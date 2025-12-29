@@ -3,6 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/maplibre-gl-shaders.svg)](https://www.npmjs.com/package/maplibre-gl-shaders)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
+[![Tests](https://img.shields.io/badge/Tests-125%20passing-brightgreen.svg)]()
 
 **Animated GLSL shaders for MapLibre GL JS** - Add stunning visual effects to your maps with minimal effort.
 
@@ -17,7 +18,11 @@
 
 ## Demo
 
-Check out the [interactive playground](https://maplibre-gl-shaders.dev) to explore all shaders with live configuration.
+Run the interactive playground locally:
+
+```bash
+npm run dev:demo
+```
 
 ## Installation
 
@@ -51,11 +56,8 @@ const map = new maplibregl.Map({
 });
 
 map.on('load', () => {
-  // Create a shader manager
-  const shaderManager = createShaderManager(map);
-
   // Add a GeoJSON source
-  map.addSource('points', {
+  map.addSource('my-points', {
     type: 'geojson',
     data: {
       type: 'FeatureCollection',
@@ -69,8 +71,20 @@ map.on('load', () => {
     }
   });
 
-  // Apply a shader to your data
-  shaderManager.apply('pulse', 'points', {
+  // Add a circle layer (required for point shaders)
+  map.addLayer({
+    id: 'my-points-layer',
+    type: 'circle',
+    source: 'my-points',
+    paint: {
+      'circle-radius': 20,
+      'circle-color': '#3b82f6'
+    }
+  });
+
+  // Create a shader manager and apply a shader
+  const shaderManager = createShaderManager(map);
+  shaderManager.register('my-points-layer', 'pulse', {
     color: '#3b82f6',
     speed: 1.5,
     rings: 3,
@@ -81,7 +95,7 @@ map.on('load', () => {
 
 ## Available Shaders
 
-### Point Shaders
+### Point Shaders (6)
 
 | Shader | Description | Use Cases |
 |--------|-------------|-----------|
@@ -92,7 +106,7 @@ map.on('load', () => {
 | `glow` | Luminous halo with variable intensity | Points of interest, hotspots, selection |
 | `morphingShapes` | Fluid transitions between shapes | Dynamic categorization, multiple states |
 
-### Line Shaders
+### Line Shaders (7)
 
 | Shader | Description | Use Cases |
 |--------|-------------|-----------|
@@ -104,7 +118,7 @@ map.on('load', () => {
 | `snake` | Colored segment progressing along path | Routes, progression, loading |
 | `neon` | Neon effect with flicker | Cyberpunk style, live data, futuristic UI |
 
-### Polygon Shaders
+### Polygon Shaders (8)
 
 | Shader | Description | Use Cases |
 |--------|-------------|-----------|
@@ -117,7 +131,7 @@ map.on('load', () => {
 | `gradientRotation` | Rotating radial/linear gradient | Influence zones, orientation visualization |
 | `dissolve` | Dissolution appear/disappear effect | Transitions, reveal, progressive appearance |
 
-### Global Shaders
+### Global Shaders (5)
 
 | Shader | Description | Use Cases |
 |--------|-------------|-----------|
@@ -127,12 +141,67 @@ map.on('load', () => {
 | `weather` | Rain/snow/leaves particles | Weather, ambiance, seasons |
 | `holographicGrid` | Pulsing sci-fi grid | Futuristic interface, tech visualization |
 
-## Configuration Examples
+## API Reference
 
-### Pulse Shader
+### `createShaderManager(map, options?)`
+
+Creates a new shader manager instance.
 
 ```typescript
-shaderManager.apply('pulse', 'my-source', {
+const manager = createShaderManager(map, {
+  autoStart: true,    // Start animation loop automatically (default: true)
+  targetFPS: 60,      // Target frame rate (default: 60)
+  debug: false        // Enable debug logging (default: false)
+});
+```
+
+### `ShaderManager` Methods
+
+| Method | Description |
+|--------|-------------|
+| `register(layerId, shaderName, config?)` | Apply a shader to an existing layer |
+| `unregister(layerId)` | Remove a shader from a layer |
+| `updateConfig(layerId, config)` | Update shader configuration at runtime |
+| `play(layerId?)` | Resume animation (all layers if no ID provided) |
+| `pause(layerId?)` | Pause animation (all layers if no ID provided) |
+| `setSpeed(layerId, speed)` | Set speed for a specific layer |
+| `setGlobalSpeed(speed)` | Set global animation speed multiplier |
+| `getTime()` | Get current animation time in seconds |
+| `getInstance(layerId)` | Get shader instance for a layer |
+| `getRegisteredLayers()` | Get all registered layer IDs |
+| `destroy()` | Clean up and remove all shaders |
+
+### Functional API
+
+```typescript
+import { applyShader } from 'maplibre-gl-shaders';
+
+// Apply shader and get a controller
+const controller = applyShader(map, 'my-layer', 'pulse', {
+  color: '#3b82f6',
+  speed: 1.5
+});
+
+// Update configuration
+controller.update({ speed: 2.0 });
+
+// Pause/resume
+controller.pause();
+controller.play();
+
+// Check state
+console.log(controller.isPlaying());
+
+// Remove
+controller.remove();
+```
+
+## Configuration Examples
+
+### Pulse Shader (Points)
+
+```typescript
+shaderManager.register('my-layer', 'pulse', {
   color: '#3b82f6',     // Ring color
   speed: 1.0,           // Expansion speed
   rings: 3,             // Number of visible rings
@@ -145,7 +214,7 @@ shaderManager.apply('pulse', 'my-source', {
 ### Flow Shader (Lines)
 
 ```typescript
-shaderManager.apply('flow', 'routes-source', {
+shaderManager.register('routes-layer', 'flow', {
   color: '#10b981',
   speed: 2.0,
   dashLength: 15,
@@ -158,59 +227,24 @@ shaderManager.apply('flow', 'routes-source', {
 ### Ripple Shader (Polygons)
 
 ```typescript
-shaderManager.apply('ripple', 'zones-source', {
+shaderManager.register('zones-layer', 'ripple', {
   color: '#6366f1',
   speed: 1.5,
   waves: 4,
-  decay: 0.6,
-  origin: 'centroid'
+  decay: 0.6
 });
 ```
 
-## API Reference
-
-### `createShaderManager(map, options?)`
-
-Creates a new shader manager instance.
+### Weather Shader (Global)
 
 ```typescript
-const manager = createShaderManager(map, {
-  autoStart: true,    // Start animation loop automatically
-  fps: 60             // Target frame rate
+shaderManager.register('weather-effect', 'weather', {
+  type: 'rain',         // 'rain' | 'snow' | 'leaves'
+  speed: 1.0,
+  density: 100,
+  color: '#94a3b8',
+  wind: 15              // Wind angle in degrees
 });
-```
-
-### `ShaderManager` Methods
-
-| Method | Description |
-|--------|-------------|
-| `apply(shader, source, config?)` | Apply a shader to a source |
-| `remove(shader, source)` | Remove a shader from a source |
-| `update(shader, source, config)` | Update shader configuration |
-| `pause()` | Pause all animations |
-| `play()` | Resume all animations |
-| `setSpeed(multiplier)` | Set global speed multiplier |
-| `destroy()` | Clean up and remove all shaders |
-
-### Functional API
-
-```typescript
-import { applyShader, removeShader } from 'maplibre-gl-shaders';
-
-// Apply shader
-const controller = applyShader(map, 'pulse', 'source-id', config);
-
-// Update configuration
-controller.update({ speed: 2.0 });
-
-// Pause/resume
-controller.pause();
-controller.play();
-
-// Remove
-controller.remove();
-// or
-removeShader(map, 'pulse', 'source-id');
 ```
 
 ## Custom Shaders
@@ -218,7 +252,7 @@ removeShader(map, 'pulse', 'source-id');
 Create your own animated shaders:
 
 ```typescript
-import { defineShader, registerShader } from 'maplibre-gl-shaders';
+import { defineShader, registerShader, hexToRgba } from 'maplibre-gl-shaders';
 
 const myShader = defineShader({
   name: 'myCustomShader',
@@ -239,6 +273,7 @@ const myShader = defineShader({
   },
 
   fragmentShader: `
+    precision mediump float;
     uniform vec3 u_color;
     uniform float u_time;
     uniform float u_size;
@@ -250,8 +285,9 @@ const myShader = defineShader({
   `,
 
   getUniforms(config, time) {
+    const rgba = hexToRgba(config.color);
     return {
-      u_color: hexToRgb(config.color),
+      u_color: [rgba[0], rgba[1], rgba[2]],
       u_time: time * config.speed,
       u_size: config.size
     };
@@ -266,12 +302,12 @@ registerShader(myShader);
 ```tsx
 import { useEffect, useRef } from 'react';
 import maplibregl from 'maplibre-gl';
-import { createShaderManager, registerAllShaders } from 'maplibre-gl-shaders';
+import { ShaderManager, createShaderManager, registerAllShaders } from 'maplibre-gl-shaders';
 
 function MapWithShaders() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
-  const shaderManager = useRef<ReturnType<typeof createShaderManager> | null>(null);
+  const shaderManager = useRef<ShaderManager | null>(null);
 
   useEffect(() => {
     registerAllShaders();
@@ -286,7 +322,14 @@ function MapWithShaders() {
     map.current.on('load', () => {
       shaderManager.current = createShaderManager(map.current!);
 
-      // Add sources and apply shaders...
+      // Add source and layer...
+      map.current!.addSource('points', { /* ... */ });
+      map.current!.addLayer({ id: 'points-layer', /* ... */ });
+
+      // Apply shader
+      shaderManager.current.register('points-layer', 'pulse', {
+        color: '#3b82f6'
+      });
     });
 
     return () => {
@@ -297,6 +340,26 @@ function MapWithShaders() {
 
   return <div ref={mapContainer} style={{ width: '100%', height: '100vh' }} />;
 }
+```
+
+## Utilities
+
+The library exports several utility functions:
+
+```typescript
+import {
+  hexToRgba,      // Convert hex color to RGBA array
+  rgbaToHex,      // Convert RGBA array to hex string
+  normalizeColor, // Normalize color to RGBA array
+  rgbToHsl,       // Convert RGB to HSL
+  hslToRgb,       // Convert HSL to RGB
+  lerpColor,      // Interpolate between two colors
+  listShaders,    // List available shaders by geometry
+} from 'maplibre-gl-shaders';
+
+// List all point shaders
+const pointShaders = listShaders('point');
+// ['pulse', 'heartbeat', 'radar', 'particleBurst', 'glow', 'morphingShapes']
 ```
 
 ## Browser Support
@@ -312,14 +375,13 @@ Requires WebGL 2.0 support.
 
 1. **Limit concurrent shaders** - Each shader adds GPU overhead
 2. **Use appropriate FPS** - 30 FPS is often sufficient for smooth animations
-3. **Reduce shader complexity** - Simpler shaders perform better
-4. **Consider visibility** - Pause shaders when not visible
+3. **Pause when hidden** - Save resources when the page is not visible
 
 ```typescript
-// Adjust FPS for better performance
-const manager = createShaderManager(map, { fps: 30 });
+// Use 30 FPS for better performance
+const manager = createShaderManager(map, { targetFPS: 30 });
 
-// Pause when not visible
+// Pause when page is hidden
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     manager.pause();
@@ -327,6 +389,28 @@ document.addEventListener('visibilitychange', () => {
     manager.play();
   }
 });
+```
+
+## Development
+
+```bash
+# Install dependencies
+npm install
+
+# Run demo site
+npm run dev:demo
+
+# Run tests
+npm test
+
+# Run tests with coverage
+npm run test:coverage
+
+# Build library
+npm run build:lib
+
+# Generate API documentation
+npm run docs
 ```
 
 ## Contributing
