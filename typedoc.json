@@ -1,0 +1,25 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/index.ts"],
+  "out": "docs",
+  "name": "MapLibre GL Shaders",
+  "readme": "README.md",
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeInternal": true,
+  "includeVersion": true,
+  "navigationLinks": {
+    "GitHub": "https://github.com/maplibre/maplibre-gl-shaders",
+    "Demo": "https://maplibre-gl-shaders.dev"
+  },
+  "categorizeByGroup": true,
+  "categoryOrder": [
+    "Core",
+    "Shaders",
+    "Utilities",
+    "Types",
+    "*"
+  ],
+  "plugin": [],
+  "theme": "default"
+}
