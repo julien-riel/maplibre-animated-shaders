@@ -631,7 +631,7 @@ Préparation et publication du package sur le registre npm.
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/[username]/maplibre-animated-shaders"
+    "url": "https://github.com/julien-riel/maplibre-animated-shaders"
   },
   "license": "MIT"
 }

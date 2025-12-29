@@ -691,7 +691,7 @@ Le fichier `package.json` contient des champs incomplets :
 {
   "author": "",
   "repository": {
-    "url": "https://github.com/[username]/maplibre-animated-shaders"
+    "url": "https://github.com/julien-riel/maplibre-animated-shaders"
   }
 }
 ```
