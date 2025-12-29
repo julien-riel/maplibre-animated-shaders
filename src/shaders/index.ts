@@ -10,7 +10,7 @@ export * from './points';
 export * from './lines';
 
 // Polygons shaders (Phase 4)
-// export * from './polygons';
+export * from './polygons';
 
 // Global effects (Phase 5)
 // export * from './global';
@@ -34,6 +34,16 @@ import {
   snakeShader,
   neonShader,
 } from './lines';
+import {
+  scanLinesShader,
+  rippleShader,
+  hatchingShader,
+  fillWaveShader,
+  noiseShader,
+  marchingAntsShader,
+  gradientRotationShader,
+  dissolveShader,
+} from './polygons';
 
 /**
  * Register all built-in shaders with the global registry
@@ -59,7 +69,14 @@ export function registerAllShaders(): void {
   globalRegistry.register(neonShader as unknown as ShaderDefinition);
 
   // Polygons (Phase 4)
-  // globalRegistry.register(rippleShader);
+  globalRegistry.register(scanLinesShader as unknown as ShaderDefinition);
+  globalRegistry.register(rippleShader as unknown as ShaderDefinition);
+  globalRegistry.register(hatchingShader as unknown as ShaderDefinition);
+  globalRegistry.register(fillWaveShader as unknown as ShaderDefinition);
+  globalRegistry.register(noiseShader as unknown as ShaderDefinition);
+  globalRegistry.register(marchingAntsShader as unknown as ShaderDefinition);
+  globalRegistry.register(gradientRotationShader as unknown as ShaderDefinition);
+  globalRegistry.register(dissolveShader as unknown as ShaderDefinition);
 
   // Global (Phase 5)
   // globalRegistry.register(heatShimmerShader);

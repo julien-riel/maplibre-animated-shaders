@@ -8,11 +8,11 @@
 | 1 | Premier shader + Site de démo | 2 | 🔴 Critique | ✅ Terminé |
 | 2 | Shaders Points | 5 | 🟠 Haute | ✅ Terminé |
 | 3 | Shaders Lignes | 7 | 🟠 Haute | ✅ Terminé |
-| 4 | Shaders Polygones | 8 | 🟡 Moyenne | 🔲 À faire |
+| 4 | Shaders Polygones | 8 | 🟡 Moyenne | ✅ Terminé |
 | 5 | Effets Globaux | 5 | 🟢 Basse | 🔲 À faire |
 | 6 | Finalisation | 3 | 🟠 Haute | 🔲 À faire |
 
-**Total : 35 tâches** | **Complétées : 19/35**
+**Total : 35 tâches** | **Complétées : 27/35**
 
 > **Philosophie** : Le site de démo est créé dès le premier shader pour permettre le développement itératif avec un agent AI. Chaque nouveau shader peut être testé immédiatement.
 
@@ -358,9 +358,9 @@ Effet néon avec légère instabilité/flicker.
 
 ---
 
-## Phase 4 — Shaders Polygones
+## Phase 4 — Shaders Polygones ✅
 
-### T4.1 — Shader: Scan Lines
+### T4.1 — Shader: Scan Lines ✅ TERMINÉ
 Lignes horizontales/verticales qui balayent la zone.
 
 | Paramètre | Type | Défaut | Description |
@@ -376,7 +376,7 @@ Lignes horizontales/verticales qui balayent la zone.
 
 ---
 
-### T4.2 — Shader: Ripple
+### T4.2 — Shader: Ripple ✅ TERMINÉ
 Ondulations depuis le centroïde du polygone.
 
 | Paramètre | Type | Défaut | Description |
@@ -391,7 +391,7 @@ Ondulations depuis le centroïde du polygone.
 
 ---
 
-### T4.3 — Shader: Hatching
+### T4.3 — Shader: Hatching ✅ TERMINÉ
 Pattern de hachures animées.
 
 | Paramètre | Type | Défaut | Description |
@@ -407,7 +407,7 @@ Pattern de hachures animées.
 
 ---
 
-### T4.4 — Shader: Fill Wave
+### T4.4 — Shader: Fill Wave ✅ TERMINÉ
 Remplissage progressif comme un liquide.
 
 | Paramètre | Type | Défaut | Description |
@@ -423,7 +423,7 @@ Remplissage progressif comme un liquide.
 
 ---
 
-### T4.5 — Shader: Noise
+### T4.5 — Shader: Noise ✅ TERMINÉ
 Texture bruitée animée.
 
 | Paramètre | Type | Défaut | Description |
@@ -439,7 +439,7 @@ Texture bruitée animée.
 
 ---
 
-### T4.6 — Shader: Marching Ants
+### T4.6 — Shader: Marching Ants ✅ TERMINÉ
 Pointillés animés sur le contour (style sélection).
 
 | Paramètre | Type | Défaut | Description |
@@ -455,7 +455,7 @@ Pointillés animés sur le contour (style sélection).
 
 ---
 
-### T4.7 — Shader: Gradient Rotation
+### T4.7 — Shader: Gradient Rotation ✅ TERMINÉ
 Dégradé radial ou linéaire qui tourne.
 
 | Paramètre | Type | Défaut | Description |
@@ -469,7 +469,7 @@ Dégradé radial ou linéaire qui tourne.
 
 ---
 
-### T4.8 — Shader: Dissolve
+### T4.8 — Shader: Dissolve ✅ TERMINÉ
 Apparition/disparition avec effet de dissolution.
 
 | Paramètre | Type | Défaut | Description |
@@ -685,7 +685,7 @@ Phase 0 (Infrastructure)         ███████████████�
 Phase 1 (Pulse + Site démo)      ████████████████████████████████  TERMINÉ ✅
 Phase 2 (Points suite)           ████████████████████████████████  TERMINÉ ✅
 Phase 3 (Lignes)                 ████████████████████████████████  TERMINÉ ✅
-Phase 4 (Polygones)              ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  À faire
+Phase 4 (Polygones)              ████████████████████████████████  TERMINÉ ✅
 Phase 5 (Global)                 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  À faire
 Phase 6 (Final + npm)            ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  À faire
 ```

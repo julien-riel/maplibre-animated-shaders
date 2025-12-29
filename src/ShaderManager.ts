@@ -12,6 +12,7 @@ import { ConfigResolver } from './ConfigResolver';
 import { globalRegistry, ShaderRegistry } from './ShaderRegistry';
 import { PointShaderLayer } from './layers/PointShaderLayer';
 import { LineShaderLayer } from './layers/LineShaderLayer';
+import { PolygonShaderLayer } from './layers/PolygonShaderLayer';
 
 /**
  * Main entry point for managing animated shaders on a MapLibre map.
@@ -23,7 +24,7 @@ export class ShaderManager implements IShaderManager {
   private configResolver: ConfigResolver;
   private registry: ShaderRegistry;
   private instances: Map<string, ShaderInstance> = new Map();
-  private customLayers: Map<string, PointShaderLayer | LineShaderLayer> = new Map();
+  private customLayers: Map<string, PointShaderLayer | LineShaderLayer | PolygonShaderLayer> = new Map();
   private options: Required<ShaderManagerOptions>;
   private debug: boolean;
 
@@ -85,6 +86,12 @@ export class ShaderManager implements IShaderManager {
     // For line shaders, use WebGL custom layer
     if (definition.geometry === 'line') {
       this.registerLineShader(layerId, definition, resolvedConfig);
+      return;
+    }
+
+    // For polygon shaders, use WebGL custom layer
+    if (definition.geometry === 'polygon') {
+      this.registerPolygonShader(layerId, definition, resolvedConfig);
       return;
     }
 
@@ -215,6 +222,66 @@ export class ShaderManager implements IShaderManager {
   }
 
   /**
+   * Register a polygon shader using WebGL custom layer
+   */
+  private registerPolygonShader(
+    layerId: string,
+    definition: ShaderDefinition,
+    config: ShaderConfig
+  ): void {
+    // Get the source ID from the existing layer
+    const existingLayer = this.map.getLayer(layerId);
+    if (!existingLayer) {
+      throw new Error(`[ShaderManager] Layer "${layerId}" not found on map`);
+    }
+
+    // Get source ID from the layer
+    const sourceId = (existingLayer as { source?: string }).source;
+    if (!sourceId) {
+      throw new Error(`[ShaderManager] Layer "${layerId}" has no source`);
+    }
+
+    // Create custom layer ID
+    const customLayerId = `${layerId}-shader`;
+
+    // Remove existing custom layer if present
+    if (this.map.getLayer(customLayerId)) {
+      this.map.removeLayer(customLayerId);
+    }
+
+    // Make original layer invisible but keep it in the render tree
+    this.map.setPaintProperty(layerId, 'fill-opacity', 0);
+
+    // Create the custom layer
+    const customLayer = new PolygonShaderLayer(
+      customLayerId,
+      sourceId,
+      definition,
+      config
+    );
+
+    // Add the custom layer to the map
+    this.map.addLayer(customLayer, layerId);
+
+    // Store the custom layer
+    this.customLayers.set(layerId, customLayer);
+
+    // Create shader instance for tracking
+    const instance: ShaderInstance = {
+      layerId,
+      definition,
+      config,
+      isPlaying: true,
+      speed: config.speed ?? 1.0,
+      localTime: 0,
+    };
+
+    this.instances.set(layerId, instance);
+
+    this.log(`Registered polygon shader "${definition.name}" on layer "${layerId}" (WebGL)`);
+  }
+
+  /**
    * Register a shader using paint property animation (for non-point geometries)
    */
   private registerPaintShader(
@@ -277,6 +344,8 @@ export class ShaderManager implements IShaderManager {
           this.map.setPaintProperty(layerId, 'circle-stroke-opacity', 1);
         } else if (geometry === 'line') {
           this.map.setPaintProperty(layerId, 'line-opacity', 1);
+        } else if (geometry === 'polygon') {
+          this.map.setPaintProperty(layerId, 'fill-opacity', 0.2);
         }
       }
     }
@@ -428,6 +497,8 @@ export class ShaderManager implements IShaderManager {
           this.map.setPaintProperty(layerId, 'circle-stroke-opacity', 1);
         } else if (geometry === 'line') {
           this.map.setPaintProperty(layerId, 'line-opacity', 1);
+        } else if (geometry === 'polygon') {
+          this.map.setPaintProperty(layerId, 'fill-opacity', 0.2);
         }
       }
     }
