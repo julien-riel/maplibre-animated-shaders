@@ -9,10 +9,10 @@
 | 2 | Shaders Points | 5 | 🟠 Haute | ✅ Terminé |
 | 3 | Shaders Lignes | 7 | 🟠 Haute | ✅ Terminé |
 | 4 | Shaders Polygones | 8 | 🟡 Moyenne | ✅ Terminé |
-| 5 | Effets Globaux | 5 | 🟢 Basse | 🔲 À faire |
+| 5 | Effets Globaux | 5 | 🟢 Basse | ✅ Terminé |
 | 6 | Finalisation | 3 | 🟠 Haute | 🔲 À faire |
 
-**Total : 35 tâches** | **Complétées : 27/35**
+**Total : 35 tâches** | **Complétées : 32/35**
 
 > **Philosophie** : Le site de démo est créé dès le premier shader pour permettre le développement itératif avec un agent AI. Chaque nouveau shader peut être testé immédiatement.
 
@@ -485,9 +485,9 @@ Apparition/disparition avec effet de dissolution.
 
 ---
 
-## Phase 5 — Effets Globaux
+## Phase 5 — Effets Globaux ✅
 
-### T5.1 — Shader: Heat Shimmer
+### T5.1 — Shader: Heat Shimmer ✅ TERMINÉ
 Distorsion comme la chaleur sur l'asphalte.
 
 | Paramètre | Type | Défaut | Description |
@@ -502,7 +502,7 @@ Distorsion comme la chaleur sur l'asphalte.
 
 ---
 
-### T5.2 — Shader: Day Night Cycle
+### T5.2 — Shader: Day Night Cycle ✅ TERMINÉ
 Variation d'éclairage simulant le cycle jour/nuit.
 
 | Paramètre | Type | Défaut | Description |
@@ -518,7 +518,7 @@ Variation d'éclairage simulant le cycle jour/nuit.
 
 ---
 
-### T5.3 — Shader: Depth Fog
+### T5.3 — Shader: Depth Fog ✅ TERMINÉ
 Brouillard animé basé sur le niveau de zoom.
 
 | Paramètre | Type | Défaut | Description |
@@ -534,7 +534,7 @@ Brouillard animé basé sur le niveau de zoom.
 
 ---
 
-### T5.4 — Shader: Weather
+### T5.4 — Shader: Weather ✅ TERMINÉ
 Particules de pluie/neige sur la carte.
 
 | Paramètre | Type | Défaut | Description |
@@ -550,7 +550,7 @@ Particules de pluie/neige sur la carte.
 
 ---
 
-### T5.5 — Shader: Holographic Grid
+### T5.5 — Shader: Holographic Grid ✅ TERMINÉ
 Grille sci-fi qui pulse sur les features.
 
 | Paramètre | Type | Défaut | Description |
@@ -686,7 +686,7 @@ Phase 1 (Pulse + Site démo)      ███████████████�
 Phase 2 (Points suite)           ████████████████████████████████  TERMINÉ ✅
 Phase 3 (Lignes)                 ████████████████████████████████  TERMINÉ ✅
 Phase 4 (Polygones)              ████████████████████████████████  TERMINÉ ✅
-Phase 5 (Global)                 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  À faire
+Phase 5 (Global)                 ████████████████████████████████  TERMINÉ ✅
 Phase 6 (Final + npm)            ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  À faire
 ```
 

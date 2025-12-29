@@ -13,7 +13,7 @@ export * from './lines';
 export * from './polygons';
 
 // Global effects (Phase 5)
-// export * from './global';
+export * from './global';
 
 import { globalRegistry } from '../ShaderRegistry';
 import type { ShaderDefinition } from '../types';
@@ -44,6 +44,13 @@ import {
   gradientRotationShader,
   dissolveShader,
 } from './polygons';
+import {
+  heatShimmerShader,
+  dayNightCycleShader,
+  depthFogShader,
+  weatherShader,
+  holographicGridShader,
+} from './global';
 
 /**
  * Register all built-in shaders with the global registry
@@ -79,5 +86,9 @@ export function registerAllShaders(): void {
   globalRegistry.register(dissolveShader as unknown as ShaderDefinition);
 
   // Global (Phase 5)
-  // globalRegistry.register(heatShimmerShader);
+  globalRegistry.register(heatShimmerShader as unknown as ShaderDefinition);
+  globalRegistry.register(dayNightCycleShader as unknown as ShaderDefinition);
+  globalRegistry.register(depthFogShader as unknown as ShaderDefinition);
+  globalRegistry.register(weatherShader as unknown as ShaderDefinition);
+  globalRegistry.register(holographicGridShader as unknown as ShaderDefinition);
 }

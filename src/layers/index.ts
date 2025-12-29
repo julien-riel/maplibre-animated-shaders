@@ -5,3 +5,4 @@
 export { PointShaderLayer } from './PointShaderLayer';
 export { LineShaderLayer } from './LineShaderLayer';
 export { PolygonShaderLayer } from './PolygonShaderLayer';
+export { GlobalShaderLayer } from './GlobalShaderLayer';

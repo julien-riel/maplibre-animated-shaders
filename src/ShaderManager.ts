@@ -13,6 +13,7 @@ import { globalRegistry, ShaderRegistry } from './ShaderRegistry';
 import { PointShaderLayer } from './layers/PointShaderLayer';
 import { LineShaderLayer } from './layers/LineShaderLayer';
 import { PolygonShaderLayer } from './layers/PolygonShaderLayer';
+import { GlobalShaderLayer } from './layers/GlobalShaderLayer';
 
 /**
  * Main entry point for managing animated shaders on a MapLibre map.
@@ -24,7 +25,7 @@ export class ShaderManager implements IShaderManager {
   private configResolver: ConfigResolver;
   private registry: ShaderRegistry;
   private instances: Map<string, ShaderInstance> = new Map();
-  private customLayers: Map<string, PointShaderLayer | LineShaderLayer | PolygonShaderLayer> = new Map();
+  private customLayers: Map<string, PointShaderLayer | LineShaderLayer | PolygonShaderLayer | GlobalShaderLayer> = new Map();
   private options: Required<ShaderManagerOptions>;
   private debug: boolean;
 
@@ -92,6 +93,12 @@ export class ShaderManager implements IShaderManager {
     // For polygon shaders, use WebGL custom layer
     if (definition.geometry === 'polygon') {
       this.registerPolygonShader(layerId, definition, resolvedConfig);
+      return;
+    }
+
+    // For global shaders, use full-screen WebGL custom layer
+    if (definition.geometry === 'global') {
+      this.registerGlobalShader(layerId, definition, resolvedConfig);
       return;
     }
 
@@ -282,6 +289,50 @@ export class ShaderManager implements IShaderManager {
   }
 
   /**
+   * Register a global shader using full-screen WebGL custom layer
+   */
+  private registerGlobalShader(
+    layerId: string,
+    definition: ShaderDefinition,
+    config: ShaderConfig
+  ): void {
+    // Create custom layer ID
+    const customLayerId = `${layerId}-global-shader`;
+
+    // Remove existing custom layer if present
+    if (this.map.getLayer(customLayerId)) {
+      this.map.removeLayer(customLayerId);
+    }
+
+    // Create the custom layer (no source needed for global effects)
+    const customLayer = new GlobalShaderLayer(
+      customLayerId,
+      definition,
+      config
+    );
+
+    // Add the custom layer to the map on top of all other layers
+    this.map.addLayer(customLayer);
+
+    // Store the custom layer
+    this.customLayers.set(layerId, customLayer);
+
+    // Create shader instance for tracking
+    const instance: ShaderInstance = {
+      layerId,
+      definition,
+      config,
+      isPlaying: true,
+      speed: config.speed ?? 1.0,
+      localTime: 0,
+    };
+
+    this.instances.set(layerId, instance);
+
+    this.log(`Registered global shader "${definition.name}" on layer "${layerId}" (WebGL)`);
+  }
+
+  /**
    * Register a shader using paint property animation (for non-point geometries)
    */
   private registerPaintShader(
@@ -330,7 +381,10 @@ export class ShaderManager implements IShaderManager {
     // Remove custom layer if it exists
     const customLayer = this.customLayers.get(layerId);
     if (customLayer) {
-      const customLayerId = `${layerId}-shader`;
+      // Determine the custom layer ID based on geometry type
+      const customLayerId = instance.definition.geometry === 'global'
+        ? `${layerId}-global-shader`
+        : `${layerId}-shader`;
       if (this.map.getLayer(customLayerId)) {
         this.map.removeLayer(customLayerId);
       }
@@ -484,12 +538,15 @@ export class ShaderManager implements IShaderManager {
   destroy(): void {
     // Remove all custom layers
     for (const [layerId] of this.customLayers) {
-      const customLayerId = `${layerId}-shader`;
+      const instance = this.instances.get(layerId);
+      // Determine the custom layer ID based on geometry type
+      const customLayerId = instance?.definition.geometry === 'global'
+        ? `${layerId}-global-shader`
+        : `${layerId}-shader`;
       if (this.map.getLayer(customLayerId)) {
         this.map.removeLayer(customLayerId);
       }
       // Restore original layer opacity based on geometry type
-      const instance = this.instances.get(layerId);
       if (this.map.getLayer(layerId) && instance) {
         const geometry = instance.definition.geometry;
         if (geometry === 'point') {
@@ -500,6 +557,7 @@ export class ShaderManager implements IShaderManager {
         } else if (geometry === 'polygon') {
           this.map.setPaintProperty(layerId, 'fill-opacity', 0.2);
         }
+        // Global shaders don't have associated layers to restore
       }
     }
     this.customLayers.clear();

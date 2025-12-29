@@ -131,6 +131,9 @@ export class MapView {
           return 'demo-lines';
         case 'polygon':
           return 'demo-polygons';
+        case 'global':
+          // Global shaders use a virtual layer ID
+          return 'global-effect';
         default:
           return 'demo-points';
       }
