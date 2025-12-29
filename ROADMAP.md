@@ -599,7 +599,7 @@ Préparation et publication du package sur le registre npm.
 
 ```json
 {
-  "name": "maplibre-gl-shaders",
+  "name": "maplibre-animated-shaders",
   "version": "1.0.0",
   "description": "Animated GLSL shaders for MapLibre GL JS",
   "main": "dist/index.cjs",
@@ -631,7 +631,7 @@ Préparation et publication du package sur le registre npm.
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/[username]/maplibre-gl-shaders"
+    "url": "https://github.com/[username]/maplibre-animated-shaders"
   },
   "license": "MIT"
 }
@@ -677,7 +677,7 @@ git push --tags
 - Soumettre à awesome-maplibre
 - Article de blog sur le site personnel
 
-**Livrable:** Package `maplibre-gl-shaders` disponible sur npmjs.com
+**Livrable:** Package `maplibre-animated-shaders` disponible sur npmjs.com
 
 ---
 

@@ -1,6 +1,6 @@
 # Recommandations d'amélioration
 
-Ce document présente 10 recommandations d'amélioration identifiées lors d'une revue de code approfondie du projet maplibre-gl-shaders.
+Ce document présente 10 recommandations d'amélioration identifiées lors d'une revue de code approfondie du projet maplibre-animated-shaders.
 
 Chaque recommandation inclut :
 - Le contexte et la problématique
@@ -691,7 +691,7 @@ Le fichier `package.json` contient des champs incomplets :
 {
   "author": "",
   "repository": {
-    "url": "https://github.com/[username]/maplibre-gl-shaders"
+    "url": "https://github.com/[username]/maplibre-animated-shaders"
   }
 }
 ```
@@ -715,12 +715,12 @@ Compléter les métadonnées :
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/votre-username/maplibre-gl-shaders.git"
+    "url": "https://github.com/votre-username/maplibre-animated-shaders.git"
   },
   "bugs": {
-    "url": "https://github.com/votre-username/maplibre-gl-shaders/issues"
+    "url": "https://github.com/votre-username/maplibre-animated-shaders/issues"
   },
-  "homepage": "https://github.com/votre-username/maplibre-gl-shaders#readme",
+  "homepage": "https://github.com/votre-username/maplibre-animated-shaders#readme",
   "funding": {
     "type": "github",
     "url": "https://github.com/sponsors/votre-username"

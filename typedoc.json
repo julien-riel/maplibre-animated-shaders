@@ -9,8 +9,8 @@
   "excludeInternal": true,
   "includeVersion": true,
   "navigationLinks": {
-    "GitHub": "https://github.com/maplibre/maplibre-gl-shaders",
-    "Demo": "https://maplibre-gl-shaders.dev"
+    "GitHub": "https://github.com/maplibre/maplibre-animated-shaders",
+    "Demo": "https://maplibre-animated-shaders.dev"
   },
   "categorizeByGroup": true,
   "categoryOrder": [

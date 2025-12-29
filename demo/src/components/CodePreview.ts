@@ -55,7 +55,7 @@ export class CodePreview {
   private generateCode(): string {
     const configStr = this.formatConfig(this.currentConfig);
 
-    return `import { createShaderManager, registerAllShaders } from 'maplibre-gl-shaders';
+    return `import { createShaderManager, registerAllShaders } from 'maplibre-animated-shaders';
 import maplibregl from 'maplibre-gl';
 
 // Register all built-in shaders

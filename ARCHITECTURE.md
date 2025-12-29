@@ -8,7 +8,7 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │                      Application utilisateur                     │
 ├─────────────────────────────────────────────────────────────────┤
-│                     maplibre-gl-shaders                          │
+│                     maplibre-animated-shaders                          │
 │  ┌───────────────┐  ┌───────────────┐  ┌───────────────────┐    │
 │  │ ShaderManager │  │ AnimationLoop │  │ ConfigResolver    │    │
 │  └───────┬───────┘  └───────┬───────┘  └─────────┬─────────┘    │
@@ -149,7 +149,7 @@ interface ShaderConfig {
 ## Organisation des fichiers
 
 ```
-maplibre-gl-shaders/
+maplibre-animated-shaders/
 ├── src/
 │   ├── index.ts                    # Export principal
 │   ├── ShaderManager.ts
@@ -236,13 +236,13 @@ L'API est conçue pour être **simple à intégrer** dans n'importe quel projet 
 ### Installation
 
 ```bash
-npm install maplibre-gl-shaders
+npm install maplibre-animated-shaders
 ```
 
 ### Intégration en 3 lignes
 
 ```typescript
-import { applyShader } from 'maplibre-gl-shaders';
+import { applyShader } from 'maplibre-animated-shaders';
 
 const map = new maplibregl.Map({ container: 'map', style: '...' });
 
@@ -255,7 +255,7 @@ C'est tout ! Le shader est actif et animé.
 ### Usage avec configuration
 
 ```typescript
-import { applyShader } from 'maplibre-gl-shaders';
+import { applyShader } from 'maplibre-animated-shaders';
 
 applyShader(map, 'traffic-layer', 'flow', {
   speed: 2.0,
@@ -268,7 +268,7 @@ applyShader(map, 'traffic-layer', 'flow', {
 ### Usage avancé avec contrôle
 
 ```typescript
-import { createShaderManager } from 'maplibre-gl-shaders';
+import { createShaderManager } from 'maplibre-animated-shaders';
 
 const shaders = createShaderManager(map);
 
@@ -295,7 +295,7 @@ shaders.destroy();
 ### API fonctionnelle (one-liners)
 
 ```typescript
-import { applyShader, removeShader, listShaders } from 'maplibre-gl-shaders';
+import { applyShader, removeShader, listShaders } from 'maplibre-animated-shaders';
 
 // Appliquer
 const controller = applyShader(map, 'layer', 'heartbeat', { speed: 1.2 });
@@ -318,7 +318,7 @@ console.log(listShaders('point'));   // par géométrie
 ### Avec React
 
 ```tsx
-import { useShader } from 'maplibre-gl-shaders/react';
+import { useShader } from 'maplibre-animated-shaders/react';
 
 function MapComponent() {
   const mapRef = useRef(null);
@@ -335,7 +335,7 @@ function MapComponent() {
 ### Presets thématiques
 
 ```typescript
-import { applyShader, presets } from 'maplibre-gl-shaders';
+import { applyShader, presets } from 'maplibre-animated-shaders';
 
 // Presets prédéfinis pour cas d'usage courants
 applyShader(map, 'traffic', 'flow', presets.traffic.congestion);
@@ -346,7 +346,7 @@ applyShader(map, 'selection', 'ripple', presets.ui.selection);
 ### Création de shader custom
 
 ```typescript
-import { defineShader, registerShader, applyShader } from 'maplibre-gl-shaders';
+import { defineShader, registerShader, applyShader } from 'maplibre-animated-shaders';
 
 const myShader = defineShader({
   name: 'my-custom-effect',

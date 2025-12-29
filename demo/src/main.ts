@@ -44,8 +44,8 @@ function init(): void {
         <span>v0.1.0</span>
       </div>
       <nav class="header-links">
-        <a href="https://github.com/[username]/maplibre-gl-shaders" target="_blank">GitHub</a>
-        <a href="https://github.com/[username]/maplibre-gl-shaders#readme" target="_blank">Docs</a>
+        <a href="https://github.com/[username]/maplibre-animated-shaders" target="_blank">GitHub</a>
+        <a href="https://github.com/[username]/maplibre-animated-shaders#readme" target="_blank">Docs</a>
       </nav>
     </header>
     <main class="main-layout">

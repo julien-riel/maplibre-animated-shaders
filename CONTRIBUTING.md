@@ -15,8 +15,8 @@ Thank you for your interest in contributing! This document provides guidelines a
 1. Fork and clone the repository:
 
 ```bash
-git clone https://github.com/your-username/maplibre-gl-shaders.git
-cd maplibre-gl-shaders
+git clone https://github.com/your-username/maplibre-animated-shaders.git
+cd maplibre-animated-shaders
 ```
 
 2. Install dependencies:
@@ -44,7 +44,7 @@ npm test
 ## Project Structure
 
 ```
-maplibre-gl-shaders/
+maplibre-animated-shaders/
 ├── src/
 │   ├── index.ts              # Main exports
 │   ├── ShaderManager.ts      # Core shader management

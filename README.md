@@ -1,6 +1,6 @@
 # MapLibre GL Shaders
 
-[![npm version](https://img.shields.io/npm/v/maplibre-gl-shaders.svg)](https://www.npmjs.com/package/maplibre-gl-shaders)
+[![npm version](https://img.shields.io/npm/v/maplibre-animated-shaders.svg)](https://www.npmjs.com/package/maplibre-animated-shaders)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
 [![Tests](https://img.shields.io/badge/Tests-125%20passing-brightgreen.svg)]()
@@ -27,22 +27,22 @@ npm run dev:demo
 ## Installation
 
 ```bash
-npm install maplibre-gl-shaders maplibre-gl
+npm install maplibre-animated-shaders maplibre-gl
 ```
 
 ```bash
-yarn add maplibre-gl-shaders maplibre-gl
+yarn add maplibre-animated-shaders maplibre-gl
 ```
 
 ```bash
-pnpm add maplibre-gl-shaders maplibre-gl
+pnpm add maplibre-animated-shaders maplibre-gl
 ```
 
 ## Quick Start
 
 ```typescript
 import maplibregl from 'maplibre-gl';
-import { createShaderManager, registerAllShaders } from 'maplibre-gl-shaders';
+import { createShaderManager, registerAllShaders } from 'maplibre-animated-shaders';
 
 // Register all built-in shaders
 registerAllShaders();
@@ -174,7 +174,7 @@ const manager = createShaderManager(map, {
 ### Functional API
 
 ```typescript
-import { applyShader } from 'maplibre-gl-shaders';
+import { applyShader } from 'maplibre-animated-shaders';
 
 // Apply shader and get a controller
 const controller = applyShader(map, 'my-layer', 'pulse', {
@@ -252,7 +252,7 @@ shaderManager.register('weather-effect', 'weather', {
 Create your own animated shaders:
 
 ```typescript
-import { defineShader, registerShader, hexToRgba } from 'maplibre-gl-shaders';
+import { defineShader, registerShader, hexToRgba } from 'maplibre-animated-shaders';
 
 const myShader = defineShader({
   name: 'myCustomShader',
@@ -302,7 +302,7 @@ registerShader(myShader);
 ```tsx
 import { useEffect, useRef } from 'react';
 import maplibregl from 'maplibre-gl';
-import { ShaderManager, createShaderManager, registerAllShaders } from 'maplibre-gl-shaders';
+import { ShaderManager, createShaderManager, registerAllShaders } from 'maplibre-animated-shaders';
 
 function MapWithShaders() {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -355,7 +355,7 @@ import {
   hslToRgb,       // Convert HSL to RGB
   lerpColor,      // Interpolate between two colors
   listShaders,    // List available shaders by geometry
-} from 'maplibre-gl-shaders';
+} from 'maplibre-animated-shaders';
 
 // List all point shaders
 const pointShaders = listShaders('point');
