@@ -7,7 +7,7 @@
 export * from './points';
 
 // Lines shaders (Phase 3)
-// export * from './lines';
+export * from './lines';
 
 // Polygons shaders (Phase 4)
 // export * from './polygons';
@@ -25,6 +25,15 @@ import {
   glowShader,
   morphingShapesShader,
 } from './points';
+import {
+  flowShader,
+  gradientTravelShader,
+  electricShader,
+  trailFadeShader,
+  breathingShader,
+  snakeShader,
+  neonShader,
+} from './lines';
 
 /**
  * Register all built-in shaders with the global registry
@@ -41,7 +50,13 @@ export function registerAllShaders(): void {
   globalRegistry.register(morphingShapesShader as unknown as ShaderDefinition);
 
   // Lines (Phase 3)
-  // globalRegistry.register(flowShader);
+  globalRegistry.register(flowShader as unknown as ShaderDefinition);
+  globalRegistry.register(gradientTravelShader as unknown as ShaderDefinition);
+  globalRegistry.register(electricShader as unknown as ShaderDefinition);
+  globalRegistry.register(trailFadeShader as unknown as ShaderDefinition);
+  globalRegistry.register(breathingShader as unknown as ShaderDefinition);
+  globalRegistry.register(snakeShader as unknown as ShaderDefinition);
+  globalRegistry.register(neonShader as unknown as ShaderDefinition);
 
   // Polygons (Phase 4)
   // globalRegistry.register(rippleShader);

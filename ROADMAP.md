@@ -7,12 +7,12 @@
 | 0 | Infrastructure | 5 | 🔴 Critique | ✅ Terminé |
 | 1 | Premier shader + Site de démo | 2 | 🔴 Critique | ✅ Terminé |
 | 2 | Shaders Points | 5 | 🟠 Haute | ✅ Terminé |
-| 3 | Shaders Lignes | 7 | 🟠 Haute | 🔲 À faire |
+| 3 | Shaders Lignes | 7 | 🟠 Haute | ✅ Terminé |
 | 4 | Shaders Polygones | 8 | 🟡 Moyenne | 🔲 À faire |
 | 5 | Effets Globaux | 5 | 🟢 Basse | 🔲 À faire |
 | 6 | Finalisation | 3 | 🟠 Haute | 🔲 À faire |
 
-**Total : 35 tâches** | **Complétées : 12/35**
+**Total : 35 tâches** | **Complétées : 19/35**
 
 > **Philosophie** : Le site de démo est créé dès le premier shader pour permettre le développement itératif avec un agent AI. Chaque nouveau shader peut être testé immédiatement.
 
@@ -245,9 +245,9 @@ Transition fluide entre formes géométriques.
 
 ---
 
-## Phase 3 — Shaders Lignes
+## Phase 3 — Shaders Lignes ✅
 
-### T3.1 — Shader: Flow
+### T3.1 — Shader: Flow ✅ TERMINÉ
 Tirets animés qui "coulent" le long de la ligne.
 
 | Paramètre | Type | Défaut | Description |
@@ -263,7 +263,7 @@ Tirets animés qui "coulent" le long de la ligne.
 
 ---
 
-### T3.2 — Shader: Gradient Travel
+### T3.2 — Shader: Gradient Travel ✅ TERMINÉ
 Dégradé de couleur qui se déplace le long de la ligne.
 
 | Paramètre | Type | Défaut | Description |
@@ -278,7 +278,7 @@ Dégradé de couleur qui se déplace le long de la ligne.
 
 ---
 
-### T3.3 — Shader: Electric
+### T3.3 — Shader: Electric ✅ TERMINÉ
 Distorsion sinusoïdale avec effet plasma/électrique.
 
 | Paramètre | Type | Défaut | Description |
@@ -294,7 +294,7 @@ Distorsion sinusoïdale avec effet plasma/électrique.
 
 ---
 
-### T3.4 — Shader: Trail Fade
+### T3.4 — Shader: Trail Fade ✅ TERMINÉ
 Opacité décroissante vers l'arrière de la ligne.
 
 | Paramètre | Type | Défaut | Description |
@@ -310,7 +310,7 @@ Opacité décroissante vers l'arrière de la ligne.
 
 ---
 
-### T3.5 — Shader: Breathing
+### T3.5 — Shader: Breathing ✅ TERMINÉ
 Épaisseur qui pulse rythmiquement.
 
 | Paramètre | Type | Défaut | Description |
@@ -326,7 +326,7 @@ Opacité décroissante vers l'arrière de la ligne.
 
 ---
 
-### T3.6 — Shader: Snake
+### T3.6 — Shader: Snake ✅ TERMINÉ
 Segment coloré qui progresse sur le tracé.
 
 | Paramètre | Type | Défaut | Description |
@@ -342,7 +342,7 @@ Segment coloré qui progresse sur le tracé.
 
 ---
 
-### T3.7 — Shader: Neon
+### T3.7 — Shader: Neon ✅ TERMINÉ
 Effet néon avec légère instabilité/flicker.
 
 | Paramètre | Type | Défaut | Description |
@@ -684,7 +684,7 @@ git push --tags
 Phase 0 (Infrastructure)         ████████████████████████████████  TERMINÉ ✅
 Phase 1 (Pulse + Site démo)      ████████████████████████████████  TERMINÉ ✅
 Phase 2 (Points suite)           ████████████████████████████████  TERMINÉ ✅
-Phase 3 (Lignes)                 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  À faire
+Phase 3 (Lignes)                 ████████████████████████████████  TERMINÉ ✅
 Phase 4 (Polygones)              ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  À faire
 Phase 5 (Global)                 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  À faire
 Phase 6 (Final + npm)            ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  À faire

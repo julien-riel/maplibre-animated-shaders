@@ -11,6 +11,7 @@ import { AnimationLoop } from './AnimationLoop';
 import { ConfigResolver } from './ConfigResolver';
 import { globalRegistry, ShaderRegistry } from './ShaderRegistry';
 import { PointShaderLayer } from './layers/PointShaderLayer';
+import { LineShaderLayer } from './layers/LineShaderLayer';
 
 /**
  * Main entry point for managing animated shaders on a MapLibre map.
@@ -22,7 +23,7 @@ export class ShaderManager implements IShaderManager {
   private configResolver: ConfigResolver;
   private registry: ShaderRegistry;
   private instances: Map<string, ShaderInstance> = new Map();
-  private customLayers: Map<string, PointShaderLayer> = new Map();
+  private customLayers: Map<string, PointShaderLayer | LineShaderLayer> = new Map();
   private options: Required<ShaderManagerOptions>;
   private debug: boolean;
 
@@ -78,6 +79,12 @@ export class ShaderManager implements IShaderManager {
     // For point shaders, use WebGL custom layer
     if (definition.geometry === 'point') {
       this.registerPointShader(layerId, definition, resolvedConfig);
+      return;
+    }
+
+    // For line shaders, use WebGL custom layer
+    if (definition.geometry === 'line') {
+      this.registerLineShader(layerId, definition, resolvedConfig);
       return;
     }
 
@@ -148,6 +155,66 @@ export class ShaderManager implements IShaderManager {
   }
 
   /**
+   * Register a line shader using WebGL custom layer
+   */
+  private registerLineShader(
+    layerId: string,
+    definition: ShaderDefinition,
+    config: ShaderConfig
+  ): void {
+    // Get the source ID from the existing layer
+    const existingLayer = this.map.getLayer(layerId);
+    if (!existingLayer) {
+      throw new Error(`[ShaderManager] Layer "${layerId}" not found on map`);
+    }
+
+    // Get source ID from the layer
+    const sourceId = (existingLayer as { source?: string }).source;
+    if (!sourceId) {
+      throw new Error(`[ShaderManager] Layer "${layerId}" has no source`);
+    }
+
+    // Create custom layer ID
+    const customLayerId = `${layerId}-shader`;
+
+    // Remove existing custom layer if present
+    if (this.map.getLayer(customLayerId)) {
+      this.map.removeLayer(customLayerId);
+    }
+
+    // Make original layer invisible but keep it in the render tree
+    this.map.setPaintProperty(layerId, 'line-opacity', 0);
+
+    // Create the custom layer
+    const customLayer = new LineShaderLayer(
+      customLayerId,
+      sourceId,
+      definition,
+      config
+    );
+
+    // Add the custom layer to the map
+    this.map.addLayer(customLayer, layerId);
+
+    // Store the custom layer
+    this.customLayers.set(layerId, customLayer);
+
+    // Create shader instance for tracking
+    const instance: ShaderInstance = {
+      layerId,
+      definition,
+      config,
+      isPlaying: true,
+      speed: config.speed ?? 1.0,
+      localTime: 0,
+    };
+
+    this.instances.set(layerId, instance);
+
+    this.log(`Registered line shader "${definition.name}" on layer "${layerId}" (WebGL)`);
+  }
+
+  /**
    * Register a shader using paint property animation (for non-point geometries)
    */
   private registerPaintShader(
@@ -202,10 +269,15 @@ export class ShaderManager implements IShaderManager {
       }
       this.customLayers.delete(layerId);
 
-      // Restore original layer opacity
+      // Restore original layer opacity based on geometry type
       if (this.map.getLayer(layerId)) {
-        this.map.setPaintProperty(layerId, 'circle-opacity', 1);
-        this.map.setPaintProperty(layerId, 'circle-stroke-opacity', 1);
+        const geometry = instance.definition.geometry;
+        if (geometry === 'point') {
+          this.map.setPaintProperty(layerId, 'circle-opacity', 1);
+          this.map.setPaintProperty(layerId, 'circle-stroke-opacity', 1);
+        } else if (geometry === 'line') {
+          this.map.setPaintProperty(layerId, 'line-opacity', 1);
+        }
       }
     }
 
@@ -347,10 +419,16 @@ export class ShaderManager implements IShaderManager {
       if (this.map.getLayer(customLayerId)) {
         this.map.removeLayer(customLayerId);
       }
-      // Restore original layer opacity
-      if (this.map.getLayer(layerId)) {
-        this.map.setPaintProperty(layerId, 'circle-opacity', 1);
-        this.map.setPaintProperty(layerId, 'circle-stroke-opacity', 1);
+      // Restore original layer opacity based on geometry type
+      const instance = this.instances.get(layerId);
+      if (this.map.getLayer(layerId) && instance) {
+        const geometry = instance.definition.geometry;
+        if (geometry === 'point') {
+          this.map.setPaintProperty(layerId, 'circle-opacity', 1);
+          this.map.setPaintProperty(layerId, 'circle-stroke-opacity', 1);
+        } else if (geometry === 'line') {
+          this.map.setPaintProperty(layerId, 'line-opacity', 1);
+        }
       }
     }
     this.customLayers.clear();

@@ -3,3 +3,4 @@
  */
 
 export { PointShaderLayer } from './PointShaderLayer';
+export { LineShaderLayer } from './LineShaderLayer';

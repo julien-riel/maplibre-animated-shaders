@@ -5,7 +5,7 @@
 
 import maplibregl from 'maplibre-gl';
 import type { Map as MapLibreMap } from 'maplibre-gl';
-import { createShaderManager } from '../../../src';
+import { createShaderManager, globalRegistry } from '../../../src';
 import type { ShaderManager } from '../../../src/ShaderManager';
 
 import demoPoints from '../data/demo-points.geojson';
@@ -120,9 +120,22 @@ export class MapView {
   /**
    * Get layer ID for shader type
    */
-  private getLayerForShader(_shaderName: string): string {
-    // For now, always use points layer since we only have pulse shader
-    // In the future, check shader geometry type
+  private getLayerForShader(shaderName: string): string {
+    const definition = globalRegistry.get(shaderName);
+
+    if (definition) {
+      switch (definition.geometry) {
+        case 'point':
+          return 'demo-points';
+        case 'line':
+          return 'demo-lines';
+        case 'polygon':
+          return 'demo-polygons';
+        default:
+          return 'demo-points';
+      }
+    }
+
     return 'demo-points';
   }
 
