@@ -2,75 +2,75 @@
 
 ## Vue d'ensemble du plan
 
-| Phase | Description | Tâches | Priorité |
-|-------|-------------|--------|----------|
-| 0 | Infrastructure | 5 | 🔴 Critique |
-| 1 | Premier shader + Site de démo | 2 | 🔴 Critique |
-| 2 | Shaders Points | 5 | 🟠 Haute |
-| 3 | Shaders Lignes | 7 | 🟠 Haute |
-| 4 | Shaders Polygones | 8 | 🟡 Moyenne |
-| 5 | Effets Globaux | 5 | 🟢 Basse |
-| 6 | Finalisation | 3 | 🟠 Haute |
+| Phase | Description | Tâches | Priorité | Statut |
+|-------|-------------|--------|----------|--------|
+| 0 | Infrastructure | 5 | 🔴 Critique | ✅ Terminé |
+| 1 | Premier shader + Site de démo | 2 | 🔴 Critique | ✅ Terminé |
+| 2 | Shaders Points | 5 | 🟠 Haute | ✅ Terminé |
+| 3 | Shaders Lignes | 7 | 🟠 Haute | 🔲 À faire |
+| 4 | Shaders Polygones | 8 | 🟡 Moyenne | 🔲 À faire |
+| 5 | Effets Globaux | 5 | 🟢 Basse | 🔲 À faire |
+| 6 | Finalisation | 3 | 🟠 Haute | 🔲 À faire |
 
-**Total : 35 tâches**
+**Total : 35 tâches** | **Complétées : 12/35**
 
 > **Philosophie** : Le site de démo est créé dès le premier shader pour permettre le développement itératif avec un agent AI. Chaque nouveau shader peut être testé immédiatement.
 
 ---
 
-## Phase 0 — Infrastructure
+## Phase 0 — Infrastructure ✅
 
-### T0.1 — Setup projet et build system
-- Initialiser le projet npm/TypeScript
-- Configurer Vite pour le build et la démo
-- Setup ESLint, Prettier
-- Configurer les exports ESM/CJS
+### T0.1 — Setup projet et build system ✅ TERMINÉ
+- ✅ Initialiser le projet npm/TypeScript
+- ✅ Configurer Vite pour le build et la démo
+- ✅ Setup ESLint, Prettier
+- ✅ Configurer les exports ESM/CJS
 
 **Livrable:** Projet buildable avec `npm run build`
 
 ---
 
-### T0.2 — Core: ShaderManager
-- Implémenter la classe `ShaderManager`
-- Gestion du cycle de vie (register/unregister)
-- Méthodes play/pause/setSpeed
-- Binding avec l'instance MapLibre
+### T0.2 — Core: ShaderManager ✅ TERMINÉ
+- ✅ Implémenter la classe `ShaderManager`
+- ✅ Gestion du cycle de vie (register/unregister)
+- ✅ Méthodes play/pause/setSpeed
+- ✅ Binding avec l'instance MapLibre
 
 **Livrable:** Manager fonctionnel sans shaders
 
 ---
 
-### T0.3 — Core: AnimationLoop
-- Implémenter la boucle `requestAnimationFrame`
-- Gestion du temps global et par shader
-- Start/stop/pause global
-- Calcul du delta time
+### T0.3 — Core: AnimationLoop ✅ TERMINÉ
+- ✅ Implémenter la boucle `requestAnimationFrame`
+- ✅ Gestion du temps global et par shader
+- ✅ Start/stop/pause global
+- ✅ Calcul du delta time
 
 **Livrable:** Loop qui injecte le temps
 
 ---
 
-### T0.4 — Core: ShaderRegistry & ConfigResolver
-- Registry pour stocker les définitions de shaders
-- ConfigResolver pour merger configs
-- Validation des paramètres avec schéma
-- Types TypeScript complets
+### T0.4 — Core: ShaderRegistry & ConfigResolver ✅ TERMINÉ
+- ✅ Registry pour stocker les définitions de shaders
+- ✅ ConfigResolver pour merger configs
+- ✅ Validation des paramètres avec schéma
+- ✅ Types TypeScript complets
 
 **Livrable:** Système de registration complet
 
 ---
 
-### T0.5 — GLSL Commons
-- `noise.glsl` — Simplex noise 2D/3D, Perlin
-- `easing.glsl` — easeInOut, bounce, elastic, etc.
-- `shapes.glsl` — SDF cercle, carré, triangle
-- `colors.glsl` — HSL↔RGB, blend modes
+### T0.5 — GLSL Commons ✅ TERMINÉ
+- ✅ `noise.glsl` — Simplex noise 2D/3D, Perlin
+- ✅ `easing.glsl` — easeInOut, bounce, elastic, etc.
+- ✅ `shapes.glsl` — SDF cercle, carré, triangle
+- ✅ `colors.glsl` — HSL↔RGB, blend modes
 
 **Livrable:** Bibliothèque GLSL réutilisable
 
 ---
 
-## Phase 1 — Premier Shader + Site de Démo
+## Phase 1 — Premier Shader + Site de Démo ✅
 
 > **Objectif** : Avoir un environnement de test fonctionnel dès que possible pour valider chaque shader développé par la suite.
 
@@ -91,82 +91,80 @@ Cercles concentriques qui s'expandent depuis le point. Ce shader sert de référ
 
 ---
 
-### T1.2 — Site de démonstration (Playground) 🔄 EN COURS
-
-> **Note** : Structure de base créée. Voir `PLAN_PHASE_1.md` pour les tâches restantes.
+### T1.2 — Site de démonstration (Playground) ✅ TERMINÉ
 
 Site interactif pour tester chaque shader au fur et à mesure du développement.
 
-#### Fonctionnalités principales
+#### Fonctionnalités implémentées
 
-| Fonctionnalité | Description |
-|----------------|-------------|
-| **Galerie de shaders** | Navigation par géométrie (points/lignes/polygones/global) avec preview animé |
-| **Contrôles temps réel** | Sliders, color pickers, toggles pour modifier tous les paramètres |
-| **Carte interactive** | MapLibre avec données de démo pour visualiser les effets en contexte |
-| **Générateur de code** | Affichage du code d'intégration correspondant à la configuration |
-| **Hot reload** | Rechargement automatique lors du développement |
-| **Performance monitor** | Affichage FPS et métriques WebGL |
+| Fonctionnalité | Description | Statut |
+|----------------|-------------|--------|
+| **Galerie de shaders** | Navigation par géométrie (points/lignes/polygones/global) avec preview animé | ✅ |
+| **Contrôles temps réel** | Sliders, color pickers, toggles pour modifier tous les paramètres | ✅ |
+| **Carte interactive** | MapLibre avec données de démo pour visualiser les effets en contexte | ✅ |
+| **Générateur de code** | Affichage du code d'intégration correspondant à la configuration | ✅ |
+| **Hot reload** | Rechargement automatique lors du développement | ✅ |
+| **Performance monitor** | Affichage FPS et métriques WebGL | ✅ |
 
 #### Structure du site
 
 ```
 demo/
-├── index.html              # Page principale
+├── index.html              # Page principale ✅
+├── vite.config.ts          # Configuration Vite ✅
 ├── src/
-│   ├── main.ts             # Point d'entrée
+│   ├── main.ts             # Point d'entrée ✅
+│   ├── types.d.ts          # Déclarations TypeScript ✅
 │   ├── components/
-│   │   ├── ShaderGallery.ts      # Liste des shaders par catégorie
-│   │   ├── ConfigPanel.ts        # Contrôles de configuration dynamiques
-│   │   ├── CodePreview.ts        # Générateur de code snippet
-│   │   ├── MapView.ts            # Wrapper MapLibre avec données démo
-│   │   └── PerformanceMonitor.ts # Compteur FPS et métriques
+│   │   ├── ShaderGallery.ts      # Liste des shaders par catégorie ✅
+│   │   ├── ConfigPanel.ts        # Contrôles de configuration dynamiques ✅
+│   │   ├── CodePreview.ts        # Générateur de code snippet ✅
+│   │   ├── MapView.ts            # Wrapper MapLibre avec données démo ✅
+│   │   └── PerformanceMonitor.ts # Compteur FPS et métriques ✅
 │   ├── data/
-│   │   ├── demo-points.geojson   # POIs de démonstration
-│   │   ├── demo-lines.geojson    # Réseau routier simplifié
-│   │   └── demo-polygons.geojson # Zones/quartiers
+│   │   ├── demo-points.geojson   # 50 POIs autour de Paris ✅
+│   │   ├── demo-lines.geojson    # 40 lignes (routes, métro, vélo) ✅
+│   │   └── demo-polygons.geojson # 15 zones/quartiers ✅
 │   └── styles/
-│       └── main.css
-├── public/
-│   └── og-image.png        # Image pour partage social
-└── vite.config.ts
+│       └── main.css              # Thème sombre complet ✅
+└── public/
+    └── og-image.png        # Image pour partage social (optionnel)
 ```
 
 #### Design et UX
 
-- **Layout 3 colonnes** : Sidebar shaders | Carte centrale | Panel configuration
-- **Thème sombre** : Cohérent avec l'univers cartographique/dev
-- **Responsive** : Adaptation mobile avec drawer pour les panneaux
-- **URL shareable** : Paramètres encodés dans l'URL pour partager une configuration
+- ✅ **Layout 3 colonnes** : Sidebar shaders | Carte centrale | Panel configuration
+- ✅ **Thème sombre** : Cohérent avec l'univers cartographique/dev
+- ✅ **Responsive** : Adaptation mobile avec drawer pour les panneaux
+- ✅ **URL shareable** : Paramètres encodés dans l'URL pour partager une configuration
 
 #### Données de démonstration
 
 Le site utilise des données GeoJSON représentatives :
-- **Points** : ~50 POIs variés (restaurants, parcs, stations)
-- **Lignes** : Réseau routier simplifié (~200 segments)
-- **Polygones** : 10-15 zones/quartiers avec différentes tailles
+- ✅ **Points** : 50 POIs variés autour de Paris (landmarks, musées, parcs, transport)
+- ✅ **Lignes** : 40 segments (routes, métro, bus, pistes cyclables, chemins)
+- ✅ **Polygones** : 15 zones/quartiers avec différentes tailles
 
-#### Workflow de développement
+#### Commandes disponibles
 
 ```bash
-# Terminal 1 : Dev server avec hot reload
-npm run dev
+# Lancer le site de démo en développement
+npm run dev:demo
 
-# L'agent AI implémente un shader...
+# Build production du site de démo
+npm run build:demo
 
-# Le shader apparaît automatiquement dans le playground
-# → Test immédiat des paramètres
-# → Validation visuelle
-# → Ajustements si nécessaire
+# Preview du build production
+npm run preview:demo
 ```
 
-**Livrable:** Site de démo fonctionnel accessible en local + déployable
+**Livrable:** Site de démo fonctionnel accessible en local + déployable ✅
 
 ---
 
-## Phase 2 — Shaders Points (suite)
+## Phase 2 — Shaders Points (suite) ✅
 
-### T2.1 — Shader: Heartbeat
+### T2.1 — Shader: Heartbeat ✅ TERMINÉ
 Variation de taille rythmique avec ease-in-out.
 
 | Paramètre | Type | Défaut | Description |
@@ -182,7 +180,7 @@ Variation de taille rythmique avec ease-in-out.
 
 ---
 
-### T2.2 — Shader: Radar
+### T2.2 — Shader: Radar ✅ TERMINÉ
 Arc qui tourne autour du point.
 
 | Paramètre | Type | Défaut | Description |
@@ -198,7 +196,7 @@ Arc qui tourne autour du point.
 
 ---
 
-### T2.3 — Shader: Particle Burst
+### T2.3 — Shader: Particle Burst ✅ TERMINÉ
 Particules qui émanent du centre.
 
 | Paramètre | Type | Défaut | Description |
@@ -215,7 +213,7 @@ Particules qui émanent du centre.
 
 ---
 
-### T2.4 — Shader: Glow
+### T2.4 — Shader: Glow ✅ TERMINÉ
 Halo lumineux avec intensité variable.
 
 | Paramètre | Type | Défaut | Description |
@@ -231,7 +229,7 @@ Halo lumineux avec intensité variable.
 
 ---
 
-### T2.5 — Shader: Morphing Shapes
+### T2.5 — Shader: Morphing Shapes ✅ TERMINÉ
 Transition fluide entre formes géométriques.
 
 | Paramètre | Type | Défaut | Description |
@@ -680,16 +678,16 @@ git push --tags
 
 ---
 
-## Timeline estimée
+## Progression
 
 ```
-Phase 0 (Infrastructure)         ████░░░░░░░░░░░░░░░░░░░░░░░░░░  Semaine 1
-Phase 1 (Pulse + Site démo)      ░░░░████░░░░░░░░░░░░░░░░░░░░░░  Semaine 2
-Phase 2 (Points suite)           ░░░░░░░░████████░░░░░░░░░░░░░░  Semaine 3-4
-Phase 3 (Lignes)                 ░░░░░░░░░░░░░░░░████████░░░░░░  Semaine 5-6
-Phase 4 (Polygones)              ░░░░░░░░░░░░░░░░░░░░░░░░████░░  Semaine 7-8
-Phase 5 (Global)                 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░██  Semaine 9
-Phase 6 (Final + npm)            ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░█  Semaine 10
+Phase 0 (Infrastructure)         ████████████████████████████████  TERMINÉ ✅
+Phase 1 (Pulse + Site démo)      ████████████████████████████████  TERMINÉ ✅
+Phase 2 (Points suite)           ████████████████████████████████  TERMINÉ ✅
+Phase 3 (Lignes)                 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  À faire
+Phase 4 (Polygones)              ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  À faire
+Phase 5 (Global)                 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  À faire
+Phase 6 (Final + npm)            ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  À faire
 ```
 
 ---

@@ -45,6 +45,9 @@ export * from './utils';
 // GLSL common functions
 export { glsl, noiseGLSL, easingGLSL, shapesGLSL, colorsGLSL } from './glsl';
 
+// Custom WebGL layers
+export { PointShaderLayer } from './layers';
+
 // Shaders (will be populated as they are implemented)
 export { registerAllShaders } from './shaders';
 

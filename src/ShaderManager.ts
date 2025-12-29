@@ -10,6 +10,7 @@ import type {
 import { AnimationLoop } from './AnimationLoop';
 import { ConfigResolver } from './ConfigResolver';
 import { globalRegistry, ShaderRegistry } from './ShaderRegistry';
+import { PointShaderLayer } from './layers/PointShaderLayer';
 
 /**
  * Main entry point for managing animated shaders on a MapLibre map.
@@ -21,6 +22,7 @@ export class ShaderManager implements IShaderManager {
   private configResolver: ConfigResolver;
   private registry: ShaderRegistry;
   private instances: Map<string, ShaderInstance> = new Map();
+  private customLayers: Map<string, PointShaderLayer> = new Map();
   private options: Required<ShaderManagerOptions>;
   private debug: boolean;
 
@@ -48,11 +50,6 @@ export class ShaderManager implements IShaderManager {
    * Register a shader on a layer
    */
   register(layerId: string, shaderName: string, config?: Partial<ShaderConfig>): void {
-    // Check if layer exists
-    if (!this.map.getLayer(layerId)) {
-      throw new Error(`[ShaderManager] Layer "${layerId}" not found on map`);
-    }
-
     // Get shader definition
     const definition = this.registry.get(shaderName);
     if (!definition) {
@@ -78,13 +75,98 @@ export class ShaderManager implements IShaderManager {
       );
     }
 
+    // For point shaders, use WebGL custom layer
+    if (definition.geometry === 'point') {
+      this.registerPointShader(layerId, definition, resolvedConfig);
+      return;
+    }
+
+    // For other geometries, use paint property animation (legacy)
+    this.registerPaintShader(layerId, definition, resolvedConfig);
+  }
+
+  /**
+   * Register a point shader using WebGL custom layer
+   */
+  private registerPointShader(
+    layerId: string,
+    definition: ShaderDefinition,
+    config: ShaderConfig
+  ): void {
+    // Get the source ID from the existing layer
+    const existingLayer = this.map.getLayer(layerId);
+    if (!existingLayer) {
+      throw new Error(`[ShaderManager] Layer "${layerId}" not found on map`);
+    }
+
+    // Get source ID from the layer
+    const sourceId = (existingLayer as { source?: string }).source;
+    if (!sourceId) {
+      throw new Error(`[ShaderManager] Layer "${layerId}" has no source`);
+    }
+
+    // Create custom layer ID
+    const customLayerId = `${layerId}-shader`;
+
+    // Remove existing custom layer if present
+    if (this.map.getLayer(customLayerId)) {
+      this.map.removeLayer(customLayerId);
+    }
+
+    // Make original layer invisible but keep it in the render tree
+    // This ensures the source data is loaded
+    this.map.setPaintProperty(layerId, 'circle-opacity', 0);
+    this.map.setPaintProperty(layerId, 'circle-stroke-opacity', 0);
+
+    // Create the custom layer
+    const customLayer = new PointShaderLayer(
+      customLayerId,
+      sourceId,
+      definition,
+      config
+    );
+
+    // Add the custom layer to the map
+    this.map.addLayer(customLayer, layerId);
+
+    // Store the custom layer
+    this.customLayers.set(layerId, customLayer);
+
+    // Create shader instance for tracking
+    const instance: ShaderInstance = {
+      layerId,
+      definition,
+      config,
+      isPlaying: true,
+      speed: config.speed ?? 1.0,
+      localTime: 0,
+    };
+
+    this.instances.set(layerId, instance);
+
+    this.log(`Registered point shader "${definition.name}" on layer "${layerId}" (WebGL)`);
+  }
+
+  /**
+   * Register a shader using paint property animation (for non-point geometries)
+   */
+  private registerPaintShader(
+    layerId: string,
+    definition: ShaderDefinition,
+    config: ShaderConfig
+  ): void {
+    // Check if layer exists
+    if (!this.map.getLayer(layerId)) {
+      throw new Error(`[ShaderManager] Layer "${layerId}" not found on map`);
+    }
+
     // Create shader instance
     const instance: ShaderInstance = {
       layerId,
       definition,
-      config: resolvedConfig,
+      config,
       isPlaying: true,
-      speed: resolvedConfig.speed ?? 1.0,
+      speed: config.speed ?? 1.0,
       localTime: 0,
     };
 
@@ -98,7 +180,7 @@ export class ShaderManager implements IShaderManager {
       this.updateShader(layerId, time, deltaTime);
     });
 
-    this.log(`Registered shader "${shaderName}" on layer "${layerId}"`);
+    this.log(`Registered shader "${definition.name}" on layer "${layerId}" (paint)`);
   }
 
   /**
@@ -109,6 +191,22 @@ export class ShaderManager implements IShaderManager {
     if (!instance) {
       this.log(`No shader registered on layer "${layerId}"`);
       return;
+    }
+
+    // Remove custom layer if it exists
+    const customLayer = this.customLayers.get(layerId);
+    if (customLayer) {
+      const customLayerId = `${layerId}-shader`;
+      if (this.map.getLayer(customLayerId)) {
+        this.map.removeLayer(customLayerId);
+      }
+      this.customLayers.delete(layerId);
+
+      // Restore original layer opacity
+      if (this.map.getLayer(layerId)) {
+        this.map.setPaintProperty(layerId, 'circle-opacity', 1);
+        this.map.setPaintProperty(layerId, 'circle-stroke-opacity', 1);
+      }
     }
 
     // Remove from animation loop
@@ -128,13 +226,24 @@ export class ShaderManager implements IShaderManager {
       const instance = this.instances.get(layerId);
       if (instance) {
         instance.isPlaying = true;
+        // Update custom layer if present
+        const customLayer = this.customLayers.get(layerId);
+        if (customLayer) {
+          customLayer.play();
+          this.map.triggerRepaint();
+        }
         this.log(`Playing shader on layer "${layerId}"`);
       }
     } else {
-      this.instances.forEach((instance) => {
+      this.instances.forEach((instance, id) => {
         instance.isPlaying = true;
+        const customLayer = this.customLayers.get(id);
+        if (customLayer) {
+          customLayer.play();
+        }
       });
       this.animationLoop.start();
+      this.map.triggerRepaint();
       this.log('Playing all shaders');
     }
   }
@@ -147,11 +256,20 @@ export class ShaderManager implements IShaderManager {
       const instance = this.instances.get(layerId);
       if (instance) {
         instance.isPlaying = false;
+        // Update custom layer if present
+        const customLayer = this.customLayers.get(layerId);
+        if (customLayer) {
+          customLayer.pause();
+        }
         this.log(`Paused shader on layer "${layerId}"`);
       }
     } else {
-      this.instances.forEach((instance) => {
+      this.instances.forEach((instance, id) => {
         instance.isPlaying = false;
+        const customLayer = this.customLayers.get(id);
+        if (customLayer) {
+          customLayer.pause();
+        }
       });
       this.log('Paused all shaders');
     }
@@ -164,6 +282,11 @@ export class ShaderManager implements IShaderManager {
     const instance = this.instances.get(layerId);
     if (instance) {
       instance.speed = Math.max(0, speed);
+      // Update custom layer if present
+      const customLayer = this.customLayers.get(layerId);
+      if (customLayer) {
+        customLayer.setSpeed(speed);
+      }
       this.log(`Set speed to ${speed} on layer "${layerId}"`);
     }
   }
@@ -190,6 +313,13 @@ export class ShaderManager implements IShaderManager {
       instance.isPlaying = config.enabled;
     }
 
+    // Update custom layer if present
+    const customLayer = this.customLayers.get(layerId);
+    if (customLayer) {
+      customLayer.updateConfig(config);
+      this.map.triggerRepaint();
+    }
+
     this.log(`Updated config on layer "${layerId}"`, config);
   }
 
@@ -211,6 +341,20 @@ export class ShaderManager implements IShaderManager {
    * Clean up all resources
    */
   destroy(): void {
+    // Remove all custom layers
+    for (const [layerId] of this.customLayers) {
+      const customLayerId = `${layerId}-shader`;
+      if (this.map.getLayer(customLayerId)) {
+        this.map.removeLayer(customLayerId);
+      }
+      // Restore original layer opacity
+      if (this.map.getLayer(layerId)) {
+        this.map.setPaintProperty(layerId, 'circle-opacity', 1);
+        this.map.setPaintProperty(layerId, 'circle-stroke-opacity', 1);
+      }
+    }
+    this.customLayers.clear();
+
     this.animationLoop.destroy();
     this.instances.clear();
     this.log('ShaderManager destroyed');
@@ -231,11 +375,14 @@ export class ShaderManager implements IShaderManager {
   }
 
   /**
-   * Update a single shader
+   * Update a single shader (for paint property animation)
    */
   private updateShader(layerId: string, _time: number, deltaTime: number): void {
     const instance = this.instances.get(layerId);
     if (!instance || !instance.isPlaying) return;
+
+    // Skip if using custom layer
+    if (this.customLayers.has(layerId)) return;
 
     // Update local time with instance speed
     instance.localTime += deltaTime * instance.speed;

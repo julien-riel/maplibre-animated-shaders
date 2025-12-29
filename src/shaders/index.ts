@@ -17,14 +17,28 @@ export * from './points';
 
 import { globalRegistry } from '../ShaderRegistry';
 import type { ShaderDefinition } from '../types';
-import { pulseShader } from './points';
+import {
+  pulseShader,
+  heartbeatShader,
+  radarShader,
+  particleBurstShader,
+  glowShader,
+  morphingShapesShader,
+} from './points';
 
 /**
  * Register all built-in shaders with the global registry
  */
 export function registerAllShaders(): void {
-  // Points
+  // Points (Phase 1)
   globalRegistry.register(pulseShader as unknown as ShaderDefinition);
+
+  // Points (Phase 2)
+  globalRegistry.register(heartbeatShader as unknown as ShaderDefinition);
+  globalRegistry.register(radarShader as unknown as ShaderDefinition);
+  globalRegistry.register(particleBurstShader as unknown as ShaderDefinition);
+  globalRegistry.register(glowShader as unknown as ShaderDefinition);
+  globalRegistry.register(morphingShapesShader as unknown as ShaderDefinition);
 
   // Lines (Phase 3)
   // globalRegistry.register(flowShader);
