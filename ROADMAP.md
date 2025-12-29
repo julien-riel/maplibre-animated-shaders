@@ -74,7 +74,7 @@
 
 > **Objectif** : Avoir un environnement de test fonctionnel dès que possible pour valider chaque shader développé par la suite.
 
-### T1.1 — Shader: Pulse (Premier shader de référence)
+### T1.1 — Shader: Pulse (Premier shader de référence) ✅ TERMINÉ
 
 Cercles concentriques qui s'expandent depuis le point. Ce shader sert de référence pour l'architecture.
 
@@ -91,7 +91,9 @@ Cercles concentriques qui s'expandent depuis le point. Ce shader sert de référ
 
 ---
 
-### T1.2 — Site de démonstration (Playground)
+### T1.2 — Site de démonstration (Playground) 🔄 EN COURS
+
+> **Note** : Structure de base créée. Voir `PLAN_PHASE_1.md` pour les tâches restantes.
 
 Site interactif pour tester chaque shader au fur et à mesure du développement.
 

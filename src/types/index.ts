@@ -71,13 +71,14 @@ export interface ValidationError {
 }
 
 /**
- * Uniform values passed to GLSL shader
+ * Uniform values passed to GLSL shader or MapLibre paint properties
  */
 export type UniformValue =
   | number
   | number[]
   | Float32Array
   | boolean
+  | string
   | [number, number]
   | [number, number, number]
   | [number, number, number, number];
