@@ -8,6 +8,14 @@
 import type { CustomLayerInterface, Map as MapLibreMap } from 'maplibre-gl';
 import type { ShaderDefinition, ShaderConfig } from '../types';
 import type { mat4 } from 'gl-matrix';
+import {
+  ShaderError,
+  compileShaderWithErrorHandling,
+  linkProgramWithErrorHandling,
+  createBufferWithErrorHandling,
+  safeCleanup,
+  isContextLost,
+} from '../utils/webgl-error-handler';
 
 /**
  * Vertex shader for point rendering
@@ -86,6 +94,10 @@ export class PointShaderLayer implements CustomLayerInterface {
   private points: PointData[] = [];
   private vertexCount: number = 0;
 
+  // Error handling state
+  private initializationError: Error | null = null;
+  private hasLoggedError: boolean = false;
+
   constructor(
     id: string,
     sourceId: string,
@@ -130,34 +142,64 @@ export class PointShaderLayer implements CustomLayerInterface {
   }
 
   /**
+   * Check if layer has an initialization error
+   */
+  hasError(): boolean {
+    return this.initializationError !== null;
+  }
+
+  /**
+   * Get the initialization error if any
+   */
+  getError(): Error | null {
+    return this.initializationError;
+  }
+
+  /**
    * Called when the layer is added to the map
    */
   onAdd(map: MapLibreMap, gl: WebGLRenderingContext): void {
     this.map = map;
+    this.initializationError = null;
+    this.hasLoggedError = false;
 
-    // Compile shaders and create program
-    this.program = this.createProgram(gl);
-    if (!this.program) {
-      console.error('Failed to create shader program');
+    try {
+      // Check for context loss
+      if (isContextLost(gl)) {
+        throw new Error('WebGL context is lost');
+      }
+
+      // Compile shaders and create program with error handling
+      this.program = this.createProgram(gl);
+      if (!this.program) {
+        throw new Error('Failed to create shader program');
+      }
+
+      // Get attribute locations
+      this.aPos = gl.getAttribLocation(this.program, 'a_pos');
+      this.aOffset = gl.getAttribLocation(this.program, 'a_offset');
+      this.aIndex = gl.getAttribLocation(this.program, 'a_index');
+
+      // Get uniform locations
+      this.cacheUniformLocations(gl);
+
+      // Create buffers with error handling
+      this.vertexBuffer = createBufferWithErrorHandling(gl, 'vertex', this.id);
+      this.indexBuffer = createBufferWithErrorHandling(gl, 'index', this.id);
+
+    } catch (error) {
+      this.initializationError = error as Error;
+      console.error(
+        `[PointShaderLayer] Initialization failed for layer "${this.id}":`,
+        error instanceof ShaderError ? error.message : error
+      );
       return;
     }
-
-    // Get attribute locations
-    this.aPos = gl.getAttribLocation(this.program, 'a_pos');
-    this.aOffset = gl.getAttribLocation(this.program, 'a_offset');
-    this.aIndex = gl.getAttribLocation(this.program, 'a_index');
-
-    // Get uniform locations
-    this.cacheUniformLocations(gl);
-
-    // Create buffers
-    this.vertexBuffer = gl.createBuffer();
-    this.indexBuffer = gl.createBuffer();
 
     // Listen for source data changes
     const onSourceData = (e: { sourceId: string; isSourceLoaded?: boolean }) => {
       if (e.sourceId === this.sourceId && e.isSourceLoaded) {
-        this.updatePointData(gl);
+        this.safeUpdatePointData(gl);
         map.triggerRepaint();
       }
     };
@@ -165,14 +207,14 @@ export class PointShaderLayer implements CustomLayerInterface {
 
     // Also update when map becomes idle (tiles loaded)
     const onIdle = () => {
-      this.updatePointData(gl);
+      this.safeUpdatePointData(gl);
       map.triggerRepaint();
     };
     map.once('idle', onIdle);
 
     // Initial data load (after a small delay to let source load)
     setTimeout(() => {
-      this.updatePointData(gl);
+      this.safeUpdatePointData(gl);
       map.triggerRepaint();
     }, 100);
 
@@ -180,25 +222,52 @@ export class PointShaderLayer implements CustomLayerInterface {
   }
 
   /**
+   * Safe wrapper for updatePointData with error handling
+   */
+  private safeUpdatePointData(gl: WebGLRenderingContext): void {
+    try {
+      this.updatePointData(gl);
+    } catch (error) {
+      console.error(`[PointShaderLayer] Error updating point data for layer "${this.id}":`, error);
+    }
+  }
+
+  /**
    * Called when the layer is removed
    */
   onRemove(_map: MapLibreMap, gl: WebGLRenderingContext): void {
-    if (this.program) {
-      gl.deleteProgram(this.program);
-    }
-    if (this.vertexBuffer) {
-      gl.deleteBuffer(this.vertexBuffer);
-    }
-    if (this.indexBuffer) {
-      gl.deleteBuffer(this.indexBuffer);
-    }
+    // Use safe cleanup to handle any errors during resource disposal
+    safeCleanup(gl, {
+      program: this.program,
+      buffers: [this.vertexBuffer, this.indexBuffer],
+    });
+
+    this.program = null;
+    this.vertexBuffer = null;
+    this.indexBuffer = null;
     this.map = null;
+    this.initializationError = null;
   }
 
   /**
    * Render the layer
    */
   render(gl: WebGLRenderingContext, matrix: mat4): void {
+    // Skip rendering if there was an initialization error
+    if (this.initializationError) {
+      if (!this.hasLoggedError) {
+        console.warn(`[PointShaderLayer] Skipping render for layer "${this.id}" due to initialization error`);
+        this.hasLoggedError = true;
+      }
+      return;
+    }
+
+    // Check for WebGL context loss
+    if (isContextLost(gl)) {
+      console.warn(`[PointShaderLayer] WebGL context lost for layer "${this.id}"`);
+      return;
+    }
+
     if (!this.program || !this.map || this.vertexCount === 0) return;
 
     // Update time
@@ -271,61 +340,50 @@ export class PointShaderLayer implements CustomLayerInterface {
   }
 
   /**
-   * Create the shader program
+   * Create the shader program with comprehensive error handling
    */
   private createProgram(gl: WebGLRenderingContext): WebGLProgram | null {
-    const vertexShader = this.compileShader(gl, gl.VERTEX_SHADER, POINT_VERTEX_SHADER);
-    const fragmentShader = this.compileShader(gl, gl.FRAGMENT_SHADER, this.definition.fragmentShader);
+    let vertexShader: WebGLShader | null = null;
+    let fragmentShader: WebGLShader | null = null;
 
-    if (!vertexShader || !fragmentShader) {
-      return null;
-    }
-
-    const program = gl.createProgram();
-    if (!program) return null;
-
-    gl.attachShader(program, vertexShader);
-    gl.attachShader(program, fragmentShader);
-    gl.linkProgram(program);
-
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-      console.error('Shader program link error:', gl.getProgramInfoLog(program));
-      gl.deleteProgram(program);
-      return null;
-    }
-
-    // Clean up shaders (they're now part of the program)
-    gl.deleteShader(vertexShader);
-    gl.deleteShader(fragmentShader);
-
-    return program;
-  }
-
-  /**
-   * Compile a shader
-   */
-  private compileShader(
-    gl: WebGLRenderingContext,
-    type: number,
-    source: string
-  ): WebGLShader | null {
-    const shader = gl.createShader(type);
-    if (!shader) return null;
-
-    gl.shaderSource(shader, source);
-    gl.compileShader(shader);
-
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      console.error(
-        `Shader compile error (${type === gl.VERTEX_SHADER ? 'vertex' : 'fragment'}):`,
-        gl.getShaderInfoLog(shader)
+    try {
+      // Compile shaders using error handling utilities
+      vertexShader = compileShaderWithErrorHandling(
+        gl,
+        gl.VERTEX_SHADER,
+        POINT_VERTEX_SHADER,
+        this.id
       );
-      console.error('Shader source:', source);
-      gl.deleteShader(shader);
-      return null;
-    }
 
-    return shader;
+      fragmentShader = compileShaderWithErrorHandling(
+        gl,
+        gl.FRAGMENT_SHADER,
+        this.definition.fragmentShader,
+        this.id
+      );
+
+      // Link program using error handling utilities
+      const program = linkProgramWithErrorHandling(
+        gl,
+        vertexShader,
+        fragmentShader,
+        this.id
+      );
+
+      // Clean up shaders (they're now part of the program)
+      gl.deleteShader(vertexShader);
+      gl.deleteShader(fragmentShader);
+
+      return program;
+
+    } catch (error) {
+      // Clean up any created shaders on error
+      if (vertexShader) gl.deleteShader(vertexShader);
+      if (fragmentShader) gl.deleteShader(fragmentShader);
+
+      // Re-throw to be caught by onAdd
+      throw error;
+    }
   }
 
   /**

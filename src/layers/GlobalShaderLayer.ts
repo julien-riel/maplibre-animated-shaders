@@ -8,6 +8,14 @@
 import type { CustomLayerInterface, Map as MapLibreMap } from 'maplibre-gl';
 import type { ShaderDefinition, ShaderConfig } from '../types';
 import type { mat4 } from 'gl-matrix';
+import {
+  ShaderError,
+  compileShaderWithErrorHandling,
+  linkProgramWithErrorHandling,
+  createBufferWithErrorHandling,
+  safeCleanup,
+  isContextLost,
+} from '../utils/webgl-error-handler';
 
 /**
  * Default vertex shader for full-screen quad
@@ -66,6 +74,10 @@ export class GlobalShaderLayer implements CustomLayerInterface {
   // Uniform locations
   private uniforms: Map<string, WebGLUniformLocation | null> = new Map();
 
+  // Error handling state
+  private initializationError: Error | null = null;
+  private hasLoggedError: boolean = false;
+
   constructor(
     id: string,
     definition: ShaderDefinition,
@@ -108,36 +120,60 @@ export class GlobalShaderLayer implements CustomLayerInterface {
   }
 
   /**
+   * Check if layer has an initialization error
+   */
+  hasError(): boolean {
+    return this.initializationError !== null;
+  }
+
+  /**
+   * Get the initialization error if any
+   */
+  getError(): Error | null {
+    return this.initializationError;
+  }
+
+  /**
    * Called when the layer is added to the map
    */
   onAdd(map: MapLibreMap, gl: WebGLRenderingContext): void {
     this.map = map;
+    this.initializationError = null;
+    this.hasLoggedError = false;
 
-    // Compile shaders and create program
-    this.program = this.createProgram(gl);
-    if (!this.program) {
-      console.error('Failed to create shader program for global layer');
+    try {
+      if (isContextLost(gl)) {
+        throw new Error('WebGL context is lost');
+      }
+
+      this.program = this.createProgram(gl);
+      if (!this.program) {
+        throw new Error('Failed to create shader program');
+      }
+
+      this.aPos = gl.getAttribLocation(this.program, 'a_pos');
+
+      this.cacheUniformLocations(gl);
+
+      this.vertexBuffer = createBufferWithErrorHandling(gl, 'vertex', this.id);
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+
+      const vertices = new Float32Array([
+        -1, -1,
+         1, -1,
+        -1,  1,
+         1,  1,
+      ]);
+      gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+
+    } catch (error) {
+      this.initializationError = error as Error;
+      console.error(
+        `[GlobalShaderLayer] Initialization failed for layer "${this.id}":`,
+        error instanceof ShaderError ? error.message : error
+      );
       return;
     }
-
-    // Get attribute locations
-    this.aPos = gl.getAttribLocation(this.program, 'a_pos');
-
-    // Get uniform locations
-    this.cacheUniformLocations(gl);
-
-    // Create vertex buffer for full-screen quad
-    this.vertexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
-
-    // Full-screen triangle strip (covers -1 to 1 in clip space)
-    const vertices = new Float32Array([
-      -1, -1,
-       1, -1,
-      -1,  1,
-       1,  1,
-    ]);
-    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
     this.lastFrameTime = performance.now();
   }
@@ -146,19 +182,34 @@ export class GlobalShaderLayer implements CustomLayerInterface {
    * Called when the layer is removed
    */
   onRemove(_map: MapLibreMap, gl: WebGLRenderingContext): void {
-    if (this.program) {
-      gl.deleteProgram(this.program);
-    }
-    if (this.vertexBuffer) {
-      gl.deleteBuffer(this.vertexBuffer);
-    }
+    safeCleanup(gl, {
+      program: this.program,
+      buffers: [this.vertexBuffer],
+    });
+
+    this.program = null;
+    this.vertexBuffer = null;
     this.map = null;
+    this.initializationError = null;
   }
 
   /**
    * Render the layer
    */
   render(gl: WebGLRenderingContext, matrix: mat4): void {
+    if (this.initializationError) {
+      if (!this.hasLoggedError) {
+        console.warn(`[GlobalShaderLayer] Skipping render for layer "${this.id}" due to initialization error`);
+        this.hasLoggedError = true;
+      }
+      return;
+    }
+
+    if (isContextLost(gl)) {
+      console.warn(`[GlobalShaderLayer] WebGL context lost for layer "${this.id}"`);
+      return;
+    }
+
     if (!this.program || !this.map) return;
 
     // Update time
@@ -231,62 +282,46 @@ export class GlobalShaderLayer implements CustomLayerInterface {
   }
 
   /**
-   * Create the shader program
+   * Create the shader program with comprehensive error handling
    */
   private createProgram(gl: WebGLRenderingContext): WebGLProgram | null {
-    const vertexShaderSource = this.definition.vertexShader || GLOBAL_VERTEX_SHADER;
-    const vertexShader = this.compileShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-    const fragmentShader = this.compileShader(gl, gl.FRAGMENT_SHADER, this.definition.fragmentShader);
+    let vertexShader: WebGLShader | null = null;
+    let fragmentShader: WebGLShader | null = null;
 
-    if (!vertexShader || !fragmentShader) {
-      return null;
-    }
+    try {
+      const vertexShaderSource = this.definition.vertexShader || GLOBAL_VERTEX_SHADER;
 
-    const program = gl.createProgram();
-    if (!program) return null;
-
-    gl.attachShader(program, vertexShader);
-    gl.attachShader(program, fragmentShader);
-    gl.linkProgram(program);
-
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-      console.error('Shader program link error:', gl.getProgramInfoLog(program));
-      gl.deleteProgram(program);
-      return null;
-    }
-
-    // Clean up shaders
-    gl.deleteShader(vertexShader);
-    gl.deleteShader(fragmentShader);
-
-    return program;
-  }
-
-  /**
-   * Compile a shader
-   */
-  private compileShader(
-    gl: WebGLRenderingContext,
-    type: number,
-    source: string
-  ): WebGLShader | null {
-    const shader = gl.createShader(type);
-    if (!shader) return null;
-
-    gl.shaderSource(shader, source);
-    gl.compileShader(shader);
-
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      console.error(
-        `Shader compile error (${type === gl.VERTEX_SHADER ? 'vertex' : 'fragment'}):`,
-        gl.getShaderInfoLog(shader)
+      vertexShader = compileShaderWithErrorHandling(
+        gl,
+        gl.VERTEX_SHADER,
+        vertexShaderSource,
+        this.id
       );
-      console.error('Shader source:', source);
-      gl.deleteShader(shader);
-      return null;
-    }
 
-    return shader;
+      fragmentShader = compileShaderWithErrorHandling(
+        gl,
+        gl.FRAGMENT_SHADER,
+        this.definition.fragmentShader,
+        this.id
+      );
+
+      const program = linkProgramWithErrorHandling(
+        gl,
+        vertexShader,
+        fragmentShader,
+        this.id
+      );
+
+      gl.deleteShader(vertexShader);
+      gl.deleteShader(fragmentShader);
+
+      return program;
+
+    } catch (error) {
+      if (vertexShader) gl.deleteShader(vertexShader);
+      if (fragmentShader) gl.deleteShader(fragmentShader);
+      throw error;
+    }
   }
 
   /**
