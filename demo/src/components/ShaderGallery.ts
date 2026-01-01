@@ -1,12 +1,13 @@
 /**
  * ShaderGallery - Sidebar component displaying available shaders
  * Organized by geometry type (points, lines, polygons, global)
+ * Click on a shader to add it to the effects stack
  */
 
 import { globalRegistry } from '../../../src';
 import type { ShaderDefinition, GeometryType } from '../../../src/types';
 
-type SelectCallback = (shaderName: string) => void;
+type AddCallback = (shaderName: string) => void;
 
 /**
  * Geometry type display configuration
@@ -23,8 +24,7 @@ const geometryLabels: Record<GeometryType, { label: string; icon: string }> = {
  */
 export class ShaderGallery {
   private container: HTMLElement;
-  private selectCallbacks: SelectCallback[] = [];
-  private selectedShader: string | null = null;
+  private addCallbacks: AddCallback[] = [];
 
   constructor(containerId: string) {
     const el = document.getElementById(containerId);
@@ -36,19 +36,24 @@ export class ShaderGallery {
   }
 
   /**
-   * Register a callback for shader selection
+   * Register a callback for adding a shader to the stack
    */
-  onSelect(callback: SelectCallback): void {
-    this.selectCallbacks.push(callback);
+  onAdd(callback: AddCallback): void {
+    this.addCallbacks.push(callback);
   }
 
   /**
-   * Select a shader programmatically
+   * @deprecated Use onAdd instead. Kept for backwards compatibility.
+   */
+  onSelect(callback: AddCallback): void {
+    this.onAdd(callback);
+  }
+
+  /**
+   * @deprecated No longer tracks selection. Kept for backwards compatibility.
    */
   select(shaderName: string): void {
-    this.selectedShader = shaderName;
-    this.updateSelection();
-    this.notifySelect(shaderName);
+    this.notifyAdd(shaderName);
   }
 
   /**
@@ -131,10 +136,8 @@ export class ShaderGallery {
    * Render a single shader item
    */
   private renderShaderItem(shader: ShaderDefinition): string {
-    const isActive = this.selectedShader === shader.name;
-
     return `
-      <div class="shader-item${isActive ? ' active' : ''}"
+      <div class="shader-item"
            data-shader="${shader.name}"
            title="${shader.description}">
         <div class="shader-preview" data-shader-preview="${shader.name}">
@@ -143,6 +146,11 @@ export class ShaderGallery {
         <div class="shader-info">
           <div class="shader-name">${shader.displayName}</div>
           <div class="shader-tags">${shader.tags.slice(0, 3).join(', ')}</div>
+        </div>
+        <div class="shader-add-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16">
+            <path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
         </div>
       </div>
     `;
@@ -222,33 +230,17 @@ export class ShaderGallery {
       item.addEventListener('click', () => {
         const shaderName = item.getAttribute('data-shader');
         if (shaderName) {
-          this.select(shaderName);
+          this.notifyAdd(shaderName);
         }
       });
     });
   }
 
   /**
-   * Update visual selection state
+   * Notify all add callbacks
    */
-  private updateSelection(): void {
-    const items = this.container.querySelectorAll('.shader-item');
-
-    items.forEach(item => {
-      const shaderName = item.getAttribute('data-shader');
-      if (shaderName === this.selectedShader) {
-        item.classList.add('active');
-      } else {
-        item.classList.remove('active');
-      }
-    });
-  }
-
-  /**
-   * Notify all select callbacks
-   */
-  private notifySelect(shaderName: string): void {
-    this.selectCallbacks.forEach(cb => cb(shaderName));
+  private notifyAdd(shaderName: string): void {
+    this.addCallbacks.forEach(cb => cb(shaderName));
   }
 
   /**

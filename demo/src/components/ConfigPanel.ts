@@ -1,13 +1,15 @@
 /**
  * ConfigPanel - Dynamic configuration panel for shader parameters
  * Generates controls based on the shader's configSchema
+ * Supports effect context for stacked effects
  */
 
 import type { ShaderDefinition, ConfigSchema, ConfigParamSchema } from '../../../src/types';
+import type { StackedEffect, EffectId } from '../types/effectStack';
 import { CodePreview } from './CodePreview';
 
-type ChangeCallback = (key: string, value: unknown) => void;
-type PlayPauseCallback = (playing: boolean) => void;
+type ChangeCallback = (effectId: EffectId, key: string, value: unknown) => void;
+type PlayPauseCallback = (effectId: EffectId, playing: boolean) => void;
 
 /**
  * ConfigPanel component
@@ -17,6 +19,7 @@ export class ConfigPanel {
   private changeCallbacks: ChangeCallback[] = [];
   private playPauseCallbacks: PlayPauseCallback[] = [];
   private currentShader: ShaderDefinition | null = null;
+  private currentEffect: StackedEffect | null = null;
   private currentConfig: Record<string, unknown> = {};
   private isPlaying: boolean = true;
   private codePreview: CodePreview | null = null;
@@ -32,12 +35,34 @@ export class ConfigPanel {
   }
 
   /**
-   * Set the current shader and configuration
+   * Set the current effect and its shader definition
+   */
+  setEffect(effect: StackedEffect, shader: ShaderDefinition): void {
+    this.currentEffect = effect;
+    this.currentShader = shader;
+    this.currentConfig = { ...effect.config };
+    this.isPlaying = effect.isPlaying;
+    this.render();
+  }
+
+  /**
+   * Set the current shader and configuration (legacy support)
+   * @deprecated Use setEffect instead
    */
   setShader(shader: ShaderDefinition, config: Record<string, unknown>): void {
     this.currentShader = shader;
     this.currentConfig = { ...config };
     this.render();
+  }
+
+  /**
+   * Clear the panel (no effect selected)
+   */
+  clear(): void {
+    this.currentEffect = null;
+    this.currentShader = null;
+    this.currentConfig = {};
+    this.renderEmpty();
   }
 
   /**
@@ -79,9 +104,15 @@ export class ConfigPanel {
       return;
     }
 
+    // Show effect ID if we have an effect
+    const headerTitle = this.currentEffect
+      ? `${this.currentShader.displayName}`
+      : this.currentShader.displayName;
+
     this.container.innerHTML = `
       <div class="panel-header">
-        <h2>${this.currentShader.displayName}</h2>
+        <h2>${headerTitle}</h2>
+        ${this.currentEffect ? `<span class="panel-effect-id">${this.currentEffect.id}</span>` : ''}
       </div>
       <div class="panel-tabs">
         <button class="panel-tab${this.activeTab === 'config' ? ' active' : ''}" data-tab="config">Controls</button>
@@ -339,13 +370,17 @@ export class ConfigPanel {
    * Notify config change callbacks
    */
   private notifyChange(key: string, value: unknown): void {
-    this.changeCallbacks.forEach(cb => cb(key, value));
+    if (this.currentEffect) {
+      this.changeCallbacks.forEach(cb => cb(this.currentEffect!.id, key, value));
+    }
   }
 
   /**
    * Notify play/pause callbacks
    */
   private notifyPlayPause(playing: boolean): void {
-    this.playPauseCallbacks.forEach(cb => cb(playing));
+    if (this.currentEffect) {
+      this.playPauseCallbacks.forEach(cb => cb(this.currentEffect!.id, playing));
+    }
   }
 }

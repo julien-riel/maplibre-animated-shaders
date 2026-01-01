@@ -1,18 +1,29 @@
 /**
  * MapView - MapLibre GL JS wrapper with demo data
  * Handles map initialization, data loading, and shader application
+ * Supports multiple stacked effects
  */
 
 import maplibregl from 'maplibre-gl';
 import type { Map as MapLibreMap } from 'maplibre-gl';
 import { createShaderManager, globalRegistry } from '../../../src';
 import type { ShaderManager } from '../../../src/ShaderManager';
+import type { EffectId, StackedEffect, GeometryType } from '../types/effectStack';
 
 import demoPoints from '../data/demo-points.geojson';
 import demoLines from '../data/demo-lines.geojson';
 import demoPolygons from '../data/demo-polygons.geojson';
 
 type ReadyCallback = () => void;
+
+/**
+ * Layer type configuration for each geometry
+ */
+interface LayerConfig {
+  type: 'circle' | 'line' | 'fill';
+  source: string;
+  paint: Record<string, unknown>;
+}
 
 /**
  * MapView component
@@ -25,6 +36,8 @@ export class MapView {
   private currentConfig: Record<string, unknown> = {};
   private readyCallbacks: ReadyCallback[] = [];
   private isReady: boolean = false;
+  /** Track dynamically created effect layers */
+  private effectLayers: Map<EffectId, string> = new Map();
 
   constructor(containerId: string) {
     this.map = new maplibregl.Map({
@@ -140,6 +153,224 @@ export class MapView {
     }
 
     return 'demo-points';
+  }
+
+  // ===== STACKED EFFECTS METHODS =====
+
+  /**
+   * Add a stacked effect to the map
+   */
+  addEffect(effect: StackedEffect): void {
+    if (!this.isReady) {
+      // Queue for when map is ready
+      this.onReady(() => this.addEffect(effect));
+      return;
+    }
+
+    // Ensure shader manager exists
+    if (!this.shaderManager) {
+      this.shaderManager = createShaderManager(this.map, { debug: false });
+    }
+
+    // Create a new layer for this effect
+    const layerId = effect.layerId;
+
+    // Get layer configuration based on geometry
+    const layerConfig = this.getLayerConfigForGeometry(effect.geometry);
+
+    if (layerConfig) {
+      // Add the layer to the map
+      this.map.addLayer({
+        id: layerId,
+        type: layerConfig.type,
+        source: layerConfig.source,
+        paint: layerConfig.paint,
+      });
+    }
+
+    // Register shader on this layer
+    try {
+      this.shaderManager.register(layerId, effect.shaderName, effect.config);
+      this.effectLayers.set(effect.id, layerId);
+
+      // Apply visibility
+      if (!effect.visible) {
+        this.setEffectVisibility(effect.id, false);
+      }
+
+      // Apply play state
+      if (!effect.isPlaying) {
+        this.shaderManager.pause(layerId);
+      }
+    } catch (error) {
+      console.error(`Failed to add effect ${effect.id}:`, error);
+      // Clean up layer if shader registration failed
+      if (this.map.getLayer(layerId)) {
+        this.map.removeLayer(layerId);
+      }
+    }
+  }
+
+  /**
+   * Remove an effect from the map
+   */
+  removeEffect(effectId: EffectId): void {
+    const layerId = this.effectLayers.get(effectId);
+    if (!layerId) {
+      console.warn(`Effect ${effectId} not found`);
+      return;
+    }
+
+    // Unregister shader
+    if (this.shaderManager) {
+      this.shaderManager.unregister(layerId);
+    }
+
+    // Remove the shader custom layer
+    const shaderLayerId = `${layerId}-shader`;
+    if (this.map.getLayer(shaderLayerId)) {
+      this.map.removeLayer(shaderLayerId);
+    }
+
+    // Remove the base layer
+    if (this.map.getLayer(layerId)) {
+      this.map.removeLayer(layerId);
+    }
+
+    // Clean up tracking
+    this.effectLayers.delete(effectId);
+  }
+
+  /**
+   * Update configuration for an effect
+   */
+  updateEffectConfig(effectId: EffectId, config: Record<string, unknown>): void {
+    const layerId = this.effectLayers.get(effectId);
+    if (!layerId || !this.shaderManager) {
+      return;
+    }
+
+    try {
+      this.shaderManager.updateConfig(layerId, config);
+    } catch (error) {
+      console.error(`Failed to update effect ${effectId}:`, error);
+    }
+  }
+
+  /**
+   * Set visibility for an effect
+   */
+  setEffectVisibility(effectId: EffectId, visible: boolean): void {
+    const layerId = this.effectLayers.get(effectId);
+    if (!layerId) {
+      return;
+    }
+
+    // Hide both the base layer and shader layer
+    const shaderLayerId = `${layerId}-shader`;
+
+    if (this.map.getLayer(layerId)) {
+      this.map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
+    }
+
+    if (this.map.getLayer(shaderLayerId)) {
+      this.map.setLayoutProperty(shaderLayerId, 'visibility', visible ? 'visible' : 'none');
+    }
+  }
+
+  /**
+   * Play/pause an effect
+   */
+  setEffectPlaying(effectId: EffectId, playing: boolean): void {
+    const layerId = this.effectLayers.get(effectId);
+    if (!layerId || !this.shaderManager) {
+      return;
+    }
+
+    if (playing) {
+      this.shaderManager.play(layerId);
+    } else {
+      this.shaderManager.pause(layerId);
+    }
+  }
+
+  /**
+   * Reorder effects (change layer order)
+   */
+  reorderEffects(newOrder: StackedEffect[]): void {
+    // MapLibre renders layers bottom-to-top
+    // newOrder[0] should be at the bottom
+    for (let i = 1; i < newOrder.length; i++) {
+      const effect = newOrder[i];
+      const prevEffect = newOrder[i - 1];
+      const layerId = this.effectLayers.get(effect.id);
+      const prevLayerId = this.effectLayers.get(prevEffect.id);
+
+      if (layerId && prevLayerId) {
+        // Move shader layer if exists
+        const shaderLayerId = `${layerId}-shader`;
+        const prevShaderLayerId = `${prevLayerId}-shader`;
+
+        if (this.map.getLayer(shaderLayerId) && this.map.getLayer(prevShaderLayerId)) {
+          // Move current layer above previous layer
+          this.map.moveLayer(shaderLayerId);
+        }
+      }
+    }
+  }
+
+  /**
+   * Get layer configuration for a geometry type
+   */
+  private getLayerConfigForGeometry(geometry: GeometryType): LayerConfig | null {
+    switch (geometry) {
+      case 'point':
+        return {
+          type: 'circle',
+          source: 'demo-points-source',
+          paint: {
+            'circle-radius': 8,
+            'circle-color': '#3b82f6',
+            'circle-opacity': 1,
+            'circle-stroke-width': 2,
+            'circle-stroke-color': '#ffffff',
+          },
+        };
+      case 'line':
+        return {
+          type: 'line',
+          source: 'demo-lines-source',
+          paint: {
+            'line-color': '#22c55e',
+            'line-width': 2,
+            'line-opacity': 0.6,
+          },
+        };
+      case 'polygon':
+        return {
+          type: 'fill',
+          source: 'demo-polygons-source',
+          paint: {
+            'fill-color': '#8b5cf6',
+            'fill-opacity': 0.2,
+            'fill-outline-color': '#8b5cf6',
+          },
+        };
+      case 'global':
+        // Global effects don't need a base layer
+        return null;
+      default:
+        return null;
+    }
+  }
+
+  /**
+   * Clear all effects
+   */
+  clearAllEffects(): void {
+    for (const effectId of this.effectLayers.keys()) {
+      this.removeEffect(effectId);
+    }
   }
 
   /**

@@ -787,3 +787,275 @@ input[type="checkbox"]:checked::after {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--border-color);
 }
+
+/* ===== Effects Stack Panel ===== */
+
+/* Split the config panel into effects stack and config controls */
+.config-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.effects-stack-panel {
+  flex: 0 0 auto;
+  min-height: 150px;
+  max-height: 45%;
+  border-bottom: 1px solid var(--border-color);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.config-controls {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Effects stack header */
+.effects-stack-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.effects-stack-header h2 {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+}
+
+.effects-stack-count {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  background: var(--bg-tertiary);
+  border-radius: 10px;
+  color: var(--text-secondary);
+}
+
+/* Effects stack list */
+.effects-stack-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-sm);
+}
+
+.effects-stack-empty {
+  padding: var(--spacing-lg);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* Performance warning */
+.effects-stack-warning {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--accent-warning);
+  font-size: 12px;
+  text-align: center;
+}
+
+/* Effect item */
+.effect-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background: var(--bg-tertiary);
+  border-radius: 6px;
+  margin-bottom: 4px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.effect-item:hover {
+  background: var(--bg-hover);
+}
+
+.effect-item.selected {
+  border-color: var(--accent-primary);
+}
+
+.effect-item.hidden-effect {
+  opacity: 0.5;
+}
+
+.effect-item.dragging {
+  opacity: 0.5;
+}
+
+.effect-item.drag-over {
+  border-color: var(--accent-success);
+  background: rgba(34, 197, 94, 0.1);
+}
+
+/* Drag handle */
+.effect-drag-handle {
+  cursor: grab;
+  color: var(--text-muted);
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.effect-drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Visibility button */
+.effect-visibility {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.effect-visibility:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.effect-visibility[data-visible="false"] {
+  color: var(--text-muted);
+}
+
+/* Effect preview icon */
+.effect-preview {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  background: var(--bg-secondary);
+}
+
+.effect-preview[data-geometry="point"] {
+  color: var(--accent-primary);
+}
+
+.effect-preview[data-geometry="line"] {
+  color: var(--accent-success);
+}
+
+.effect-preview[data-geometry="polygon"] {
+  color: var(--accent-secondary);
+}
+
+.effect-preview[data-geometry="global"] {
+  color: var(--accent-warning);
+}
+
+/* Effect info */
+.effect-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.effect-name {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.effect-geometry {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Remove button */
+.effect-remove {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--text-muted);
+  opacity: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.effect-item:hover .effect-remove {
+  opacity: 1;
+}
+
+.effect-remove:hover {
+  background: var(--accent-error);
+  color: white;
+}
+
+/* ===== Shader Gallery Add Icon ===== */
+
+.shader-add-icon {
+  opacity: 0;
+  color: var(--accent-success);
+  transition: opacity 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.shader-item:hover .shader-add-icon {
+  opacity: 1;
+}
+
+/* Remove the old active state */
+.shader-item.active {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* ===== ConfigPanel Effect ID ===== */
+
+.panel-effect-id {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  padding: 2px 6px;
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+}
+
+/* ===== Mobile adjustments for effects stack ===== */
+
+@media (max-width: 768px) {
+  .effects-stack-panel {
+    max-height: 35%;
+  }
+
+  .effect-remove {
+    opacity: 1;
+  }
+
+  .effect-drag-handle {
+    padding: 4px;
+  }
+
+  .shader-add-icon {
+    opacity: 1;
+  }
+}

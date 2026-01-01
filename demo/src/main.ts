@@ -1,6 +1,7 @@
 /**
  * MapLibre GL Shaders - Playground
  * Interactive demo site for testing and configuring shaders
+ * Supports stacked effects (Photoshop-style layers)
  */
 
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -8,8 +9,21 @@ import './styles/main.css';
 import { ShaderGallery } from './components/ShaderGallery';
 import { ConfigPanel } from './components/ConfigPanel';
 import { MapView } from './components/MapView';
+import { EffectsStackPanel } from './components/EffectsStackPanel';
 import { PerformanceMonitor } from './components/PerformanceMonitor';
 import { globalRegistry, registerAllShaders } from '../../src';
+import type { ShaderDefinition } from '../../src/types';
+import type {
+  EffectStackState,
+  StackedEffect,
+  EffectId,
+  GeometryType,
+} from './types/effectStack';
+import {
+  createInitialEffectStackState,
+  findEffect,
+  removeEffectFromStack,
+} from './types/effectStack';
 
 // Register all built-in shaders
 registerAllShaders();
@@ -18,16 +32,37 @@ registerAllShaders();
  * Application state
  */
 interface AppState {
-  selectedShader: string | null;
-  config: Record<string, unknown>;
-  isPlaying: boolean;
+  effectStack: EffectStackState;
+  isGlobalPlaying: boolean;
 }
 
 const state: AppState = {
-  selectedShader: 'pulse',
-  config: {},
-  isPlaying: true,
+  effectStack: createInitialEffectStackState(),
+  isGlobalPlaying: true,
 };
+
+/**
+ * Create a new effect from a shader name
+ */
+function createEffect(shaderName: string, counter: number): StackedEffect {
+  const shader = globalRegistry.get(shaderName);
+  if (!shader) {
+    throw new Error(`Shader "${shaderName}" not found`);
+  }
+
+  const id = `${shaderName}-${counter}`;
+
+  return {
+    id,
+    shaderName,
+    displayName: shader.displayName,
+    geometry: shader.geometry as GeometryType,
+    config: { ...shader.defaultConfig },
+    visible: true,
+    isPlaying: true,
+    layerId: `effect-${id}`,
+  };
+}
 
 /**
  * Initialize the application
@@ -36,7 +71,7 @@ function init(): void {
   const app = document.getElementById('app');
   if (!app) return;
 
-  // Create main layout
+  // Create main layout with effects stack panel
   app.innerHTML = `
     <header class="header">
       <div class="header-title">
@@ -53,7 +88,10 @@ function init(): void {
       <div class="map-container" id="map-container">
         <div id="map"></div>
       </div>
-      <aside class="config-panel" id="config-panel"></aside>
+      <aside class="config-panel" id="config-panel">
+        <div class="effects-stack-panel" id="effects-stack"></div>
+        <div class="config-controls" id="config-controls"></div>
+      </aside>
     </main>
     <div class="mobile-panel-overlay" id="mobile-overlay"></div>
     <nav class="mobile-nav">
@@ -91,33 +129,94 @@ function init(): void {
   // Initialize components
   const mapView = new MapView('map');
   const gallery = new ShaderGallery('sidebar');
-  const configPanel = new ConfigPanel('config-panel');
+  const effectsPanel = new EffectsStackPanel('effects-stack');
+  const configPanel = new ConfigPanel('config-controls');
   const perfMonitor = new PerformanceMonitor('map-container');
 
-  // Handle shader selection
-  gallery.onSelect((shaderName) => {
-    state.selectedShader = shaderName;
-    const shader = globalRegistry.get(shaderName);
-    if (shader) {
-      state.config = { ...shader.defaultConfig };
-      configPanel.setShader(shader, state.config);
-      mapView.applyShader(shaderName, state.config);
+  // Handle shader addition from gallery
+  gallery.onAdd((shaderName) => {
+    // Create new effect
+    const effect = createEffect(shaderName, state.effectStack.nextIdCounter);
+    state.effectStack.nextIdCounter++;
+    state.effectStack.effects.push(effect);
+
+    // Add effect to map
+    mapView.addEffect(effect);
+
+    // Update effects panel
+    effectsPanel.update(state.effectStack);
+
+    // Select the new effect
+    state.effectStack.selectedEffectId = effect.id;
+    effectsPanel.selectEffect(effect.id);
+  });
+
+  // Handle effect selection
+  effectsPanel.onSelect((effectId) => {
+    state.effectStack.selectedEffectId = effectId;
+
+    if (effectId) {
+      const effect = findEffect(state.effectStack, effectId);
+      if (effect) {
+        const shader = globalRegistry.get(effect.shaderName);
+        if (shader) {
+          configPanel.setEffect(effect, shader);
+        }
+      }
+    } else {
+      configPanel.clear();
+    }
+  });
+
+  // Handle effect removal
+  effectsPanel.onRemove((effectId) => {
+    // Remove from map
+    mapView.removeEffect(effectId);
+
+    // Remove from state
+    removeEffectFromStack(state.effectStack, effectId);
+
+    // Update panel
+    effectsPanel.update(state.effectStack);
+
+    // Clear config if this was selected
+    if (state.effectStack.selectedEffectId === effectId) {
+      state.effectStack.selectedEffectId = null;
+      configPanel.clear();
+    }
+  });
+
+  // Handle effect reordering
+  effectsPanel.onReorder((newOrder) => {
+    state.effectStack.effects = newOrder;
+    mapView.reorderEffects(newOrder);
+  });
+
+  // Handle visibility toggle
+  effectsPanel.onVisibilityToggle((effectId, visible) => {
+    const effect = findEffect(state.effectStack, effectId);
+    if (effect) {
+      effect.visible = visible;
+      mapView.setEffectVisibility(effectId, visible);
+      effectsPanel.update(state.effectStack);
     }
   });
 
   // Handle config changes
-  configPanel.onChange((key, value) => {
-    state.config[key] = value;
-    mapView.updateConfig(state.config);
+  configPanel.onChange((effectId, key, value) => {
+    const effect = findEffect(state.effectStack, effectId);
+    if (effect) {
+      effect.config[key] = value;
+      mapView.updateEffectConfig(effectId, effect.config);
+    }
   });
 
   // Handle playback controls
-  configPanel.onPlayPause((playing) => {
-    state.isPlaying = playing;
-    if (playing) {
-      mapView.play();
-    } else {
-      mapView.pause();
+  configPanel.onPlayPause((effectId, playing) => {
+    const effect = findEffect(state.effectStack, effectId);
+    if (effect) {
+      effect.isPlaying = playing;
+      mapView.setEffectPlaying(effectId, playing);
     }
   });
 
@@ -125,33 +224,47 @@ function init(): void {
   mapView.onReady(() => {
     perfMonitor.start();
 
-    // Select default shader
-    if (state.selectedShader) {
-      gallery.select(state.selectedShader);
-    }
+    // Load from URL if applicable
+    loadFromURL(mapView, effectsPanel, configPanel);
   });
-
-  // Handle URL params for shareable configs
-  loadFromURL();
 }
 
 /**
  * Load configuration from URL parameters
  */
-function loadFromURL(): void {
+function loadFromURL(
+  mapView: MapView,
+  effectsPanel: EffectsStackPanel,
+  configPanel: ConfigPanel
+): void {
   const params = new URLSearchParams(window.location.search);
   const shader = params.get('shader');
   const config = params.get('config');
 
   if (shader && globalRegistry.has(shader)) {
-    state.selectedShader = shader;
-  }
+    // Create initial effect from URL
+    const effect = createEffect(shader, state.effectStack.nextIdCounter);
+    state.effectStack.nextIdCounter++;
 
-  if (config) {
-    try {
-      state.config = JSON.parse(decodeURIComponent(config));
-    } catch {
-      console.warn('Invalid config in URL');
+    if (config) {
+      try {
+        effect.config = { ...effect.config, ...JSON.parse(decodeURIComponent(config)) };
+      } catch {
+        console.warn('Invalid config in URL');
+      }
+    }
+
+    state.effectStack.effects.push(effect);
+    mapView.addEffect(effect);
+    effectsPanel.update(state.effectStack);
+
+    // Select it
+    state.effectStack.selectedEffectId = effect.id;
+    effectsPanel.selectEffect(effect.id);
+
+    const shaderDef = globalRegistry.get(shader);
+    if (shaderDef) {
+      configPanel.setEffect(effect, shaderDef);
     }
   }
 }
