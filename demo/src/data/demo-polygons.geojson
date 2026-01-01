@@ -7,7 +7,7 @@
         "type": "Polygon",
         "coordinates": [[[2.2900, 48.8550], [2.3000, 48.8550], [2.3000, 48.8620], [2.2900, 48.8620], [2.2900, 48.8550]]]
       },
-      "properties": { "id": 1, "name": "7th Arrondissement", "type": "district", "population": 52000 }
+      "properties": { "id": 1, "name": "7th Arrondissement", "type": "district", "population": 52000, "priority": "high", "speed": 0.8, "intensity": 0.7, "color": "#8b5cf6", "delay": 0.0 }
     },
     {
       "type": "Feature",
@@ -15,7 +15,7 @@
         "type": "Polygon",
         "coordinates": [[[2.3300, 48.8570], [2.3420, 48.8570], [2.3420, 48.8640], [2.3300, 48.8640], [2.3300, 48.8570]]]
       },
-      "properties": { "id": 2, "name": "1st Arrondissement", "type": "district", "population": 17000 }
+      "properties": { "id": 2, "name": "1st Arrondissement", "type": "district", "population": 17000, "priority": "high", "speed": 1.0, "intensity": 0.9, "color": "#8b5cf6", "delay": 0.2 }
     },
     {
       "type": "Feature",
@@ -23,7 +23,7 @@
         "type": "Polygon",
         "coordinates": [[[2.3420, 48.8500], [2.3550, 48.8500], [2.3550, 48.8560], [2.3420, 48.8560], [2.3420, 48.8500]]]
       },
-      "properties": { "id": 3, "name": "4th Arrondissement", "type": "district", "population": 28000 }
+      "properties": { "id": 3, "name": "4th Arrondissement", "type": "district", "population": 28000, "priority": "medium", "speed": 0.9, "intensity": 0.75, "color": "#8b5cf6", "delay": 0.4 }
     },
     {
       "type": "Feature",
@@ -31,7 +31,7 @@
         "type": "Polygon",
         "coordinates": [[[2.3200, 48.8400], [2.3350, 48.8400], [2.3350, 48.8480], [2.3200, 48.8480], [2.3200, 48.8400]]]
       },
-      "properties": { "id": 4, "name": "5th Arrondissement", "type": "district", "population": 60000 }
+      "properties": { "id": 4, "name": "5th Arrondissement", "type": "district", "population": 60000, "priority": "high", "speed": 0.7, "intensity": 0.8, "color": "#8b5cf6", "delay": 0.6 }
     },
     {
       "type": "Feature",
@@ -39,7 +39,7 @@
         "type": "Polygon",
         "coordinates": [[[2.3100, 48.8500], [2.3250, 48.8500], [2.3250, 48.8580], [2.3100, 48.8580], [2.3100, 48.8500]]]
       },
-      "properties": { "id": 5, "name": "6th Arrondissement", "type": "district", "population": 43000 }
+      "properties": { "id": 5, "name": "6th Arrondissement", "type": "district", "population": 43000, "priority": "medium", "speed": 0.85, "intensity": 0.7, "color": "#8b5cf6", "delay": 0.8 }
     },
     {
       "type": "Feature",
@@ -47,7 +47,7 @@
         "type": "Polygon",
         "coordinates": [[[2.3500, 48.8560], [2.3650, 48.8560], [2.3650, 48.8640], [2.3500, 48.8640], [2.3500, 48.8560]]]
       },
-      "properties": { "id": 6, "name": "3rd Arrondissement", "type": "district", "population": 35000 }
+      "properties": { "id": 6, "name": "3rd Arrondissement", "type": "district", "population": 35000, "priority": "medium", "speed": 0.95, "intensity": 0.65, "color": "#8b5cf6", "delay": 1.0 }
     },
     {
       "type": "Feature",
@@ -55,7 +55,7 @@
         "type": "Polygon",
         "coordinates": [[[2.3300, 48.8640], [2.3450, 48.8640], [2.3450, 48.8720], [2.3300, 48.8720], [2.3300, 48.8640]]]
       },
-      "properties": { "id": 7, "name": "2nd Arrondissement", "type": "district", "population": 22000 }
+      "properties": { "id": 7, "name": "2nd Arrondissement", "type": "district", "population": 22000, "priority": "low", "speed": 0.75, "intensity": 0.55, "color": "#8b5cf6", "delay": 1.2 }
     },
     {
       "type": "Feature",
@@ -63,7 +63,7 @@
         "type": "Polygon",
         "coordinates": [[[2.3250, 48.8720], [2.3380, 48.8720], [2.3380, 48.8800], [2.3250, 48.8800], [2.3250, 48.8720]]]
       },
-      "properties": { "id": 8, "name": "9th Arrondissement", "type": "district", "population": 60000 }
+      "properties": { "id": 8, "name": "9th Arrondissement", "type": "district", "population": 60000, "priority": "high", "speed": 1.1, "intensity": 0.85, "color": "#8b5cf6", "delay": 1.4 }
     },
     {
       "type": "Feature",
@@ -71,7 +71,7 @@
         "type": "Polygon",
         "coordinates": [[[2.3550, 48.8640], [2.3700, 48.8640], [2.3700, 48.8730], [2.3550, 48.8730], [2.3550, 48.8640]]]
       },
-      "properties": { "id": 9, "name": "10th Arrondissement", "type": "district", "population": 95000 }
+      "properties": { "id": 9, "name": "10th Arrondissement", "type": "district", "population": 95000, "priority": "high", "speed": 1.2, "intensity": 0.9, "color": "#8b5cf6", "delay": 1.6 }
     },
     {
       "type": "Feature",
@@ -79,7 +79,7 @@
         "type": "Polygon",
         "coordinates": [[[2.3600, 48.8470], [2.3750, 48.8470], [2.3750, 48.8560], [2.3600, 48.8560], [2.3600, 48.8470]]]
       },
-      "properties": { "id": 10, "name": "11th Arrondissement", "type": "district", "population": 150000 }
+      "properties": { "id": 10, "name": "11th Arrondissement", "type": "district", "population": 150000, "priority": "high", "speed": 1.3, "intensity": 0.95, "color": "#8b5cf6", "delay": 1.8 }
     },
     {
       "type": "Feature",
@@ -87,7 +87,7 @@
         "type": "Polygon",
         "coordinates": [[[2.2700, 48.8580], [2.2850, 48.8580], [2.2850, 48.8680], [2.2700, 48.8680], [2.2700, 48.8580]]]
       },
-      "properties": { "id": 11, "name": "Trocadero Zone", "type": "zone", "population": 0 }
+      "properties": { "id": 11, "name": "Trocadero Zone", "type": "zone", "population": 0, "priority": "medium", "speed": 0.6, "intensity": 0.5, "color": "#3b82f6", "delay": 0.1 }
     },
     {
       "type": "Feature",
@@ -95,7 +95,7 @@
         "type": "Polygon",
         "coordinates": [[[2.3700, 48.8560], [2.3850, 48.8560], [2.3850, 48.8650], [2.3700, 48.8650], [2.3700, 48.8560]]]
       },
-      "properties": { "id": 12, "name": "Pere Lachaise Area", "type": "zone", "population": 0 }
+      "properties": { "id": 12, "name": "Pere Lachaise Area", "type": "zone", "population": 0, "priority": "low", "speed": 0.4, "intensity": 0.35, "color": "#3b82f6", "delay": 0.3 }
     },
     {
       "type": "Feature",
@@ -103,7 +103,7 @@
         "type": "Polygon",
         "coordinates": [[[2.3050, 48.8350], [2.3150, 48.8350], [2.3150, 48.8430], [2.3050, 48.8430], [2.3050, 48.8350]]]
       },
-      "properties": { "id": 13, "name": "Montparnasse Area", "type": "zone", "population": 0 }
+      "properties": { "id": 13, "name": "Montparnasse Area", "type": "zone", "population": 0, "priority": "medium", "speed": 0.7, "intensity": 0.6, "color": "#3b82f6", "delay": 0.5 }
     },
     {
       "type": "Feature",
@@ -111,7 +111,7 @@
         "type": "Polygon",
         "coordinates": [[[2.3400, 48.8750], [2.3550, 48.8750], [2.3550, 48.8830], [2.3400, 48.8830], [2.3400, 48.8750]]]
       },
-      "properties": { "id": 14, "name": "Montmartre", "type": "zone", "population": 0 }
+      "properties": { "id": 14, "name": "Montmartre", "type": "zone", "population": 0, "priority": "high", "speed": 0.9, "intensity": 0.8, "color": "#3b82f6", "delay": 0.7 }
     },
     {
       "type": "Feature",
@@ -119,7 +119,7 @@
         "type": "Polygon",
         "coordinates": [[[2.2850, 48.8700], [2.3000, 48.8700], [2.3000, 48.8780], [2.2850, 48.8780], [2.2850, 48.8700]]]
       },
-      "properties": { "id": 15, "name": "Arc de Triomphe Zone", "type": "zone", "population": 0 }
+      "properties": { "id": 15, "name": "Arc de Triomphe Zone", "type": "zone", "population": 0, "priority": "high", "speed": 1.0, "intensity": 0.85, "color": "#3b82f6", "delay": 0.9 }
     }
   ]
 }

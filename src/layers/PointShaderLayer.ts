@@ -771,7 +771,8 @@ export class PointShaderLayer implements CustomLayerInterface {
     }
 
     // Calculate time offsets for all features
-    const timingConfig = (this.config as unknown as { timing?: AnimationTimingConfig }).timing ?? { timeOffset: 'random' };
+    // timeOffset is at the top level of config (not nested under timing)
+    const timingConfig = this.config as unknown as AnimationTimingConfig;
     const timeOffsets = this.timeOffsetCalculator.calculateOffsets(this.features, timingConfig);
 
     // Evaluate data-driven properties

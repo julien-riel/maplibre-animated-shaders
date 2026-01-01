@@ -18,11 +18,13 @@ import type {
   StackedEffect,
   EffectId,
   GeometryType,
+  AdvancedEffectConfig,
 } from './types/effectStack';
 import {
   createInitialEffectStackState,
   findEffect,
   removeEffectFromStack,
+  createDefaultAdvancedConfig,
 } from './types/effectStack';
 
 // Register all built-in shaders
@@ -61,6 +63,7 @@ function createEffect(shaderName: string, counter: number): StackedEffect {
     visible: true,
     isPlaying: true,
     layerId: `effect-${id}`,
+    advancedConfig: createDefaultAdvancedConfig(),
   };
 }
 
@@ -217,6 +220,15 @@ function init(): void {
     if (effect) {
       effect.isPlaying = playing;
       mapView.setEffectPlaying(effectId, playing);
+    }
+  });
+
+  // Handle advanced config changes
+  configPanel.onAdvancedChange((effectId, advancedConfig) => {
+    const effect = findEffect(state.effectStack, effectId);
+    if (effect) {
+      effect.advancedConfig = advancedConfig;
+      mapView.updateEffectAdvancedConfig(effect);
     }
   });
 

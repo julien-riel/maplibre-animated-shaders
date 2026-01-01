@@ -2,14 +2,17 @@
  * ConfigPanel - Dynamic configuration panel for shader parameters
  * Generates controls based on the shader's configSchema
  * Supports effect context for stacked effects
+ * Includes advanced configuration for timing and interactivity
  */
 
 import type { ShaderDefinition, ConfigSchema, ConfigParamSchema } from '../../../src/types';
-import type { StackedEffect, EffectId } from '../types/effectStack';
+import type { StackedEffect, EffectId, AdvancedEffectConfig, TimeOffsetMode } from '../types/effectStack';
+import { createDefaultAdvancedConfig } from '../types/effectStack';
 import { CodePreview } from './CodePreview';
 
 type ChangeCallback = (effectId: EffectId, key: string, value: unknown) => void;
 type PlayPauseCallback = (effectId: EffectId, playing: boolean) => void;
+type AdvancedChangeCallback = (effectId: EffectId, advancedConfig: AdvancedEffectConfig) => void;
 
 /**
  * ConfigPanel component
@@ -18,12 +21,15 @@ export class ConfigPanel {
   private container: HTMLElement;
   private changeCallbacks: ChangeCallback[] = [];
   private playPauseCallbacks: PlayPauseCallback[] = [];
+  private advancedChangeCallbacks: AdvancedChangeCallback[] = [];
   private currentShader: ShaderDefinition | null = null;
   private currentEffect: StackedEffect | null = null;
   private currentConfig: Record<string, unknown> = {};
+  private currentAdvancedConfig: AdvancedEffectConfig = createDefaultAdvancedConfig();
   private isPlaying: boolean = true;
   private codePreview: CodePreview | null = null;
   private activeTab: 'config' | 'code' = 'config';
+  private advancedExpanded: boolean = false;
 
   constructor(containerId: string) {
     const el = document.getElementById(containerId);
@@ -41,6 +47,9 @@ export class ConfigPanel {
     this.currentEffect = effect;
     this.currentShader = shader;
     this.currentConfig = { ...effect.config };
+    this.currentAdvancedConfig = effect.advancedConfig
+      ? { ...effect.advancedConfig }
+      : createDefaultAdvancedConfig();
     this.isPlaying = effect.isPlaying;
     this.render();
   }
@@ -77,6 +86,13 @@ export class ConfigPanel {
    */
   onPlayPause(callback: PlayPauseCallback): void {
     this.playPauseCallbacks.push(callback);
+  }
+
+  /**
+   * Register a callback for advanced config changes
+   */
+  onAdvancedChange(callback: AdvancedChangeCallback): void {
+    this.advancedChangeCallbacks.push(callback);
   }
 
   /**
@@ -119,7 +135,7 @@ export class ConfigPanel {
         <button class="panel-tab${this.activeTab === 'code' ? ' active' : ''}" data-tab="code">Code</button>
       </div>
       <div class="panel-content" id="panel-content">
-        ${this.activeTab === 'config' ? this.renderConfigControls() : ''}
+        ${this.activeTab === 'config' ? this.renderConfigControls() + this.renderAdvancedSection() : ''}
       </div>
       <div class="playback-controls">
         <button class="playback-btn${this.isPlaying ? '' : ' primary'}" id="btn-pause">
@@ -157,6 +173,179 @@ export class ConfigPanel {
     }
 
     return html;
+  }
+
+  /**
+   * Render advanced configuration section
+   */
+  private renderAdvancedSection(): string {
+    const mode = this.currentAdvancedConfig.timeOffsetMode;
+    const interactivity = this.currentAdvancedConfig.interactivity ?? {};
+
+    return `
+      <div class="advanced-section${this.advancedExpanded ? ' expanded' : ''}" id="advanced-section">
+        <div class="advanced-section-header" id="advanced-toggle">
+          <div class="advanced-section-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+            </svg>
+            Advanced
+          </div>
+          <div class="advanced-section-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 9l6 6 6-6"/>
+            </svg>
+          </div>
+        </div>
+        <div class="advanced-section-content">
+          <!-- Animation Timing -->
+          <div class="config-subsection">
+            <div class="config-subsection-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 6v6l4 2"/>
+              </svg>
+              Animation Timing
+            </div>
+
+            <div class="config-field">
+              <div class="config-label">
+                <span>Time Offset Mode</span>
+              </div>
+              <select class="config-select" id="adv-timeOffsetMode">
+                <option value="none" ${mode === 'none' ? 'selected' : ''}>None (synchronized)</option>
+                <option value="random" ${mode === 'random' ? 'selected' : ''}>Random</option>
+                <option value="hash" ${mode === 'hash' ? 'selected' : ''}>Hash (stable by property)</option>
+                <option value="property" ${mode === 'property' ? 'selected' : ''}>From property</option>
+                <option value="range" ${mode === 'range' ? 'selected' : ''}>Random range</option>
+              </select>
+              <div class="config-hint">Desynchronize animations between features</div>
+            </div>
+
+            <div class="config-field" data-visible="${mode === 'hash' || mode === 'property'}">
+              <div class="config-label">
+                <span>Property Name</span>
+              </div>
+              <input type="text" class="config-input" id="adv-timeOffsetProperty"
+                     value="${this.currentAdvancedConfig.timeOffsetProperty || ''}"
+                     placeholder="e.g., id, delay">
+              <div class="feature-properties-hint">
+                ${this.renderPropertyTags()}
+              </div>
+            </div>
+
+            <div class="config-row" data-visible="${mode === 'range'}">
+              <div class="config-field">
+                <div class="config-label-small">Min (s)</div>
+                <input type="number" class="config-input" id="adv-timeOffsetMin"
+                       value="${this.currentAdvancedConfig.timeOffsetMin ?? 0}"
+                       step="0.1" min="0">
+              </div>
+              <div class="config-field">
+                <div class="config-label-small">Max (s)</div>
+                <input type="number" class="config-input" id="adv-timeOffsetMax"
+                       value="${this.currentAdvancedConfig.timeOffsetMax ?? 2}"
+                       step="0.1" min="0">
+              </div>
+            </div>
+
+            <div class="config-field" data-visible="${mode !== 'none'}">
+              <div class="config-label">
+                <span>Period</span>
+                <span class="config-value">${this.currentAdvancedConfig.period ?? 1}s</span>
+              </div>
+              <input type="range" id="adv-period" min="0.1" max="10" step="0.1"
+                     value="${this.currentAdvancedConfig.period ?? 1}">
+            </div>
+
+            <div class="config-field" data-visible="${mode === 'random' || mode === 'range'}">
+              <div class="config-label">
+                <span>Random Seed</span>
+              </div>
+              <input type="text" class="config-input" id="adv-randomSeed"
+                     value="${this.currentAdvancedConfig.randomSeed || ''}"
+                     placeholder="Optional (for reproducibility)">
+            </div>
+          </div>
+
+          <!-- Interactivity -->
+          <div class="config-subsection">
+            <div class="config-subsection-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15 14l5-5-5-5"/>
+                <path d="M19 9H5"/>
+              </svg>
+              Interactivity
+            </div>
+
+            <div class="config-field config-field-checkbox">
+              <label class="config-label">
+                <span>Enable per-feature control</span>
+                <input type="checkbox" id="adv-perFeatureControl"
+                       ${interactivity.perFeatureControl ? 'checked' : ''}>
+              </label>
+            </div>
+
+            <div class="config-field" data-visible="${interactivity.perFeatureControl}">
+              <div class="config-label">
+                <span>Initial State</span>
+              </div>
+              <select class="config-select" id="adv-initialState">
+                <option value="playing" ${interactivity.initialState === 'playing' ? 'selected' : ''}>Playing</option>
+                <option value="paused" ${interactivity.initialState === 'paused' ? 'selected' : ''}>Paused</option>
+              </select>
+            </div>
+
+            <div class="config-field" data-visible="${interactivity.perFeatureControl}">
+              <div class="config-label">
+                <span>On Click</span>
+              </div>
+              <select class="config-select" id="adv-onClick">
+                <option value="" ${!interactivity.onClick ? 'selected' : ''}>None</option>
+                <option value="toggle" ${interactivity.onClick === 'toggle' ? 'selected' : ''}>Toggle play/pause</option>
+                <option value="play" ${interactivity.onClick === 'play' ? 'selected' : ''}>Play</option>
+                <option value="pause" ${interactivity.onClick === 'pause' ? 'selected' : ''}>Pause</option>
+                <option value="reset" ${interactivity.onClick === 'reset' ? 'selected' : ''}>Reset</option>
+              </select>
+            </div>
+
+            <div class="config-field" data-visible="${interactivity.perFeatureControl}">
+              <div class="config-label">
+                <span>On Hover Enter</span>
+              </div>
+              <select class="config-select" id="adv-onHoverEnter">
+                <option value="" ${!interactivity.onHover?.enter ? 'selected' : ''}>None</option>
+                <option value="play" ${interactivity.onHover?.enter === 'play' ? 'selected' : ''}>Play</option>
+                <option value="pause" ${interactivity.onHover?.enter === 'pause' ? 'selected' : ''}>Pause</option>
+              </select>
+            </div>
+
+            <div class="config-field" data-visible="${interactivity.perFeatureControl}">
+              <div class="config-label">
+                <span>On Hover Leave</span>
+              </div>
+              <select class="config-select" id="adv-onHoverLeave">
+                <option value="" ${!interactivity.onHover?.leave ? 'selected' : ''}>None</option>
+                <option value="play" ${interactivity.onHover?.leave === 'play' ? 'selected' : ''}>Play</option>
+                <option value="pause" ${interactivity.onHover?.leave === 'pause' ? 'selected' : ''}>Pause</option>
+                <option value="reset" ${interactivity.onHover?.leave === 'reset' ? 'selected' : ''}>Reset</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Render property tags for quick selection
+   */
+  private renderPropertyTags(): string {
+    const properties = ['id', 'delay', 'speed', 'intensity', 'priority', 'category', 'type', 'name'];
+    return properties.map(prop =>
+      `<span class="property-tag" data-property="${prop}">${prop}</span>`
+    ).join('');
   }
 
   /**
@@ -364,6 +553,140 @@ export class ConfigPanel {
         }
       }
     });
+
+    // Advanced section toggle
+    const advancedToggle = this.container.querySelector('#advanced-toggle');
+    advancedToggle?.addEventListener('click', () => {
+      this.advancedExpanded = !this.advancedExpanded;
+      const section = this.container.querySelector('#advanced-section');
+      section?.classList.toggle('expanded', this.advancedExpanded);
+    });
+
+    // Attach advanced section listeners
+    this.attachAdvancedEventListeners();
+  }
+
+  /**
+   * Attach event listeners for advanced section
+   */
+  private attachAdvancedEventListeners(): void {
+    // Time offset mode
+    const modeSelect = this.container.querySelector('#adv-timeOffsetMode') as HTMLSelectElement;
+    modeSelect?.addEventListener('change', () => {
+      this.currentAdvancedConfig.timeOffsetMode = modeSelect.value as TimeOffsetMode;
+      this.notifyAdvancedChange();
+      this.render(); // Re-render to show/hide conditional fields
+    });
+
+    // Property name
+    const propInput = this.container.querySelector('#adv-timeOffsetProperty') as HTMLInputElement;
+    propInput?.addEventListener('input', () => {
+      this.currentAdvancedConfig.timeOffsetProperty = propInput.value;
+      this.notifyAdvancedChange();
+    });
+
+    // Property tags (quick select)
+    const propertyTags = this.container.querySelectorAll('.property-tag');
+    propertyTags.forEach(tag => {
+      tag.addEventListener('click', () => {
+        const property = tag.getAttribute('data-property');
+        if (property && propInput) {
+          propInput.value = property;
+          this.currentAdvancedConfig.timeOffsetProperty = property;
+          this.notifyAdvancedChange();
+        }
+      });
+    });
+
+    // Range min/max
+    const minInput = this.container.querySelector('#adv-timeOffsetMin') as HTMLInputElement;
+    const maxInput = this.container.querySelector('#adv-timeOffsetMax') as HTMLInputElement;
+    minInput?.addEventListener('input', () => {
+      this.currentAdvancedConfig.timeOffsetMin = parseFloat(minInput.value);
+      this.notifyAdvancedChange();
+    });
+    maxInput?.addEventListener('input', () => {
+      this.currentAdvancedConfig.timeOffsetMax = parseFloat(maxInput.value);
+      this.notifyAdvancedChange();
+    });
+
+    // Period
+    const periodInput = this.container.querySelector('#adv-period') as HTMLInputElement;
+    periodInput?.addEventListener('input', () => {
+      this.currentAdvancedConfig.period = parseFloat(periodInput.value);
+      const valueSpan = periodInput.parentElement?.querySelector('.config-value');
+      if (valueSpan) {
+        valueSpan.textContent = `${this.currentAdvancedConfig.period}s`;
+      }
+      this.notifyAdvancedChange();
+    });
+
+    // Random seed
+    const seedInput = this.container.querySelector('#adv-randomSeed') as HTMLInputElement;
+    seedInput?.addEventListener('input', () => {
+      this.currentAdvancedConfig.randomSeed = seedInput.value;
+      this.notifyAdvancedChange();
+    });
+
+    // Per-feature control
+    const perFeatureCheckbox = this.container.querySelector('#adv-perFeatureControl') as HTMLInputElement;
+    perFeatureCheckbox?.addEventListener('change', () => {
+      this.currentAdvancedConfig.interactivity = {
+        ...this.currentAdvancedConfig.interactivity,
+        perFeatureControl: perFeatureCheckbox.checked,
+      };
+      this.notifyAdvancedChange();
+      this.render(); // Re-render to show/hide conditional fields
+    });
+
+    // Initial state
+    const initialStateSelect = this.container.querySelector('#adv-initialState') as HTMLSelectElement;
+    initialStateSelect?.addEventListener('change', () => {
+      this.currentAdvancedConfig.interactivity = {
+        ...this.currentAdvancedConfig.interactivity,
+        initialState: initialStateSelect.value as 'playing' | 'paused',
+      };
+      this.notifyAdvancedChange();
+    });
+
+    // On click action
+    const onClickSelect = this.container.querySelector('#adv-onClick') as HTMLSelectElement;
+    onClickSelect?.addEventListener('change', () => {
+      const value = onClickSelect.value || undefined;
+      this.currentAdvancedConfig.interactivity = {
+        ...this.currentAdvancedConfig.interactivity,
+        onClick: value as 'toggle' | 'play' | 'pause' | 'reset' | undefined,
+      };
+      this.notifyAdvancedChange();
+    });
+
+    // Hover enter
+    const hoverEnterSelect = this.container.querySelector('#adv-onHoverEnter') as HTMLSelectElement;
+    hoverEnterSelect?.addEventListener('change', () => {
+      const value = hoverEnterSelect.value || undefined;
+      this.currentAdvancedConfig.interactivity = {
+        ...this.currentAdvancedConfig.interactivity,
+        onHover: {
+          ...this.currentAdvancedConfig.interactivity?.onHover,
+          enter: value as 'play' | 'pause' | undefined,
+        },
+      };
+      this.notifyAdvancedChange();
+    });
+
+    // Hover leave
+    const hoverLeaveSelect = this.container.querySelector('#adv-onHoverLeave') as HTMLSelectElement;
+    hoverLeaveSelect?.addEventListener('change', () => {
+      const value = hoverLeaveSelect.value || undefined;
+      this.currentAdvancedConfig.interactivity = {
+        ...this.currentAdvancedConfig.interactivity,
+        onHover: {
+          ...this.currentAdvancedConfig.interactivity?.onHover,
+          leave: value as 'play' | 'pause' | 'reset' | undefined,
+        },
+      };
+      this.notifyAdvancedChange();
+    });
   }
 
   /**
@@ -381,6 +704,17 @@ export class ConfigPanel {
   private notifyPlayPause(playing: boolean): void {
     if (this.currentEffect) {
       this.playPauseCallbacks.forEach(cb => cb(this.currentEffect!.id, playing));
+    }
+  }
+
+  /**
+   * Notify advanced config change callbacks
+   */
+  private notifyAdvancedChange(): void {
+    if (this.currentEffect) {
+      this.advancedChangeCallbacks.forEach(cb =>
+        cb(this.currentEffect!.id, { ...this.currentAdvancedConfig })
+      );
     }
   }
 }

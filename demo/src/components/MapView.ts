@@ -1,14 +1,16 @@
 /**
  * MapView - MapLibre GL JS wrapper with demo data
  * Handles map initialization, data loading, and shader application
- * Supports multiple stacked effects
+ * Supports multiple stacked effects with advanced configuration
  */
 
 import maplibregl from 'maplibre-gl';
 import type { Map as MapLibreMap } from 'maplibre-gl';
 import { createShaderManager, globalRegistry } from '../../../src';
 import type { ShaderManager } from '../../../src/ShaderManager';
-import type { EffectId, StackedEffect, GeometryType } from '../types/effectStack';
+import type { InteractivityConfig } from '../../../src/types';
+import type { EffectId, StackedEffect, GeometryType, AdvancedEffectConfig } from '../types/effectStack';
+import { buildShaderAdvancedConfig } from '../types/effectStack';
 
 import demoPoints from '../data/demo-points.geojson';
 import demoLines from '../data/demo-lines.geojson';
@@ -188,9 +190,15 @@ export class MapView {
       });
     }
 
+    // Build full config including advanced options
+    const fullConfig = this.buildFullConfig(effect);
+
+    // Extract interactivity config (passed as separate 4th parameter)
+    const interactivityConfig = this.getInteractivityConfig(effect);
+
     // Register shader on this layer
     try {
-      this.shaderManager.register(layerId, effect.shaderName, effect.config);
+      this.shaderManager.register(layerId, effect.shaderName, fullConfig, interactivityConfig);
       this.effectLayers.set(effect.id, layerId);
 
       // Apply visibility
@@ -209,6 +217,31 @@ export class MapView {
         this.map.removeLayer(layerId);
       }
     }
+  }
+
+  /**
+   * Build full configuration including advanced options (without interactivity)
+   */
+  private buildFullConfig(effect: StackedEffect): Record<string, unknown> {
+    const config = { ...effect.config };
+
+    // Merge in advanced timing config if present (not interactivity - that's separate)
+    if (effect.advancedConfig) {
+      const advancedShaderConfig = buildShaderAdvancedConfig(effect.advancedConfig);
+      Object.assign(config, advancedShaderConfig);
+    }
+
+    return config;
+  }
+
+  /**
+   * Extract interactivity config from effect
+   */
+  private getInteractivityConfig(effect: StackedEffect): InteractivityConfig | undefined {
+    if (effect.advancedConfig?.interactivity?.perFeatureControl) {
+      return effect.advancedConfig.interactivity;
+    }
+    return undefined;
   }
 
   /**
@@ -254,6 +287,43 @@ export class MapView {
       this.shaderManager.updateConfig(layerId, config);
     } catch (error) {
       console.error(`Failed to update effect ${effectId}:`, error);
+    }
+  }
+
+  /**
+   * Update advanced configuration for an effect
+   * Interactivity changes require re-registering the shader
+   */
+  updateEffectAdvancedConfig(effect: StackedEffect): void {
+    const layerId = this.effectLayers.get(effect.id);
+    if (!layerId || !this.shaderManager) {
+      return;
+    }
+
+    // Build full config with new advanced settings
+    const fullConfig = this.buildFullConfig(effect);
+    const interactivityConfig = this.getInteractivityConfig(effect);
+
+    try {
+      // Re-register the shader to apply interactivity changes
+      // This is necessary because interactivity is set up in onAdd()
+      this.shaderManager.unregister(layerId);
+
+      // Remove the shader custom layer (added by previous registration)
+      const shaderLayerId = `${layerId}-shader`;
+      if (this.map.getLayer(shaderLayerId)) {
+        this.map.removeLayer(shaderLayerId);
+      }
+
+      // Re-register with new config
+      this.shaderManager.register(layerId, effect.shaderName, fullConfig, interactivityConfig);
+
+      // Restore play state
+      if (!effect.isPlaying) {
+        this.shaderManager.pause(layerId);
+      }
+    } catch (error) {
+      console.error(`Failed to update advanced config for ${effect.id}:`, error);
     }
   }
 
