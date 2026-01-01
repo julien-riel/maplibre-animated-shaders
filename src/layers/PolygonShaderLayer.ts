@@ -323,6 +323,12 @@ export class PolygonShaderLayer implements CustomLayerInterface {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
     gl.drawElements(gl.TRIANGLES, this.vertexCount, gl.UNSIGNED_SHORT, 0);
 
+    // Restore WebGL state - disable vertex attribute arrays
+    if (this.aPos >= 0) gl.disableVertexAttribArray(this.aPos);
+    if (this.aUv >= 0) gl.disableVertexAttribArray(this.aUv);
+    if (this.aCentroid >= 0) gl.disableVertexAttribArray(this.aCentroid);
+    if (this.aPolygonIndex >= 0) gl.disableVertexAttribArray(this.aPolygonIndex);
+
     // Request another frame
     if (this.isPlaying) {
       this.map.triggerRepaint();

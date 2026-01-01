@@ -333,6 +333,11 @@ export class PointShaderLayer implements CustomLayerInterface {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
     gl.drawElements(gl.TRIANGLES, this.vertexCount, gl.UNSIGNED_SHORT, 0);
 
+    // Restore WebGL state - disable vertex attribute arrays
+    if (this.aPos >= 0) gl.disableVertexAttribArray(this.aPos);
+    if (this.aOffset >= 0) gl.disableVertexAttribArray(this.aOffset);
+    if (this.aIndex >= 0) gl.disableVertexAttribArray(this.aIndex);
+
     // Request another frame
     if (this.isPlaying) {
       this.map.triggerRepaint();

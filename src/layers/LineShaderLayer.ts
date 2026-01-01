@@ -380,6 +380,13 @@ export class LineShaderLayer implements CustomLayerInterface {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
     gl.drawElements(gl.TRIANGLES, this.vertexCount, gl.UNSIGNED_SHORT, 0);
 
+    // Restore WebGL state - disable vertex attribute arrays
+    if (this.aPosStart >= 0) gl.disableVertexAttribArray(this.aPosStart);
+    if (this.aPosEnd >= 0) gl.disableVertexAttribArray(this.aPosEnd);
+    if (this.aOffset >= 0) gl.disableVertexAttribArray(this.aOffset);
+    if (this.aProgress >= 0) gl.disableVertexAttribArray(this.aProgress);
+    if (this.aLineIndex >= 0) gl.disableVertexAttribArray(this.aLineIndex);
+
     // Request another frame
     if (this.isPlaying) {
       this.map.triggerRepaint();
