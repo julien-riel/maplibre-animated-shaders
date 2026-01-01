@@ -520,6 +520,68 @@ input[type="checkbox"]:checked::after {
   to { transform: rotate(360deg); }
 }
 
+/* Mobile Navigation */
+.mobile-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--mobile-nav-height, 56px);
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  z-index: 1000;
+}
+
+.mobile-nav-tabs {
+  display: flex;
+  height: 100%;
+}
+
+.mobile-nav-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.mobile-nav-tab:hover {
+  color: var(--text-secondary);
+}
+
+.mobile-nav-tab.active {
+  color: var(--accent-primary);
+}
+
+.mobile-nav-tab svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* Mobile Panel Overlay */
+.mobile-panel-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 900;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.mobile-panel-overlay.visible {
+  opacity: 1;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .sidebar {
@@ -532,21 +594,98 @@ input[type="checkbox"]:checked::after {
 }
 
 @media (max-width: 768px) {
+  :root {
+    --mobile-nav-height: 56px;
+  }
+
+  .header {
+    height: 48px;
+    padding: 0 var(--spacing-md);
+  }
+
+  .header-title h1 {
+    font-size: 16px;
+  }
+
+  .header-title span {
+    display: none;
+  }
+
   .main-layout {
     flex-direction: column;
+    padding-bottom: var(--mobile-nav-height);
   }
 
+  /* Map takes full space by default */
+  .map-container {
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* Panels are hidden by default, shown as bottom sheets */
   .sidebar,
   .config-panel {
+    position: fixed;
+    bottom: var(--mobile-nav-height);
+    left: 0;
+    right: 0;
     width: 100%;
-    height: auto;
-    max-height: 40vh;
+    height: 60vh;
+    max-height: calc(100vh - var(--header-height) - var(--mobile-nav-height) - 20px);
     border: none;
-    border-bottom: 1px solid var(--border-color);
+    border-top: 1px solid var(--border-color);
+    border-radius: 16px 16px 0 0;
+    transform: translateY(100%);
+    transition: transform 0.3s ease-out;
+    z-index: 950;
+    overflow: hidden;
   }
 
-  .map-container {
-    min-height: 50vh;
+  .sidebar.mobile-visible,
+  .config-panel.mobile-visible {
+    transform: translateY(0);
+  }
+
+  /* Add drag handle indicator */
+  .sidebar::before,
+  .config-panel::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    background: var(--border-color);
+    border-radius: 2px;
+    z-index: 10;
+  }
+
+  .sidebar-header,
+  .panel-header {
+    padding-top: var(--spacing-lg);
+  }
+
+  /* Show mobile navigation */
+  .mobile-nav {
+    display: block;
+  }
+
+  .mobile-panel-overlay {
+    display: block;
+    pointer-events: none;
+  }
+
+  .mobile-panel-overlay.visible {
+    pointer-events: auto;
+  }
+
+  /* Adjust perf monitor for mobile */
+  .perf-monitor {
+    top: var(--spacing-sm);
+    left: var(--spacing-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 10px;
   }
 }
 
