@@ -122,15 +122,19 @@ uniform float u_intensity;
 
 varying vec2 v_uv;
 varying vec2 v_screen_pos;
+varying float v_timeOffset;
 
 void main() {
   // Flip Y for direction (up = 1, down = 0)
   float y = u_direction > 0.5 ? v_uv.y : 1.0 - v_uv.y;
 
+  // Apply per-feature time offset for animation desynchronization
+  float localTime = u_time + v_timeOffset;
+
   // Create wave pattern
-  float wave1 = sin(v_screen_pos.x * u_waveFrequency + u_time * 3.0) * u_waveHeight * 0.01;
-  float wave2 = sin(v_screen_pos.x * u_waveFrequency * 1.5 + u_time * 2.5 + 1.0) * u_waveHeight * 0.006;
-  float wave3 = sin(v_screen_pos.x * u_waveFrequency * 0.7 + u_time * 2.0 + 2.0) * u_waveHeight * 0.004;
+  float wave1 = sin(v_screen_pos.x * u_waveFrequency + localTime * 3.0) * u_waveHeight * 0.01;
+  float wave2 = sin(v_screen_pos.x * u_waveFrequency * 1.5 + localTime * 2.5 + 1.0) * u_waveHeight * 0.006;
+  float wave3 = sin(v_screen_pos.x * u_waveFrequency * 0.7 + localTime * 2.0 + 2.0) * u_waveHeight * 0.004;
 
   float totalWave = wave1 + wave2 + wave3;
 

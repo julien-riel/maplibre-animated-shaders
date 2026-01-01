@@ -3,11 +3,19 @@
  *
  * Implements MapLibre's CustomLayerInterface to render points
  * with custom GLSL fragment shaders.
+ *
+ * Supports data-driven properties via MapLibre-style expressions:
+ * - color: ['get', 'status_color']
+ * - speed: ['coalesce', ['get', 'animation_speed'], 1.0]
+ * - intensity: ['match', ['get', 'priority'], 'high', 1.0, 'low', 0.3, 0.5]
  */
 
 import type { CustomLayerInterface, Map as MapLibreMap } from 'maplibre-gl';
-import type { ShaderDefinition, ShaderConfig } from '../types';
+import type { ShaderDefinition, ShaderConfig, AnimationTimingConfig } from '../types';
 import type { mat4 } from 'gl-matrix';
+import { TimeOffsetCalculator } from '../timing';
+import { ExpressionEvaluator, isExpression } from '../expressions';
+import { hexToRgba } from '../utils/color';
 import {
   ShaderError,
   compileShaderWithErrorHandling,
@@ -20,18 +28,32 @@ import {
 /**
  * Vertex shader for point rendering
  * Renders a quad at each point position
+ *
+ * Supports data-driven properties via per-vertex attributes:
+ * - a_color: Per-feature color (RGBA)
+ * - a_intensity: Per-feature intensity
  */
 const POINT_VERTEX_SHADER = `
   attribute vec2 a_pos;
   attribute vec2 a_offset;
   attribute float a_index;
+  attribute float a_timeOffset;
+  attribute vec4 a_color;
+  attribute float a_intensity;
 
   uniform mat4 u_matrix;
   uniform float u_size;
   uniform vec2 u_resolution;
+  uniform float u_useDataDrivenColor;
+  uniform float u_useDataDrivenIntensity;
 
   varying vec2 v_pos;
   varying float v_index;
+  varying float v_timeOffset;
+  varying vec4 v_color;
+  varying float v_intensity;
+  varying float v_useDataDrivenColor;
+  varying float v_useDataDrivenIntensity;
 
   void main() {
     // a_pos is the point center in Mercator coordinates
@@ -51,6 +73,13 @@ const POINT_VERTEX_SHADER = `
     // Pass normalized position within quad to fragment shader (-1 to 1)
     v_pos = a_offset;
     v_index = a_index;
+    v_timeOffset = a_timeOffset;
+
+    // Pass data-driven properties
+    v_color = a_color;
+    v_intensity = a_intensity;
+    v_useDataDrivenColor = u_useDataDrivenColor;
+    v_useDataDrivenIntensity = u_useDataDrivenIntensity;
   }
 `;
 
@@ -61,7 +90,17 @@ interface PointData {
 }
 
 /**
+ * Per-feature evaluated data for data-driven properties
+ */
+interface FeatureData {
+  color: [number, number, number, number];
+  intensity: number;
+}
+
+/**
  * PointShaderLayer - Custom WebGL layer for point shaders
+ *
+ * Supports data-driven properties via MapLibre-style expressions.
  */
 export class PointShaderLayer implements CustomLayerInterface {
   id: string;
@@ -81,11 +120,25 @@ export class PointShaderLayer implements CustomLayerInterface {
   private program: WebGLProgram | null = null;
   private vertexBuffer: WebGLBuffer | null = null;
   private indexBuffer: WebGLBuffer | null = null;
+  private dataDrivenBuffer: WebGLBuffer | null = null;
 
   // Attribute locations
   private aPos: number = -1;
   private aOffset: number = -1;
   private aIndex: number = -1;
+  private aTimeOffset: number = -1;
+  private aColor: number = -1;
+  private aIntensity: number = -1;
+
+  // Time offset calculator
+  private timeOffsetCalculator: TimeOffsetCalculator = new TimeOffsetCalculator();
+  private features: GeoJSON.Feature[] = [];
+
+  // Expression evaluator for data-driven properties
+  private expressionEvaluator: ExpressionEvaluator = new ExpressionEvaluator();
+  private hasDataDrivenColor: boolean = false;
+  private hasDataDrivenIntensity: boolean = false;
+  private featureData: FeatureData[] = [];
 
   // Uniform locations
   private uniforms: Map<string, WebGLUniformLocation | null> = new Map();
@@ -108,6 +161,40 @@ export class PointShaderLayer implements CustomLayerInterface {
     this.sourceId = sourceId;
     this.definition = definition;
     this.config = { ...definition.defaultConfig, ...config };
+
+    // Compile expressions from config
+    this.compileExpressions();
+  }
+
+  /**
+   * Compile MapLibre expressions from config
+   */
+  private compileExpressions(): void {
+    this.expressionEvaluator.clear();
+    this.hasDataDrivenColor = false;
+    this.hasDataDrivenIntensity = false;
+
+    // Check for color expression
+    const colorValue = this.config.color;
+    if (isExpression(colorValue)) {
+      try {
+        this.expressionEvaluator.compile('color', colorValue, 'color');
+        this.hasDataDrivenColor = true;
+      } catch (error) {
+        console.warn(`[PointShaderLayer] Failed to compile color expression:`, error);
+      }
+    }
+
+    // Check for intensity expression
+    const intensityValue = this.config.intensity;
+    if (isExpression(intensityValue)) {
+      try {
+        this.expressionEvaluator.compile('intensity', intensityValue, 'number');
+        this.hasDataDrivenIntensity = true;
+      } catch (error) {
+        console.warn(`[PointShaderLayer] Failed to compile intensity expression:`, error);
+      }
+    }
   }
 
   /**
@@ -117,6 +204,11 @@ export class PointShaderLayer implements CustomLayerInterface {
     this.config = { ...this.config, ...config };
     if (config.speed !== undefined) {
       this.speed = config.speed;
+    }
+
+    // Recompile expressions if color or intensity changed
+    if (config.color !== undefined || config.intensity !== undefined) {
+      this.compileExpressions();
     }
   }
 
@@ -179,6 +271,9 @@ export class PointShaderLayer implements CustomLayerInterface {
       this.aPos = gl.getAttribLocation(this.program, 'a_pos');
       this.aOffset = gl.getAttribLocation(this.program, 'a_offset');
       this.aIndex = gl.getAttribLocation(this.program, 'a_index');
+      this.aTimeOffset = gl.getAttribLocation(this.program, 'a_timeOffset');
+      this.aColor = gl.getAttribLocation(this.program, 'a_color');
+      this.aIntensity = gl.getAttribLocation(this.program, 'a_intensity');
 
       // Get uniform locations
       this.cacheUniformLocations(gl);
@@ -186,6 +281,7 @@ export class PointShaderLayer implements CustomLayerInterface {
       // Create buffers with error handling
       this.vertexBuffer = createBufferWithErrorHandling(gl, 'vertex', this.id);
       this.indexBuffer = createBufferWithErrorHandling(gl, 'index', this.id);
+      this.dataDrivenBuffer = createBufferWithErrorHandling(gl, 'dataDriven', this.id);
 
     } catch (error) {
       this.initializationError = error as Error;
@@ -239,14 +335,16 @@ export class PointShaderLayer implements CustomLayerInterface {
     // Use safe cleanup to handle any errors during resource disposal
     safeCleanup(gl, {
       program: this.program,
-      buffers: [this.vertexBuffer, this.indexBuffer],
+      buffers: [this.vertexBuffer, this.indexBuffer, this.dataDrivenBuffer],
     });
 
     this.program = null;
     this.vertexBuffer = null;
     this.indexBuffer = null;
+    this.dataDrivenBuffer = null;
     this.map = null;
     this.initializationError = null;
+    this.expressionEvaluator.clear();
   }
 
   /**
@@ -310,24 +408,59 @@ export class PointShaderLayer implements CustomLayerInterface {
     if (uSize) gl.uniform1f(uSize, size as number);
     if (uTime) gl.uniform1f(uTime, this.time);
 
+    // Set data-driven flags
+    const uUseDataDrivenColor = this.uniforms.get('u_useDataDrivenColor');
+    const uUseDataDrivenIntensity = this.uniforms.get('u_useDataDrivenIntensity');
+    if (uUseDataDrivenColor) gl.uniform1f(uUseDataDrivenColor, this.hasDataDrivenColor ? 1.0 : 0.0);
+    if (uUseDataDrivenIntensity) gl.uniform1f(uUseDataDrivenIntensity, this.hasDataDrivenIntensity ? 1.0 : 0.0);
+
     // Set shader-specific uniforms
     this.setShaderUniforms(gl);
 
     // Bind vertex buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
 
-    // Set up attributes
+    // Set up attributes (stride = 24 bytes = 6 floats)
+    const stride = 24;
+
     // Position (2 floats)
     gl.enableVertexAttribArray(this.aPos);
-    gl.vertexAttribPointer(this.aPos, 2, gl.FLOAT, false, 20, 0);
+    gl.vertexAttribPointer(this.aPos, 2, gl.FLOAT, false, stride, 0);
 
     // Offset (2 floats)
     gl.enableVertexAttribArray(this.aOffset);
-    gl.vertexAttribPointer(this.aOffset, 2, gl.FLOAT, false, 20, 8);
+    gl.vertexAttribPointer(this.aOffset, 2, gl.FLOAT, false, stride, 8);
 
     // Index (1 float)
     gl.enableVertexAttribArray(this.aIndex);
-    gl.vertexAttribPointer(this.aIndex, 1, gl.FLOAT, false, 20, 16);
+    gl.vertexAttribPointer(this.aIndex, 1, gl.FLOAT, false, stride, 16);
+
+    // TimeOffset (1 float)
+    if (this.aTimeOffset >= 0) {
+      gl.enableVertexAttribArray(this.aTimeOffset);
+      gl.vertexAttribPointer(this.aTimeOffset, 1, gl.FLOAT, false, stride, 20);
+    }
+
+    // Bind data-driven buffer for color and intensity attributes
+    const hasDataDriven = this.hasDataDrivenColor || this.hasDataDrivenIntensity;
+    if (hasDataDriven && this.dataDrivenBuffer) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.dataDrivenBuffer);
+
+      // Data-driven stride: color (4 floats) + intensity (1 float) = 5 floats = 20 bytes
+      const dataDrivenStride = 20;
+
+      // Color attribute (4 floats)
+      if (this.aColor >= 0) {
+        gl.enableVertexAttribArray(this.aColor);
+        gl.vertexAttribPointer(this.aColor, 4, gl.FLOAT, false, dataDrivenStride, 0);
+      }
+
+      // Intensity attribute (1 float)
+      if (this.aIntensity >= 0) {
+        gl.enableVertexAttribArray(this.aIntensity);
+        gl.vertexAttribPointer(this.aIntensity, 1, gl.FLOAT, false, dataDrivenStride, 16);
+      }
+    }
 
     // Bind index buffer and draw
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
@@ -337,6 +470,9 @@ export class PointShaderLayer implements CustomLayerInterface {
     if (this.aPos >= 0) gl.disableVertexAttribArray(this.aPos);
     if (this.aOffset >= 0) gl.disableVertexAttribArray(this.aOffset);
     if (this.aIndex >= 0) gl.disableVertexAttribArray(this.aIndex);
+    if (this.aTimeOffset >= 0) gl.disableVertexAttribArray(this.aTimeOffset);
+    if (this.aColor >= 0) gl.disableVertexAttribArray(this.aColor);
+    if (this.aIntensity >= 0) gl.disableVertexAttribArray(this.aIntensity);
 
     // Request another frame
     if (this.isPlaying) {
@@ -400,7 +536,9 @@ export class PointShaderLayer implements CustomLayerInterface {
     // Common uniforms
     const commonUniforms = [
       'u_matrix', 'u_resolution', 'u_size', 'u_time',
-      'u_color', 'u_intensity', 'u_opacity'
+      'u_color', 'u_intensity', 'u_opacity',
+      // Data-driven flags
+      'u_useDataDrivenColor', 'u_useDataDrivenIntensity'
     ];
 
     // Get uniform names from config schema
@@ -491,6 +629,7 @@ export class PointShaderLayer implements CustomLayerInterface {
    */
   private processFeatures(features: GeoJSON.Feature[] | maplibregl.MapGeoJSONFeature[], gl: WebGLRenderingContext): void {
     this.points = [];
+    this.features = features as GeoJSON.Feature[];
 
     for (let i = 0; i < features.length; i++) {
       const feature = features[i];
@@ -528,16 +667,24 @@ export class PointShaderLayer implements CustomLayerInterface {
       return;
     }
 
+    // Calculate time offsets for all features
+    const timingConfig = (this.config as unknown as { timing?: AnimationTimingConfig }).timing ?? { timeOffset: 'random' };
+    const timeOffsets = this.timeOffsetCalculator.calculateOffsets(this.features, timingConfig);
+
+    // Evaluate data-driven properties
+    this.evaluateDataDrivenProperties();
+
     // Each point becomes a quad (4 vertices, 6 indices)
-    // Vertex format: x, y, offsetX, offsetY, index (5 floats = 20 bytes)
-    const vertexData = new Float32Array(this.points.length * 4 * 5);
+    // Vertex format: x, y, offsetX, offsetY, index, timeOffset (6 floats = 24 bytes)
+    const vertexData = new Float32Array(this.points.length * 4 * 6);
     const indexData = new Uint16Array(this.points.length * 6);
 
     for (let i = 0; i < this.points.length; i++) {
       const point = this.points[i];
-      const vi = i * 4 * 5; // Vertex data index
+      const vi = i * 4 * 6; // Vertex data index
       const ii = i * 6;     // Index data index
       const baseVertex = i * 4;
+      const timeOffset = timeOffsets[point.index] ?? 0;
 
       // Quad offsets: bottom-left, bottom-right, top-right, top-left
       const offsets = [
@@ -548,12 +695,13 @@ export class PointShaderLayer implements CustomLayerInterface {
       ];
 
       for (let j = 0; j < 4; j++) {
-        const vj = vi + j * 5;
+        const vj = vi + j * 6;
         vertexData[vj + 0] = point.mercatorX;
         vertexData[vj + 1] = point.mercatorY;
         vertexData[vj + 2] = offsets[j][0];
         vertexData[vj + 3] = offsets[j][1];
         vertexData[vj + 4] = point.index;
+        vertexData[vj + 5] = timeOffset;
       }
 
       // Two triangles: 0-1-2 and 0-2-3
@@ -573,6 +721,90 @@ export class PointShaderLayer implements CustomLayerInterface {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indexData, gl.STATIC_DRAW);
 
+    // Build data-driven buffer if needed
+    if (this.hasDataDrivenColor || this.hasDataDrivenIntensity) {
+      this.buildDataDrivenBuffer(gl);
+    }
+
     this.vertexCount = indexData.length;
+  }
+
+  /**
+   * Evaluate data-driven properties for all features
+   */
+  private evaluateDataDrivenProperties(): void {
+    if (!this.map) return;
+
+    const zoom = this.map.getZoom();
+    this.featureData = [];
+
+    // Get default color from config
+    const defaultColorValue = this.config.color;
+    let defaultColor: [number, number, number, number] = [1, 1, 1, 1];
+    if (typeof defaultColorValue === 'string' && !isExpression(defaultColorValue)) {
+      defaultColor = hexToRgba(defaultColorValue);
+    } else if (Array.isArray(defaultColorValue) && defaultColorValue.length === 4 && typeof defaultColorValue[0] === 'number') {
+      defaultColor = defaultColorValue as [number, number, number, number];
+    }
+
+    // Get default intensity from config
+    const defaultIntensity = typeof this.config.intensity === 'number' ? this.config.intensity : 1.0;
+
+    for (let i = 0; i < this.features.length; i++) {
+      const feature = this.features[i];
+
+      // Evaluate color
+      let color: [number, number, number, number] = defaultColor;
+      if (this.hasDataDrivenColor) {
+        const evaluated = this.expressionEvaluator.evaluateExpression('color', feature, zoom);
+        if (evaluated && typeof evaluated === 'object' && 'r' in evaluated) {
+          const c = evaluated as { r: number; g: number; b: number; a: number };
+          color = [c.r, c.g, c.b, c.a];
+        } else if (typeof evaluated === 'string') {
+          color = hexToRgba(evaluated);
+        }
+      }
+
+      // Evaluate intensity
+      let intensity = defaultIntensity;
+      if (this.hasDataDrivenIntensity) {
+        const evaluated = this.expressionEvaluator.evaluateExpression('intensity', feature, zoom);
+        if (typeof evaluated === 'number') {
+          intensity = evaluated;
+        }
+      }
+
+      this.featureData.push({ color, intensity });
+    }
+  }
+
+  /**
+   * Build the data-driven attribute buffer
+   */
+  private buildDataDrivenBuffer(gl: WebGLRenderingContext): void {
+    if (!this.dataDrivenBuffer) return;
+
+    // Data-driven format per vertex: color (4 floats) + intensity (1 float) = 5 floats = 20 bytes
+    // Each point has 4 vertices (quad)
+    const dataDrivenData = new Float32Array(this.points.length * 4 * 5);
+
+    for (let i = 0; i < this.points.length; i++) {
+      const point = this.points[i];
+      const featureIdx = point.index;
+      const data = this.featureData[featureIdx] ?? { color: [1, 1, 1, 1], intensity: 1.0 };
+
+      // Each quad vertex gets the same data-driven values
+      for (let j = 0; j < 4; j++) {
+        const offset = (i * 4 + j) * 5;
+        dataDrivenData[offset + 0] = data.color[0];
+        dataDrivenData[offset + 1] = data.color[1];
+        dataDrivenData[offset + 2] = data.color[2];
+        dataDrivenData[offset + 3] = data.color[3];
+        dataDrivenData[offset + 4] = data.intensity;
+      }
+    }
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.dataDrivenBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, dataDrivenData, gl.DYNAMIC_DRAW);
   }
 }

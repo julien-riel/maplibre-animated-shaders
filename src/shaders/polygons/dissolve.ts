@@ -121,6 +121,7 @@ uniform float u_intensity;
 
 varying vec2 v_screen_pos;
 varying vec2 v_uv;
+varying float v_timeOffset;
 
 // Simplex noise functions
 vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
@@ -166,8 +167,11 @@ void main() {
   vec2 noiseCoord = v_screen_pos * u_noiseScale;
   float noise = fbm(noiseCoord);
 
+  // Apply per-feature time offset for animation desynchronization
+  float localTime = u_time + v_timeOffset;
+
   // Animate the progress with slight wave effect
-  float animatedProgress = u_progress + sin(u_time * 2.0) * 0.02;
+  float animatedProgress = u_progress + sin(localTime * 2.0) * 0.02;
   animatedProgress = clamp(animatedProgress, 0.0, 1.0);
 
   // Calculate dissolve threshold

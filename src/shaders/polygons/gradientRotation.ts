@@ -86,6 +86,7 @@ uniform float u_gradientType;
 uniform float u_intensity;
 
 varying vec2 v_uv;
+varying float v_timeOffset;
 
 const float PI = 3.14159265359;
 const float TWO_PI = 6.28318530718;
@@ -123,21 +124,24 @@ void main() {
   vec2 center = vec2(0.5, 0.5);
   vec2 pos = v_uv - center;
 
+  // Apply per-feature time offset for animation desynchronization
+  float localTime = u_time + v_timeOffset;
+
   float t;
 
   if (u_gradientType < 0.5) {
     // Radial gradient
     float dist = length(pos) * 2.0;
-    t = dist + u_time;
+    t = dist + localTime;
   } else if (u_gradientType < 1.5) {
     // Linear gradient (rotating)
-    float angle = u_time * TWO_PI;
+    float angle = localTime * TWO_PI;
     vec2 dir = vec2(cos(angle), sin(angle));
     t = dot(pos, dir) + 0.5;
   } else {
     // Conic gradient (rotating)
     float angle = atan(pos.y, pos.x);
-    t = (angle + PI) / TWO_PI + u_time;
+    t = (angle + PI) / TWO_PI + localTime;
   }
 
   vec4 gradientColor = getGradientColor(t);

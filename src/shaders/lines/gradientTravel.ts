@@ -121,6 +121,7 @@ varying vec2 v_pos;
 varying float v_progress;
 varying float v_line_index;
 varying float v_width;
+varying float v_timeOffset;
 
 void main() {
   // Calculate perpendicular distance from line center
@@ -130,8 +131,11 @@ void main() {
   float aa = 1.5 / u_width;
   float lineAlpha = 1.0 - smoothstep(1.0 - aa, 1.0, dist);
 
+  // Apply per-feature time offset for animation desynchronization
+  float localTime = u_time + v_timeOffset;
+
   // Calculate gradient position
-  float position = v_progress * 1000.0 - u_time * 50.0;
+  float position = v_progress * 1000.0 - localTime * 50.0;
   float gradientPos = 0.0;
 
   if (u_mode < 0.5) {

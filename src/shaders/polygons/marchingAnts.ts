@@ -121,6 +121,7 @@ uniform float u_intensity;
 
 varying vec2 v_uv;
 varying vec2 v_screen_pos;
+varying float v_timeOffset;
 
 void main() {
   // Calculate distance from edges (using UV coordinates)
@@ -153,10 +154,13 @@ void main() {
     }
   }
 
+  // Apply per-feature time offset for animation desynchronization
+  float localTime = u_time + v_timeOffset;
+
   // Create marching pattern using screen position for consistency
   float perimeter = (v_screen_pos.x + v_screen_pos.y);
   float cycleLength = u_dashLength + u_gapLength;
-  float phase = u_time * 30.0;
+  float phase = localTime * 30.0;
   float pattern = mod(perimeter + phase, cycleLength);
 
   // Determine if we're in a dash or gap

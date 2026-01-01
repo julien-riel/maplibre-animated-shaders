@@ -160,6 +160,7 @@ uniform float u_continuous;
 uniform float u_intensity;
 
 varying vec2 v_pos;
+varying float v_timeOffset;
 
 // Pseudo-random function
 float hash(float n) {
@@ -173,6 +174,9 @@ float hash2(vec2 p) {
 void main() {
   vec2 pos = v_pos * u_maxRadius;
   float alpha = 0.0;
+
+  // Apply per-feature time offset for animation desynchronization
+  float localTime = u_time + v_timeOffset;
 
   // Convert spread to radians
   float spreadRad = u_spread * PI / 180.0;
@@ -189,7 +193,7 @@ void main() {
     float emissionDelay = u_continuous > 0.5 ? hash(seed + 1.0) : 0.0;
 
     // Particle's individual time (with stagger)
-    float particleTime = u_time - emissionDelay * u_lifetime;
+    float particleTime = localTime - emissionDelay * u_lifetime;
 
     // Particle phase (0 to 1 over lifetime, loops)
     float phase = mod(particleTime / u_lifetime, 1.0);

@@ -248,3 +248,274 @@ export interface IConfigResolver {
  * MapLibre GL Map type re-export
  */
 export type MapLibreMapInstance = MapLibreMap;
+
+// =============================================================================
+// Animation Timing Types (Phase 1 - Offset/Randomization)
+// =============================================================================
+
+/**
+ * Time offset value specification
+ *
+ * - number: Fixed offset in seconds
+ * - 'random': Random offset within [0, period]
+ * - ['get', string]: Value from feature property
+ * - ['hash', string]: Stable hash of feature property (normalized to [0, period])
+ * - { min, max }: Random offset within range
+ */
+export type TimeOffsetValue =
+  | number
+  | 'random'
+  | ['get', string]
+  | ['hash', string]
+  | { min: number; max: number };
+
+/**
+ * Animation timing configuration
+ *
+ * Controls per-feature time offset for animation desynchronization
+ */
+export interface AnimationTimingConfig {
+  /**
+   * Time offset mode
+   *
+   * @example
+   * // Fixed offset
+   * timeOffset: 0.5
+   *
+   * // Random offset within period
+   * timeOffset: 'random'
+   *
+   * // Value from feature property
+   * timeOffset: ['get', 'animation_delay']
+   *
+   * // Stable hash of property (reproducible)
+   * timeOffset: ['hash', 'id']
+   *
+   * // Random within range
+   * timeOffset: { min: 0, max: 2 }
+   */
+  timeOffset?: TimeOffsetValue;
+
+  /**
+   * Seed for reproducible random offsets
+   *
+   * Can be a number or string. Same seed produces same offsets.
+   */
+  randomSeed?: number | string;
+
+  /**
+   * Animation period in seconds
+   *
+   * Used to normalize offset values for 'random' and 'hash' modes.
+   * @default 1
+   */
+  period?: number;
+}
+
+/**
+ * Extended shader config with timing support
+ */
+export interface TimedShaderConfig extends ShaderConfig, AnimationTimingConfig {}
+
+// =============================================================================
+// Data-Driven Expression Types (Phase 2)
+// =============================================================================
+
+/**
+ * MapLibre expression types for data-driven properties
+ *
+ * These expressions are evaluated per-feature using MapLibre's expression system.
+ */
+export type DataDrivenExpression =
+  | ['get', string]
+  | ['coalesce', ...unknown[]]
+  | ['match', ...unknown[]]
+  | ['interpolate', ...unknown[]]
+  | ['case', ...unknown[]]
+  | ['step', ...unknown[]]
+  | ['literal', unknown]
+  | ['==', ...unknown[]]
+  | ['!=', ...unknown[]]
+  | ['<', ...unknown[]]
+  | ['<=', ...unknown[]]
+  | ['>', ...unknown[]]
+  | ['>=', ...unknown[]]
+  | ['+', ...unknown[]]
+  | ['-', ...unknown[]]
+  | ['*', ...unknown[]]
+  | ['/', ...unknown[]]
+  | ['%', ...unknown[]]
+  | ['^', ...unknown[]]
+  | ['sqrt', unknown]
+  | ['abs', unknown]
+  | ['min', ...unknown[]]
+  | ['max', ...unknown[]]
+  | ['round', unknown]
+  | ['floor', unknown]
+  | ['ceil', unknown]
+  | ['sin', unknown]
+  | ['cos', unknown]
+  | ['tan', unknown]
+  | ['asin', unknown]
+  | ['acos', unknown]
+  | ['atan', unknown]
+  | ['ln', unknown]
+  | ['log10', unknown]
+  | ['log2', unknown]
+  | ['e']
+  | ['pi']
+  | ['zoom']
+  | ['concat', ...unknown[]]
+  | ['downcase', unknown]
+  | ['upcase', unknown]
+  | ['length', unknown]
+  | ['rgb', number, number, number]
+  | ['rgba', number, number, number, number]
+  | ['to-color', unknown]
+  | ['to-number', unknown]
+  | ['to-string', unknown]
+  | ['to-boolean', unknown]
+  | ['all', ...unknown[]]
+  | ['any', ...unknown[]]
+  | ['!', unknown]
+  | ['has', string]
+  | ['in', ...unknown[]]
+  | ['index-of', ...unknown[]]
+  | ['slice', ...unknown[]]
+  | ['let', ...unknown[]]
+  | ['var', string]
+  | ['at', number, unknown[]]
+  | unknown[];  // Fallback for any other valid expression
+
+/**
+ * A value that can be either static or data-driven
+ */
+export type DataDrivenValue<T> = T | DataDrivenExpression;
+
+/**
+ * Data-driven shader configuration
+ *
+ * Any property can be either a static value or a MapLibre expression
+ */
+export type DataDrivenShaderConfig<T extends ShaderConfig = ShaderConfig> = {
+  [K in keyof T]: DataDrivenValue<T[K]>;
+} & AnimationTimingConfig;
+
+// =============================================================================
+// Interactive Animation Types (Phase 3)
+// =============================================================================
+
+/**
+ * Animation state for a single feature
+ */
+export interface FeatureAnimationState {
+  /** Feature identifier */
+  featureId: string | number;
+  /** Whether the animation is currently playing */
+  isPlaying: boolean;
+  /** Local time accumulator (paused time) */
+  localTime: number;
+  /** Number of complete animation cycles */
+  playCount: number;
+}
+
+/**
+ * Interaction action types
+ */
+export type InteractionAction =
+  | 'toggle'
+  | 'play'
+  | 'pause'
+  | 'reset'
+  | 'playOnce';
+
+/**
+ * Custom interaction handler function
+ */
+export type InteractionHandler = (
+  feature: GeoJSON.Feature,
+  state: FeatureAnimationState
+) => void;
+
+/**
+ * Hover interaction configuration
+ */
+export interface HoverInteractionConfig {
+  /** Action on mouse enter */
+  enter?: InteractionAction | InteractionHandler;
+  /** Action on mouse leave */
+  leave?: InteractionAction | InteractionHandler;
+}
+
+/**
+ * Interactivity configuration for per-feature animation control
+ */
+export interface InteractivityConfig {
+  /**
+   * Enable per-feature animation control
+   * @default false
+   */
+  perFeatureControl?: boolean;
+
+  /**
+   * Initial animation state for features
+   * @default 'playing'
+   */
+  initialState?: 'playing' | 'paused' | 'stopped';
+
+  /**
+   * Action on click
+   *
+   * @example
+   * onClick: 'toggle'  // Toggle play/pause on click
+   * onClick: (feature, state) => { ... }  // Custom handler
+   */
+  onClick?: InteractionAction | InteractionHandler;
+
+  /**
+   * Actions on hover
+   *
+   * @example
+   * onHover: {
+   *   enter: 'play',
+   *   leave: 'pause'
+   * }
+   */
+  onHover?: HoverInteractionConfig;
+
+  /**
+   * Property name to use as feature ID
+   *
+   * Falls back to feature.id or array index if not specified.
+   */
+  featureIdProperty?: string;
+}
+
+/**
+ * Extended shader controller with per-feature control
+ */
+export interface InteractiveShaderController extends ShaderController {
+  /** Play animation for a specific feature */
+  playFeature: (featureId: string | number) => void;
+  /** Pause animation for a specific feature */
+  pauseFeature: (featureId: string | number) => void;
+  /** Reset animation for a specific feature */
+  resetFeature: (featureId: string | number) => void;
+  /** Set state for a specific feature */
+  setFeatureState: (featureId: string | number, state: Partial<FeatureAnimationState>) => void;
+  /** Get state for a specific feature */
+  getFeatureState: (featureId: string | number) => FeatureAnimationState | undefined;
+  /** Get all feature states */
+  getAllFeatureStates: () => Map<string | number, FeatureAnimationState>;
+  /** Play all features */
+  playAll: () => void;
+  /** Pause all features */
+  pauseAll: () => void;
+  /** Reset all features */
+  resetAll: () => void;
+}
+
+/**
+ * Full shader configuration with all features
+ */
+export interface FullShaderConfig extends ShaderConfig, AnimationTimingConfig, InteractivityConfig {}

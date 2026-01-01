@@ -156,6 +156,7 @@ uniform float u_shape3;
 uniform float u_shape4;
 
 varying vec2 v_pos;
+varying float v_timeOffset;
 
 // Easing
 float easeInOutCubic(float t) {
@@ -237,13 +238,16 @@ float getShape(float index) {
 void main() {
   vec2 pos = v_pos * u_size;
 
+  // Apply per-feature time offset for animation desynchronization
+  float localTime = u_time + v_timeOffset;
+
   // Apply rotation if enabled
   if (u_rotate > 0.5) {
-    pos = rotate2D(pos, u_time * 0.5);
+    pos = rotate2D(pos, localTime * 0.5);
   }
 
   // Calculate which shapes we're morphing between
-  float totalPhase = u_time;
+  float totalPhase = localTime;
 
   // Each shape gets (1 / shapeCount) of the cycle
   // With holdDuration, we split each segment into hold + transition

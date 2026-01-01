@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+#### Data-Driven Expressions (Phase 2)
+- **ExpressionEvaluator** - Wrapper around MapLibre's expression system for data-driven shader properties
+- **FeatureDataBuffer** - GPU buffer manager for per-feature attribute data
+- Support for MapLibre-style expressions in shader configuration:
+  - `['get', 'property']` - Read property from GeoJSON feature
+  - `['match', ...]` - Conditional value mapping
+  - `['interpolate', ...]` - Numeric interpolation
+  - `['coalesce', ...]` - Fallback values
+  - All other MapLibre expressions via `@maplibre/maplibre-gl-style-spec`
+- Data-driven `color` and `intensity` properties for all shader types (Point, Line, Polygon)
+- Per-vertex color and intensity attributes in vertex shaders
+
+#### Animation Timing (Phase 1)
+- **TimeOffsetCalculator** - Calculate per-feature time offsets for animation variety
+- Support for multiple offset modes:
+  - Fixed offset (`timeOffset: 0.5`)
+  - Random offset (`timeOffset: 'random'`)
+  - Property-based (`timeOffset: ['get', 'delay']`)
+  - Hash-based stable offset (`timeOffset: ['hash', 'id']`)
+  - Range-based (`timeOffset: { min: 0, max: 2 }`)
+- `a_timeOffset` vertex attribute and `v_timeOffset` varying in all shaders
+
+### Changed
+- Moved `@maplibre/maplibre-gl-style-spec` from devDependencies to dependencies
+- Updated all ShaderLayers (Point, Line, Polygon) to support data-driven properties
+- Enhanced vertex shaders with data-driven attribute support
+
+---
+
 ## [1.0.0] - 2024-12-28
 
 ### Added

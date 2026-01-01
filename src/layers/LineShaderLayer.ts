@@ -3,11 +3,18 @@
  *
  * Implements MapLibre's CustomLayerInterface to render lines
  * with custom GLSL fragment shaders.
+ *
+ * Supports data-driven properties via MapLibre-style expressions:
+ * - color: ['get', 'line_color']
+ * - intensity: ['match', ['get', 'type'], 'primary', 1.0, 0.5]
  */
 
 import type { CustomLayerInterface, Map as MapLibreMap } from 'maplibre-gl';
-import type { ShaderDefinition, ShaderConfig } from '../types';
+import type { ShaderDefinition, ShaderConfig, AnimationTimingConfig } from '../types';
 import type { mat4 } from 'gl-matrix';
+import { TimeOffsetCalculator } from '../timing';
+import { ExpressionEvaluator, isExpression } from '../expressions';
+import { hexToRgba } from '../utils/color';
 import {
   ShaderError,
   compileShaderWithErrorHandling,
@@ -20,6 +27,10 @@ import {
 /**
  * Vertex shader for line rendering
  * Renders thick lines as quads along each segment
+ *
+ * Supports data-driven properties via per-vertex attributes:
+ * - a_color: Per-feature color (RGBA)
+ * - a_intensity: Per-feature intensity
  */
 const LINE_VERTEX_SHADER = `
   attribute vec2 a_pos_start;
@@ -27,15 +38,25 @@ const LINE_VERTEX_SHADER = `
   attribute vec2 a_offset;
   attribute float a_progress;
   attribute float a_line_index;
+  attribute float a_timeOffset;
+  attribute vec4 a_color;
+  attribute float a_intensity;
 
   uniform mat4 u_matrix;
   uniform float u_width;
   uniform vec2 u_resolution;
+  uniform float u_useDataDrivenColor;
+  uniform float u_useDataDrivenIntensity;
 
   varying vec2 v_pos;
   varying float v_progress;
   varying float v_line_index;
   varying float v_width;
+  varying float v_timeOffset;
+  varying vec4 v_color;
+  varying float v_intensity;
+  varying float v_useDataDrivenColor;
+  varying float v_useDataDrivenIntensity;
 
   void main() {
     // Calculate line direction and perpendicular
@@ -74,6 +95,13 @@ const LINE_VERTEX_SHADER = `
     v_progress = mix(a_progress, a_progress + (1.0 / max(1.0, float(a_line_index + 1.0))), t);
     v_line_index = a_line_index;
     v_width = u_width;
+    v_timeOffset = a_timeOffset;
+
+    // Pass data-driven properties
+    v_color = a_color;
+    v_intensity = a_intensity;
+    v_useDataDrivenColor = u_useDataDrivenColor;
+    v_useDataDrivenIntensity = u_useDataDrivenIntensity;
   }
 `;
 
@@ -87,7 +115,17 @@ interface LineSegment {
 }
 
 /**
+ * Per-feature evaluated data for data-driven properties
+ */
+interface FeatureData {
+  color: [number, number, number, number];
+  intensity: number;
+}
+
+/**
  * LineShaderLayer - Custom WebGL layer for line shaders
+ *
+ * Supports data-driven properties via MapLibre-style expressions.
  */
 export class LineShaderLayer implements CustomLayerInterface {
   id: string;
@@ -107,6 +145,7 @@ export class LineShaderLayer implements CustomLayerInterface {
   private program: WebGLProgram | null = null;
   private vertexBuffer: WebGLBuffer | null = null;
   private indexBuffer: WebGLBuffer | null = null;
+  private dataDrivenBuffer: WebGLBuffer | null = null;
 
   // Attribute locations
   private aPosStart: number = -1;
@@ -114,6 +153,19 @@ export class LineShaderLayer implements CustomLayerInterface {
   private aOffset: number = -1;
   private aProgress: number = -1;
   private aLineIndex: number = -1;
+  private aTimeOffset: number = -1;
+  private aColor: number = -1;
+  private aIntensity: number = -1;
+
+  // Time offset calculator
+  private timeOffsetCalculator: TimeOffsetCalculator = new TimeOffsetCalculator();
+  private features: GeoJSON.Feature[] = [];
+
+  // Expression evaluator for data-driven properties
+  private expressionEvaluator: ExpressionEvaluator = new ExpressionEvaluator();
+  private hasDataDrivenColor: boolean = false;
+  private hasDataDrivenIntensity: boolean = false;
+  private featureData: FeatureData[] = [];
 
   // Uniform locations
   private uniforms: Map<string, WebGLUniformLocation | null> = new Map();
@@ -137,6 +189,40 @@ export class LineShaderLayer implements CustomLayerInterface {
     this.sourceId = sourceId;
     this.definition = definition;
     this.config = { ...definition.defaultConfig, ...config };
+
+    // Compile expressions from config
+    this.compileExpressions();
+  }
+
+  /**
+   * Compile MapLibre expressions from config
+   */
+  private compileExpressions(): void {
+    this.expressionEvaluator.clear();
+    this.hasDataDrivenColor = false;
+    this.hasDataDrivenIntensity = false;
+
+    // Check for color expression
+    const colorValue = this.config.color;
+    if (isExpression(colorValue)) {
+      try {
+        this.expressionEvaluator.compile('color', colorValue, 'color');
+        this.hasDataDrivenColor = true;
+      } catch (error) {
+        console.warn(`[LineShaderLayer] Failed to compile color expression:`, error);
+      }
+    }
+
+    // Check for intensity expression
+    const intensityValue = this.config.intensity;
+    if (isExpression(intensityValue)) {
+      try {
+        this.expressionEvaluator.compile('intensity', intensityValue, 'number');
+        this.hasDataDrivenIntensity = true;
+      } catch (error) {
+        console.warn(`[LineShaderLayer] Failed to compile intensity expression:`, error);
+      }
+    }
   }
 
   /**
@@ -146,6 +232,11 @@ export class LineShaderLayer implements CustomLayerInterface {
     this.config = { ...this.config, ...config };
     if (config.speed !== undefined) {
       this.speed = config.speed;
+    }
+
+    // Recompile expressions if color or intensity changed
+    if (config.color !== undefined || config.intensity !== undefined) {
+      this.compileExpressions();
     }
   }
 
@@ -210,6 +301,9 @@ export class LineShaderLayer implements CustomLayerInterface {
       this.aOffset = gl.getAttribLocation(this.program, 'a_offset');
       this.aProgress = gl.getAttribLocation(this.program, 'a_progress');
       this.aLineIndex = gl.getAttribLocation(this.program, 'a_line_index');
+      this.aTimeOffset = gl.getAttribLocation(this.program, 'a_timeOffset');
+      this.aColor = gl.getAttribLocation(this.program, 'a_color');
+      this.aIntensity = gl.getAttribLocation(this.program, 'a_intensity');
 
       // Get uniform locations
       this.cacheUniformLocations(gl);
@@ -217,6 +311,7 @@ export class LineShaderLayer implements CustomLayerInterface {
       // Create buffers with error handling
       this.vertexBuffer = createBufferWithErrorHandling(gl, 'vertex', this.id);
       this.indexBuffer = createBufferWithErrorHandling(gl, 'index', this.id);
+      this.dataDrivenBuffer = createBufferWithErrorHandling(gl, 'dataDriven', this.id);
 
     } catch (error) {
       this.initializationError = error as Error;
@@ -269,14 +364,16 @@ export class LineShaderLayer implements CustomLayerInterface {
   onRemove(_map: MapLibreMap, gl: WebGLRenderingContext): void {
     safeCleanup(gl, {
       program: this.program,
-      buffers: [this.vertexBuffer, this.indexBuffer],
+      buffers: [this.vertexBuffer, this.indexBuffer, this.dataDrivenBuffer],
     });
 
     this.program = null;
     this.vertexBuffer = null;
     this.indexBuffer = null;
+    this.dataDrivenBuffer = null;
     this.map = null;
     this.initializationError = null;
+    this.expressionEvaluator.clear();
   }
 
   /**
@@ -340,15 +437,21 @@ export class LineShaderLayer implements CustomLayerInterface {
     if (uTime) gl.uniform1f(uTime, this.time);
     if (uTotalLength) gl.uniform1f(uTotalLength, this.totalLength);
 
+    // Set data-driven flags
+    const uUseDataDrivenColor = this.uniforms.get('u_useDataDrivenColor');
+    const uUseDataDrivenIntensity = this.uniforms.get('u_useDataDrivenIntensity');
+    if (uUseDataDrivenColor) gl.uniform1f(uUseDataDrivenColor, this.hasDataDrivenColor ? 1.0 : 0.0);
+    if (uUseDataDrivenIntensity) gl.uniform1f(uUseDataDrivenIntensity, this.hasDataDrivenIntensity ? 1.0 : 0.0);
+
     // Set shader-specific uniforms
     this.setShaderUniforms(gl);
 
     // Bind vertex buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
 
-    // Vertex format: startX, startY, endX, endY, offsetX, offsetY, progress, lineIndex
-    // 8 floats = 32 bytes per vertex
-    const stride = 32;
+    // Vertex format: startX, startY, endX, endY, offsetX, offsetY, progress, lineIndex, timeOffset
+    // 9 floats = 36 bytes per vertex
+    const stride = 36;
 
     // Set up attributes
     if (this.aPosStart >= 0) {
@@ -376,6 +479,30 @@ export class LineShaderLayer implements CustomLayerInterface {
       gl.vertexAttribPointer(this.aLineIndex, 1, gl.FLOAT, false, stride, 28);
     }
 
+    if (this.aTimeOffset >= 0) {
+      gl.enableVertexAttribArray(this.aTimeOffset);
+      gl.vertexAttribPointer(this.aTimeOffset, 1, gl.FLOAT, false, stride, 32);
+    }
+
+    // Bind data-driven buffer for color and intensity attributes
+    const hasDataDriven = this.hasDataDrivenColor || this.hasDataDrivenIntensity;
+    if (hasDataDriven && this.dataDrivenBuffer) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.dataDrivenBuffer);
+
+      // Data-driven stride: color (4 floats) + intensity (1 float) = 5 floats = 20 bytes
+      const dataDrivenStride = 20;
+
+      if (this.aColor >= 0) {
+        gl.enableVertexAttribArray(this.aColor);
+        gl.vertexAttribPointer(this.aColor, 4, gl.FLOAT, false, dataDrivenStride, 0);
+      }
+
+      if (this.aIntensity >= 0) {
+        gl.enableVertexAttribArray(this.aIntensity);
+        gl.vertexAttribPointer(this.aIntensity, 1, gl.FLOAT, false, dataDrivenStride, 16);
+      }
+    }
+
     // Bind index buffer and draw
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
     gl.drawElements(gl.TRIANGLES, this.vertexCount, gl.UNSIGNED_SHORT, 0);
@@ -386,6 +513,9 @@ export class LineShaderLayer implements CustomLayerInterface {
     if (this.aOffset >= 0) gl.disableVertexAttribArray(this.aOffset);
     if (this.aProgress >= 0) gl.disableVertexAttribArray(this.aProgress);
     if (this.aLineIndex >= 0) gl.disableVertexAttribArray(this.aLineIndex);
+    if (this.aTimeOffset >= 0) gl.disableVertexAttribArray(this.aTimeOffset);
+    if (this.aColor >= 0) gl.disableVertexAttribArray(this.aColor);
+    if (this.aIntensity >= 0) gl.disableVertexAttribArray(this.aIntensity);
 
     // Request another frame
     if (this.isPlaying) {
@@ -443,7 +573,9 @@ export class LineShaderLayer implements CustomLayerInterface {
     // Common uniforms
     const commonUniforms = [
       'u_matrix', 'u_resolution', 'u_width', 'u_time', 'u_total_length',
-      'u_color', 'u_intensity', 'u_opacity'
+      'u_color', 'u_intensity', 'u_opacity',
+      // Data-driven flags
+      'u_useDataDrivenColor', 'u_useDataDrivenIntensity'
     ];
 
     // Get uniform names from config schema
@@ -535,6 +667,7 @@ export class LineShaderLayer implements CustomLayerInterface {
   ): void {
     this.segments = [];
     this.totalLength = 0;
+    this.features = features as GeoJSON.Feature[];
 
     let lineIndex = 0;
 
@@ -618,17 +751,25 @@ export class LineShaderLayer implements CustomLayerInterface {
       return;
     }
 
+    // Calculate time offsets for all features
+    const timingConfig = (this.config as unknown as { timing?: AnimationTimingConfig }).timing ?? { timeOffset: 'random' };
+    const timeOffsets = this.timeOffsetCalculator.calculateOffsets(this.features, timingConfig);
+
+    // Evaluate data-driven properties
+    this.evaluateDataDrivenProperties();
+
     // Each segment becomes a quad (4 vertices, 6 indices)
-    // Vertex format: startX, startY, endX, endY, offsetX, offsetY, progress, lineIndex
-    // 8 floats = 32 bytes per vertex
-    const vertexData = new Float32Array(this.segments.length * 4 * 8);
+    // Vertex format: startX, startY, endX, endY, offsetX, offsetY, progress, lineIndex, timeOffset
+    // 9 floats = 36 bytes per vertex
+    const vertexData = new Float32Array(this.segments.length * 4 * 9);
     const indexData = new Uint16Array(this.segments.length * 6);
 
     for (let i = 0; i < this.segments.length; i++) {
       const seg = this.segments[i];
-      const vi = i * 4 * 8; // Vertex data index
+      const vi = i * 4 * 9; // Vertex data index
       const ii = i * 6;     // Index data index
       const baseVertex = i * 4;
+      const timeOffset = timeOffsets[seg.lineIndex] ?? 0;
 
       // Four corners of the quad:
       // (-1, -1): start, bottom
@@ -643,7 +784,7 @@ export class LineShaderLayer implements CustomLayerInterface {
       ];
 
       for (let j = 0; j < 4; j++) {
-        const vj = vi + j * 8;
+        const vj = vi + j * 9;
         vertexData[vj + 0] = seg.startX;
         vertexData[vj + 1] = seg.startY;
         vertexData[vj + 2] = seg.endX;
@@ -652,6 +793,7 @@ export class LineShaderLayer implements CustomLayerInterface {
         vertexData[vj + 5] = offsets[j][1];
         vertexData[vj + 6] = seg.progress;
         vertexData[vj + 7] = seg.lineIndex;
+        vertexData[vj + 8] = timeOffset;
       }
 
       // Two triangles: 0-1-2 and 0-2-3
@@ -671,6 +813,90 @@ export class LineShaderLayer implements CustomLayerInterface {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indexData, gl.STATIC_DRAW);
 
+    // Build data-driven buffer if needed
+    if (this.hasDataDrivenColor || this.hasDataDrivenIntensity) {
+      this.buildDataDrivenBuffer(gl);
+    }
+
     this.vertexCount = indexData.length;
+  }
+
+  /**
+   * Evaluate data-driven properties for all features
+   */
+  private evaluateDataDrivenProperties(): void {
+    if (!this.map) return;
+
+    const zoom = this.map.getZoom();
+    this.featureData = [];
+
+    // Get default color from config
+    const defaultColorValue = this.config.color;
+    let defaultColor: [number, number, number, number] = [1, 1, 1, 1];
+    if (typeof defaultColorValue === 'string' && !isExpression(defaultColorValue)) {
+      defaultColor = hexToRgba(defaultColorValue);
+    } else if (Array.isArray(defaultColorValue) && defaultColorValue.length === 4 && typeof defaultColorValue[0] === 'number') {
+      defaultColor = defaultColorValue as [number, number, number, number];
+    }
+
+    // Get default intensity from config
+    const defaultIntensity = typeof this.config.intensity === 'number' ? this.config.intensity : 1.0;
+
+    for (let i = 0; i < this.features.length; i++) {
+      const feature = this.features[i];
+
+      // Evaluate color
+      let color: [number, number, number, number] = defaultColor;
+      if (this.hasDataDrivenColor) {
+        const evaluated = this.expressionEvaluator.evaluateExpression('color', feature, zoom);
+        if (evaluated && typeof evaluated === 'object' && 'r' in evaluated) {
+          const c = evaluated as { r: number; g: number; b: number; a: number };
+          color = [c.r, c.g, c.b, c.a];
+        } else if (typeof evaluated === 'string') {
+          color = hexToRgba(evaluated);
+        }
+      }
+
+      // Evaluate intensity
+      let intensity = defaultIntensity;
+      if (this.hasDataDrivenIntensity) {
+        const evaluated = this.expressionEvaluator.evaluateExpression('intensity', feature, zoom);
+        if (typeof evaluated === 'number') {
+          intensity = evaluated;
+        }
+      }
+
+      this.featureData.push({ color, intensity });
+    }
+  }
+
+  /**
+   * Build the data-driven attribute buffer
+   */
+  private buildDataDrivenBuffer(gl: WebGLRenderingContext): void {
+    if (!this.dataDrivenBuffer) return;
+
+    // Data-driven format per vertex: color (4 floats) + intensity (1 float) = 5 floats = 20 bytes
+    // Each segment has 4 vertices (quad)
+    const dataDrivenData = new Float32Array(this.segments.length * 4 * 5);
+
+    for (let i = 0; i < this.segments.length; i++) {
+      const seg = this.segments[i];
+      const lineIndex = seg.lineIndex;
+      const data = this.featureData[lineIndex] ?? { color: [1, 1, 1, 1], intensity: 1.0 };
+
+      // Each quad vertex gets the same data-driven values
+      for (let j = 0; j < 4; j++) {
+        const offset = (i * 4 + j) * 5;
+        dataDrivenData[offset + 0] = data.color[0];
+        dataDrivenData[offset + 1] = data.color[1];
+        dataDrivenData[offset + 2] = data.color[2];
+        dataDrivenData[offset + 3] = data.color[3];
+        dataDrivenData[offset + 4] = data.intensity;
+      }
+    }
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.dataDrivenBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, dataDrivenData, gl.DYNAMIC_DRAW);
   }
 }

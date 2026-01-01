@@ -136,6 +136,7 @@ varying vec2 v_pos;
 varying float v_progress;
 varying float v_line_index;
 varying float v_width;
+varying float v_timeOffset;
 
 // Simple pseudo-random function
 float random(float x) {
@@ -153,13 +154,16 @@ void main() {
   // Calculate base position along line
   float pos = v_progress * 1000.0;
 
+  // Apply per-feature time offset for animation desynchronization
+  float localTime = u_time + v_timeOffset;
+
   // Create electric distortion
-  float wave1 = sin(pos * u_frequency + u_time * 5.0) * u_amplitude;
-  float wave2 = sin(pos * u_frequency * 2.3 + u_time * 7.0) * u_amplitude * 0.5;
-  float wave3 = sin(pos * u_frequency * 3.7 + u_time * 11.0) * u_amplitude * 0.25;
+  float wave1 = sin(pos * u_frequency + localTime * 5.0) * u_amplitude;
+  float wave2 = sin(pos * u_frequency * 2.3 + localTime * 7.0) * u_amplitude * 0.5;
+  float wave3 = sin(pos * u_frequency * 3.7 + localTime * 11.0) * u_amplitude * 0.25;
 
   // Add noise for randomness
-  float noiseOffset = noise(pos * u_noiseScale + u_time * 3.0) * u_amplitude * 0.5;
+  float noiseOffset = noise(pos * u_noiseScale + localTime * 3.0) * u_amplitude * 0.5;
 
   float totalOffset = wave1 + wave2 + wave3 + noiseOffset;
 
@@ -181,7 +185,7 @@ void main() {
   float alpha = max(coreAlpha, glowAlpha) * u_intensity;
 
   // Add some brightness variation
-  float brightness = 0.8 + noise(pos * 0.1 + u_time * 10.0) * 0.4;
+  float brightness = 0.8 + noise(pos * 0.1 + localTime * 10.0) * 0.4;
   vec3 finalColor = u_color.rgb * brightness;
 
   gl_FragColor = vec4(finalColor, u_color.a * alpha);

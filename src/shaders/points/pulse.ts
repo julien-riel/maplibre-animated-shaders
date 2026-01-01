@@ -118,6 +118,7 @@ uniform float u_thickness;
 uniform float u_intensity;
 
 varying vec2 v_pos;
+varying float v_timeOffset;
 
 float sdRing(vec2 p, float radius, float thickness) {
   float d = length(p) - radius;
@@ -128,7 +129,9 @@ void main() {
   vec2 pos = v_pos * u_maxRadius;
   float dist = length(pos);
 
-  float cycle = fract(u_time * 0.5);
+  // Apply per-feature time offset for animation desynchronization
+  float localTime = u_time + v_timeOffset;
+  float cycle = fract(localTime * 0.5);
   float alpha = 0.0;
 
   for (float i = 0.0; i < 10.0; i++) {

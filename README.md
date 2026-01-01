@@ -247,6 +247,155 @@ shaderManager.register('weather-effect', 'weather', {
 });
 ```
 
+## Data-Driven Properties
+
+Configure shader parameters dynamically based on GeoJSON feature properties using MapLibre-style expressions. This enables per-feature customization of colors, intensity, and other parameters.
+
+### Basic Property Access
+
+```typescript
+shaderManager.register('points-layer', 'pulse', {
+  // Read color directly from feature property
+  color: ['get', 'status_color'],
+
+  // Read intensity from property
+  intensity: ['get', 'priority_level'],
+
+  // Static values still work
+  speed: 1.5,
+  rings: 3
+});
+```
+
+### Conditional Mapping with `match`
+
+```typescript
+shaderManager.register('alerts-layer', 'pulse', {
+  // Map status to colors
+  color: ['match', ['get', 'status'],
+    'critical', '#ef4444',
+    'warning', '#f59e0b',
+    'info', '#3b82f6',
+    '#6b7280'  // default gray
+  ],
+
+  // Map priority to intensity
+  intensity: ['match', ['get', 'priority'],
+    'high', 1.0,
+    'medium', 0.6,
+    'low', 0.3,
+    0.5  // default
+  ]
+});
+```
+
+### Interpolation
+
+```typescript
+shaderManager.register('earthquakes-layer', 'pulse', {
+  // Interpolate radius based on magnitude
+  maxRadius: ['interpolate', ['linear'], ['get', 'magnitude'],
+    0, 10,    // magnitude 0 -> radius 10
+    5, 50,    // magnitude 5 -> radius 50
+    10, 100   // magnitude 10 -> radius 100
+  ],
+
+  // Interpolate color based on depth
+  color: ['interpolate', ['linear'], ['get', 'depth'],
+    0, '#22c55e',    // shallow = green
+    100, '#eab308',  // medium = yellow
+    300, '#ef4444'   // deep = red
+  ]
+});
+```
+
+### Fallback Values with `coalesce`
+
+```typescript
+shaderManager.register('data-layer', 'glow', {
+  // Use feature color if available, otherwise default
+  color: ['coalesce', ['get', 'custom_color'], '#3b82f6'],
+
+  // Use animation speed from property, or default to 1.0
+  speed: ['coalesce', ['get', 'animation_speed'], 1.0]
+});
+```
+
+### Animation Time Offset
+
+Add variety to animations by offsetting the time per feature:
+
+```typescript
+shaderManager.register('points-layer', 'heartbeat', {
+  color: '#ef4444',
+  speed: 1.0,
+
+  timing: {
+    // Random offset for natural feel
+    timeOffset: 'random',
+
+    // Or use a stable hash based on ID
+    // timeOffset: ['hash', 'id'],
+
+    // Or read from property
+    // timeOffset: ['get', 'delay'],
+
+    // Or specify a range
+    // timeOffset: { min: 0, max: 2 }
+  }
+});
+```
+
+### GeoJSON Data Example
+
+```typescript
+// Your GeoJSON data with properties
+const geojson = {
+  type: 'FeatureCollection',
+  features: [
+    {
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [2.35, 48.85] },
+      properties: {
+        status: 'critical',
+        priority: 'high',
+        magnitude: 7.2,
+        custom_color: '#ff0000'
+      }
+    },
+    {
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [2.36, 48.86] },
+      properties: {
+        status: 'info',
+        priority: 'low',
+        magnitude: 3.1
+        // custom_color not set - will use fallback
+      }
+    }
+  ]
+};
+
+// Each feature will have its own color/intensity based on its properties
+```
+
+### Supported Expressions
+
+All MapLibre expression types are supported, including:
+
+| Category | Examples |
+|----------|----------|
+| **Property access** | `['get', 'prop']`, `['has', 'prop']`, `['id']` |
+| **Comparison** | `['==', ...]`, `['!=', ...]`, `['>', ...]`, `['<', ...]` |
+| **Logic** | `['all', ...]`, `['any', ...]`, `['!', ...]` |
+| **Math** | `['+', ...]`, `['*', ...]`, `['/', ...]`, `['%', ...]` |
+| **String** | `['concat', ...]`, `['downcase', ...]`, `['upcase', ...]` |
+| **Color** | `['rgb', ...]`, `['rgba', ...]`, `['to-color', ...]` |
+| **Conditional** | `['case', ...]`, `['match', ...]`, `['coalesce', ...]` |
+| **Interpolation** | `['interpolate', ...]`, `['step', ...]` |
+
+See [MapLibre Expressions](https://maplibre.org/maplibre-style-spec/expressions/) for full documentation.
+
 ## Custom Shaders
 
 Create your own animated shaders:

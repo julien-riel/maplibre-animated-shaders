@@ -119,6 +119,7 @@ uniform float u_intensity;
 
 varying vec2 v_uv;
 varying vec2 v_screen_pos;
+varying float v_timeOffset;
 
 void main() {
   // Calculate pattern based on direction
@@ -134,16 +135,19 @@ void main() {
     coord = (v_screen_pos.x + v_screen_pos.y) * 0.707;
   }
 
+  // Apply per-feature time offset for animation desynchronization
+  float localTime = u_time + v_timeOffset;
+
   // Animate the pattern
-  float phase = u_time * 50.0;
+  float phase = localTime * 50.0;
   float pattern = mod(coord + phase, u_spacing);
 
   // Create line pattern
   float lineAlpha = 1.0 - smoothstep(u_lineWidth * 0.5 - 1.0, u_lineWidth * 0.5 + 1.0, abs(pattern - u_spacing * 0.5));
 
   // Add scanning wave effect
-  float scanWave = sin(u_time * 2.0) * 0.5 + 0.5;
-  float scanPos = mod(v_uv.y + u_time * 0.3, 1.0);
+  float scanWave = sin(localTime * 2.0) * 0.5 + 0.5;
+  float scanPos = mod(v_uv.y + localTime * 0.3, 1.0);
   float scanHighlight = smoothstep(0.0, 0.1, scanPos) * smoothstep(0.2, 0.1, scanPos);
 
   // Combine with scan highlight

@@ -120,6 +120,7 @@ uniform float u_crossHatch;
 uniform float u_intensity;
 
 varying vec2 v_screen_pos;
+varying float v_timeOffset;
 
 // Rotate a 2D vector
 vec2 rotate2D(vec2 v, float angle) {
@@ -139,8 +140,11 @@ void main() {
   // Convert angle to radians
   float angleRad = u_angle * 3.14159 / 180.0;
 
+  // Apply per-feature time offset for animation desynchronization
+  float localTime = u_time + v_timeOffset;
+
   // Animation offset
-  float offset = u_time * 20.0;
+  float offset = localTime * 20.0;
 
   // Primary hatch pattern
   float hatch1 = hatchLine(v_screen_pos, angleRad, offset);

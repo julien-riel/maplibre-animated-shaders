@@ -137,6 +137,7 @@ varying vec2 v_pos;
 varying float v_progress;
 varying float v_line_index;
 varying float v_width;
+varying float v_timeOffset;
 
 // Pseudo-random for flicker
 float random(float x) {
@@ -153,10 +154,13 @@ void main() {
   // Calculate perpendicular distance from line center (in pixels)
   float dist = abs(v_pos.y) * u_width;
 
+  // Apply per-feature time offset for animation desynchronization
+  float localTime = u_time + v_timeOffset;
+
   // Calculate flicker
-  float flicker1 = noise(u_time * u_flickerSpeed);
-  float flicker2 = noise(u_time * u_flickerSpeed * 1.7 + 100.0);
-  float flicker3 = noise(u_time * u_flickerSpeed * 0.5 + 200.0);
+  float flicker1 = noise(localTime * u_flickerSpeed);
+  float flicker2 = noise(localTime * u_flickerSpeed * 1.7 + 100.0);
+  float flicker3 = noise(localTime * u_flickerSpeed * 0.5 + 200.0);
   float flicker = (flicker1 + flicker2 + flicker3) / 3.0;
   flicker = 1.0 - u_flickerIntensity + flicker * u_flickerIntensity;
 

@@ -3,11 +3,18 @@
  *
  * Implements MapLibre's CustomLayerInterface to render polygons
  * with custom GLSL fragment shaders.
+ *
+ * Supports data-driven properties via MapLibre-style expressions:
+ * - color: ['get', 'fill_color']
+ * - intensity: ['match', ['get', 'zone'], 'residential', 0.5, 1.0]
  */
 
 import type { CustomLayerInterface, Map as MapLibreMap } from 'maplibre-gl';
-import type { ShaderDefinition, ShaderConfig } from '../types';
+import type { ShaderDefinition, ShaderConfig, AnimationTimingConfig } from '../types';
 import type { mat4 } from 'gl-matrix';
+import { TimeOffsetCalculator } from '../timing';
+import { ExpressionEvaluator, isExpression } from '../expressions';
+import { hexToRgba } from '../utils/color';
 import {
   ShaderError,
   compileShaderWithErrorHandling,
@@ -20,21 +27,35 @@ import {
 /**
  * Vertex shader for polygon rendering
  * Renders triangulated polygons with UV coordinates
+ *
+ * Supports data-driven properties via per-vertex attributes:
+ * - a_color: Per-feature color (RGBA)
+ * - a_intensity: Per-feature intensity
  */
 const POLYGON_VERTEX_SHADER = `
   attribute vec2 a_pos;
   attribute vec2 a_uv;
   attribute vec2 a_centroid;
   attribute float a_polygon_index;
+  attribute float a_timeOffset;
+  attribute vec4 a_color;
+  attribute float a_intensity;
 
   uniform mat4 u_matrix;
   uniform vec2 u_resolution;
+  uniform float u_useDataDrivenColor;
+  uniform float u_useDataDrivenIntensity;
 
   varying vec2 v_pos;
   varying vec2 v_uv;
   varying vec2 v_centroid;
   varying float v_polygon_index;
   varying vec2 v_screen_pos;
+  varying float v_timeOffset;
+  varying vec4 v_color;
+  varying float v_intensity;
+  varying float v_useDataDrivenColor;
+  varying float v_useDataDrivenIntensity;
 
   void main() {
     vec4 projected = u_matrix * vec4(a_pos, 0.0, 1.0);
@@ -45,9 +66,16 @@ const POLYGON_VERTEX_SHADER = `
     v_uv = a_uv;
     v_centroid = a_centroid;
     v_polygon_index = a_polygon_index;
+    v_timeOffset = a_timeOffset;
 
     // Screen position for effects
     v_screen_pos = (projected.xy / projected.w + 1.0) * 0.5 * u_resolution;
+
+    // Pass data-driven properties
+    v_color = a_color;
+    v_intensity = a_intensity;
+    v_useDataDrivenColor = u_useDataDrivenColor;
+    v_useDataDrivenIntensity = u_useDataDrivenIntensity;
   }
 `;
 
@@ -59,7 +87,17 @@ interface PolygonData {
 }
 
 /**
+ * Per-feature evaluated data for data-driven properties
+ */
+interface FeatureData {
+  color: [number, number, number, number];
+  intensity: number;
+}
+
+/**
  * PolygonShaderLayer - Custom WebGL layer for polygon shaders
+ *
+ * Supports data-driven properties via MapLibre-style expressions.
  */
 export class PolygonShaderLayer implements CustomLayerInterface {
   id: string;
@@ -79,12 +117,26 @@ export class PolygonShaderLayer implements CustomLayerInterface {
   private program: WebGLProgram | null = null;
   private vertexBuffer: WebGLBuffer | null = null;
   private indexBuffer: WebGLBuffer | null = null;
+  private dataDrivenBuffer: WebGLBuffer | null = null;
 
   // Attribute locations
   private aPos: number = -1;
   private aUv: number = -1;
   private aCentroid: number = -1;
   private aPolygonIndex: number = -1;
+  private aTimeOffset: number = -1;
+  private aColor: number = -1;
+  private aIntensity: number = -1;
+
+  // Time offset calculator
+  private timeOffsetCalculator: TimeOffsetCalculator = new TimeOffsetCalculator();
+  private features: GeoJSON.Feature[] = [];
+
+  // Expression evaluator for data-driven properties
+  private expressionEvaluator: ExpressionEvaluator = new ExpressionEvaluator();
+  private hasDataDrivenColor: boolean = false;
+  private hasDataDrivenIntensity: boolean = false;
+  private featureData: FeatureData[] = [];
 
   // Uniform locations
   private uniforms: Map<string, WebGLUniformLocation | null> = new Map();
@@ -92,6 +144,7 @@ export class PolygonShaderLayer implements CustomLayerInterface {
   // Polygon data
   private polygons: PolygonData[] = [];
   private vertexCount: number = 0;
+  private totalVertices: number = 0;
 
   // Error handling state
   private initializationError: Error | null = null;
@@ -107,6 +160,40 @@ export class PolygonShaderLayer implements CustomLayerInterface {
     this.sourceId = sourceId;
     this.definition = definition;
     this.config = { ...definition.defaultConfig, ...config };
+
+    // Compile expressions from config
+    this.compileExpressions();
+  }
+
+  /**
+   * Compile MapLibre expressions from config
+   */
+  private compileExpressions(): void {
+    this.expressionEvaluator.clear();
+    this.hasDataDrivenColor = false;
+    this.hasDataDrivenIntensity = false;
+
+    // Check for color expression
+    const colorValue = this.config.color;
+    if (isExpression(colorValue)) {
+      try {
+        this.expressionEvaluator.compile('color', colorValue, 'color');
+        this.hasDataDrivenColor = true;
+      } catch (error) {
+        console.warn(`[PolygonShaderLayer] Failed to compile color expression:`, error);
+      }
+    }
+
+    // Check for intensity expression
+    const intensityValue = this.config.intensity;
+    if (isExpression(intensityValue)) {
+      try {
+        this.expressionEvaluator.compile('intensity', intensityValue, 'number');
+        this.hasDataDrivenIntensity = true;
+      } catch (error) {
+        console.warn(`[PolygonShaderLayer] Failed to compile intensity expression:`, error);
+      }
+    }
   }
 
   /**
@@ -116,6 +203,11 @@ export class PolygonShaderLayer implements CustomLayerInterface {
     this.config = { ...this.config, ...config };
     if (config.speed !== undefined) {
       this.speed = config.speed;
+    }
+
+    // Recompile expressions if color or intensity changed
+    if (config.color !== undefined || config.intensity !== undefined) {
+      this.compileExpressions();
     }
   }
 
@@ -176,11 +268,15 @@ export class PolygonShaderLayer implements CustomLayerInterface {
       this.aUv = gl.getAttribLocation(this.program, 'a_uv');
       this.aCentroid = gl.getAttribLocation(this.program, 'a_centroid');
       this.aPolygonIndex = gl.getAttribLocation(this.program, 'a_polygon_index');
+      this.aTimeOffset = gl.getAttribLocation(this.program, 'a_timeOffset');
+      this.aColor = gl.getAttribLocation(this.program, 'a_color');
+      this.aIntensity = gl.getAttribLocation(this.program, 'a_intensity');
 
       this.cacheUniformLocations(gl);
 
       this.vertexBuffer = createBufferWithErrorHandling(gl, 'vertex', this.id);
       this.indexBuffer = createBufferWithErrorHandling(gl, 'index', this.id);
+      this.dataDrivenBuffer = createBufferWithErrorHandling(gl, 'dataDriven', this.id);
 
     } catch (error) {
       this.initializationError = error as Error;
@@ -227,14 +323,16 @@ export class PolygonShaderLayer implements CustomLayerInterface {
   onRemove(_map: MapLibreMap, gl: WebGLRenderingContext): void {
     safeCleanup(gl, {
       program: this.program,
-      buffers: [this.vertexBuffer, this.indexBuffer],
+      buffers: [this.vertexBuffer, this.indexBuffer, this.dataDrivenBuffer],
     });
 
     this.program = null;
     this.vertexBuffer = null;
     this.indexBuffer = null;
+    this.dataDrivenBuffer = null;
     this.map = null;
     this.initializationError = null;
+    this.expressionEvaluator.clear();
   }
 
   /**
@@ -288,15 +386,21 @@ export class PolygonShaderLayer implements CustomLayerInterface {
     if (uResolution) gl.uniform2fv(uResolution, resolution);
     if (uTime) gl.uniform1f(uTime, this.time);
 
+    // Set data-driven flags
+    const uUseDataDrivenColor = this.uniforms.get('u_useDataDrivenColor');
+    const uUseDataDrivenIntensity = this.uniforms.get('u_useDataDrivenIntensity');
+    if (uUseDataDrivenColor) gl.uniform1f(uUseDataDrivenColor, this.hasDataDrivenColor ? 1.0 : 0.0);
+    if (uUseDataDrivenIntensity) gl.uniform1f(uUseDataDrivenIntensity, this.hasDataDrivenIntensity ? 1.0 : 0.0);
+
     // Set shader-specific uniforms
     this.setShaderUniforms(gl);
 
     // Bind vertex buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
 
-    // Vertex format: posX, posY, uvX, uvY, centroidX, centroidY, polygonIndex
-    // 7 floats = 28 bytes per vertex
-    const stride = 28;
+    // Vertex format: posX, posY, uvX, uvY, centroidX, centroidY, polygonIndex, timeOffset
+    // 8 floats = 32 bytes per vertex
+    const stride = 32;
 
     // Set up attributes
     if (this.aPos >= 0) {
@@ -319,6 +423,30 @@ export class PolygonShaderLayer implements CustomLayerInterface {
       gl.vertexAttribPointer(this.aPolygonIndex, 1, gl.FLOAT, false, stride, 24);
     }
 
+    if (this.aTimeOffset >= 0) {
+      gl.enableVertexAttribArray(this.aTimeOffset);
+      gl.vertexAttribPointer(this.aTimeOffset, 1, gl.FLOAT, false, stride, 28);
+    }
+
+    // Bind data-driven buffer for color and intensity attributes
+    const hasDataDriven = this.hasDataDrivenColor || this.hasDataDrivenIntensity;
+    if (hasDataDriven && this.dataDrivenBuffer) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.dataDrivenBuffer);
+
+      // Data-driven stride: color (4 floats) + intensity (1 float) = 5 floats = 20 bytes
+      const dataDrivenStride = 20;
+
+      if (this.aColor >= 0) {
+        gl.enableVertexAttribArray(this.aColor);
+        gl.vertexAttribPointer(this.aColor, 4, gl.FLOAT, false, dataDrivenStride, 0);
+      }
+
+      if (this.aIntensity >= 0) {
+        gl.enableVertexAttribArray(this.aIntensity);
+        gl.vertexAttribPointer(this.aIntensity, 1, gl.FLOAT, false, dataDrivenStride, 16);
+      }
+    }
+
     // Bind index buffer and draw
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
     gl.drawElements(gl.TRIANGLES, this.vertexCount, gl.UNSIGNED_SHORT, 0);
@@ -328,6 +456,9 @@ export class PolygonShaderLayer implements CustomLayerInterface {
     if (this.aUv >= 0) gl.disableVertexAttribArray(this.aUv);
     if (this.aCentroid >= 0) gl.disableVertexAttribArray(this.aCentroid);
     if (this.aPolygonIndex >= 0) gl.disableVertexAttribArray(this.aPolygonIndex);
+    if (this.aTimeOffset >= 0) gl.disableVertexAttribArray(this.aTimeOffset);
+    if (this.aColor >= 0) gl.disableVertexAttribArray(this.aColor);
+    if (this.aIntensity >= 0) gl.disableVertexAttribArray(this.aIntensity);
 
     // Request another frame
     if (this.isPlaying) {
@@ -385,7 +516,9 @@ export class PolygonShaderLayer implements CustomLayerInterface {
     // Common uniforms
     const commonUniforms = [
       'u_matrix', 'u_resolution', 'u_time',
-      'u_color', 'u_intensity', 'u_opacity'
+      'u_color', 'u_intensity', 'u_opacity',
+      // Data-driven flags
+      'u_useDataDrivenColor', 'u_useDataDrivenIntensity'
     ];
 
     // Get uniform names from config schema
@@ -486,6 +619,7 @@ export class PolygonShaderLayer implements CustomLayerInterface {
     gl: WebGLRenderingContext
   ): void {
     this.polygons = [];
+    this.features = features as GeoJSON.Feature[];
 
     let polygonIndex = 0;
 
@@ -562,6 +696,10 @@ export class PolygonShaderLayer implements CustomLayerInterface {
       return;
     }
 
+    // Calculate time offsets for all features
+    const timingConfig = (this.config as unknown as { timing?: AnimationTimingConfig }).timing ?? { timeOffset: 'random' };
+    const timeOffsets = this.timeOffsetCalculator.calculateOffsets(this.features, timingConfig);
+
     // Calculate total vertices and indices needed
     let totalVertices = 0;
     let totalIndices = 0;
@@ -572,9 +710,9 @@ export class PolygonShaderLayer implements CustomLayerInterface {
       totalIndices += (polygon.vertices.length - 2) * 3;
     }
 
-    // Vertex format: posX, posY, uvX, uvY, centroidX, centroidY, polygonIndex
-    // 7 floats = 28 bytes per vertex
-    const vertexData = new Float32Array(totalVertices * 7);
+    // Vertex format: posX, posY, uvX, uvY, centroidX, centroidY, polygonIndex, timeOffset
+    // 8 floats = 32 bytes per vertex
+    const vertexData = new Float32Array(totalVertices * 8);
     const indexData = new Uint16Array(totalIndices);
 
     let vertexOffset = 0;
@@ -583,11 +721,12 @@ export class PolygonShaderLayer implements CustomLayerInterface {
 
     for (const polygon of this.polygons) {
       const { vertices, centroid, bounds, index } = polygon;
+      const timeOffset = timeOffsets[index] ?? 0;
 
       // Add vertices with UV coordinates
       for (let i = 0; i < vertices.length; i++) {
         const [x, y] = vertices[i];
-        const vOffset = vertexOffset * 7;
+        const vOffset = vertexOffset * 8;
 
         // Position
         vertexData[vOffset + 0] = x;
@@ -609,6 +748,9 @@ export class PolygonShaderLayer implements CustomLayerInterface {
 
         // Polygon index
         vertexData[vOffset + 6] = index;
+
+        // Time offset
+        vertexData[vOffset + 7] = timeOffset;
 
         vertexOffset++;
       }
@@ -635,6 +777,93 @@ export class PolygonShaderLayer implements CustomLayerInterface {
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indexData, gl.STATIC_DRAW);
 
     this.vertexCount = indexOffset;
+    this.totalVertices = totalVertices;
+
+    // Evaluate data-driven properties and build buffer
+    this.evaluateDataDrivenProperties();
+
+    if (this.hasDataDrivenColor || this.hasDataDrivenIntensity) {
+      this.buildDataDrivenBuffer(gl);
+    }
+  }
+
+  /**
+   * Evaluate data-driven properties for all features
+   */
+  private evaluateDataDrivenProperties(): void {
+    if (!this.map) return;
+
+    const zoom = this.map.getZoom();
+    this.featureData = [];
+
+    // Get default color from config
+    const defaultColorValue = this.config.color;
+    let defaultColor: [number, number, number, number] = [1, 1, 1, 1];
+    if (typeof defaultColorValue === 'string' && !isExpression(defaultColorValue)) {
+      defaultColor = hexToRgba(defaultColorValue);
+    } else if (Array.isArray(defaultColorValue) && defaultColorValue.length === 4 && typeof defaultColorValue[0] === 'number') {
+      defaultColor = defaultColorValue as [number, number, number, number];
+    }
+
+    // Get default intensity from config
+    const defaultIntensity = typeof this.config.intensity === 'number' ? this.config.intensity : 1.0;
+
+    for (let i = 0; i < this.features.length; i++) {
+      const feature = this.features[i];
+
+      // Evaluate color
+      let color: [number, number, number, number] = defaultColor;
+      if (this.hasDataDrivenColor) {
+        const evaluated = this.expressionEvaluator.evaluateExpression('color', feature, zoom);
+        if (evaluated && typeof evaluated === 'object' && 'r' in evaluated) {
+          const c = evaluated as { r: number; g: number; b: number; a: number };
+          color = [c.r, c.g, c.b, c.a];
+        } else if (typeof evaluated === 'string') {
+          color = hexToRgba(evaluated);
+        }
+      }
+
+      // Evaluate intensity
+      let intensity = defaultIntensity;
+      if (this.hasDataDrivenIntensity) {
+        const evaluated = this.expressionEvaluator.evaluateExpression('intensity', feature, zoom);
+        if (typeof evaluated === 'number') {
+          intensity = evaluated;
+        }
+      }
+
+      this.featureData.push({ color, intensity });
+    }
+  }
+
+  /**
+   * Build the data-driven buffer with per-vertex color and intensity
+   */
+  private buildDataDrivenBuffer(gl: WebGLRenderingContext): void {
+    if (!this.dataDrivenBuffer) return;
+
+    // Data-driven format per vertex: color (4 floats) + intensity (1 float) = 5 floats = 20 bytes
+    const dataDrivenData = new Float32Array(this.totalVertices * 5);
+
+    let dataOffset = 0;
+    for (const polygon of this.polygons) {
+      const featureIdx = polygon.index;
+      const data = this.featureData[featureIdx] ?? { color: [1, 1, 1, 1], intensity: 1.0 };
+
+      // Each vertex in this polygon gets the same data-driven values
+      for (let j = 0; j < polygon.vertices.length; j++) {
+        const offset = dataOffset * 5;
+        dataDrivenData[offset + 0] = data.color[0];
+        dataDrivenData[offset + 1] = data.color[1];
+        dataDrivenData[offset + 2] = data.color[2];
+        dataDrivenData[offset + 3] = data.color[3];
+        dataDrivenData[offset + 4] = data.intensity;
+        dataOffset++;
+      }
+    }
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.dataDrivenBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, dataDrivenData, gl.DYNAMIC_DRAW);
   }
 
   /**

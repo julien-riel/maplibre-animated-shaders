@@ -37,7 +37,37 @@ export type {
   Uniforms,
   // MapLibre
   MapLibreMapInstance,
+  // Animation Timing (Phase 1)
+  TimeOffsetValue,
+  AnimationTimingConfig,
+  TimedShaderConfig,
+  // Data-Driven Expressions (Phase 2)
+  DataDrivenExpression,
+  DataDrivenValue,
+  DataDrivenShaderConfig,
+  // Interactive Animation (Phase 3)
+  FeatureAnimationState,
+  InteractionAction,
+  InteractionHandler,
+  HoverInteractionConfig,
+  InteractivityConfig,
+  InteractiveShaderController,
+  FullShaderConfig,
 } from './types';
+
+// Expression evaluation (Phase 2)
+export {
+  ExpressionEvaluator,
+  defaultExpressionEvaluator,
+  isExpression,
+  FeatureDataBuffer,
+  registerStandardAttributes,
+  interleaveAttributes,
+} from './expressions';
+export type { EvaluatedConfig, AttributeType } from './expressions';
+
+// Timing utilities (Phase 1)
+export { TimeOffsetCalculator, defaultTimeOffsetCalculator } from './timing';
 
 // Utilities
 export * from './utils';

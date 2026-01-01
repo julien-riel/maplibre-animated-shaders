@@ -138,6 +138,7 @@ uniform float u_coreSize;
 uniform float u_intensity;
 
 varying vec2 v_pos;
+varying float v_timeOffset;
 
 void main() {
   vec2 pos = v_pos * u_radius;
@@ -146,8 +147,11 @@ void main() {
   // Normalized distance (0 at center, 1 at edge)
   float normalizedDist = dist / u_radius;
 
+  // Apply per-feature time offset for animation desynchronization
+  float localTime = u_time + v_timeOffset;
+
   // Calculate pulsating intensity
-  float pulse = sin(u_time * PI * 2.0) * 0.5 + 0.5;
+  float pulse = sin(localTime * PI * 2.0) * 0.5 + 0.5;
   float pulseIntensity = mix(u_pulseMin, u_pulseMax, pulse);
 
   // Multi-layer glow for more realistic effect

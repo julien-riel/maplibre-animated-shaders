@@ -115,6 +115,7 @@ varying vec2 v_pos;
 varying float v_progress;
 varying float v_line_index;
 varying float v_width;
+varying float v_timeOffset;
 
 // Easing functions
 float easeLinear(float t) {
@@ -135,8 +136,11 @@ float easeQuad(float t) {
 }
 
 void main() {
+  // Apply per-feature time offset for animation desynchronization
+  float localTime = u_time + v_timeOffset;
+
   // Calculate breath phase (0 to 1 cycle)
-  float phase = fract(u_time);
+  float phase = fract(localTime);
 
   // Apply easing
   float easedPhase = 0.0;

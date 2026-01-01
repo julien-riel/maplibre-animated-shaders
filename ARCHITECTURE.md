@@ -90,10 +90,120 @@ interface ConfigResolver {
     defaults: T,
     userConfig?: Partial<T>
   ): T;
-  
+
   validate(config: ShaderConfig, schema: ConfigSchema): ValidationResult;
 }
 ```
+
+### 5. ExpressionEvaluator (Data-Driven)
+
+Wrapper autour du système d'expressions MapLibre pour les propriétés data-driven.
+
+```typescript
+interface ExpressionEvaluator {
+  // Compile une expression MapLibre
+  compile(key: string, expression: unknown, expectedType: string): CompiledExpression | null;
+
+  // Compile toutes les expressions d'une config
+  compileConfig(config: Record<string, unknown>, schema?: Record<string, { type: string }>): void;
+
+  // Évalue une expression pour un feature
+  evaluateExpression(key: string, feature: GeoJSON.Feature, zoom: number): unknown;
+
+  // Évalue toutes les expressions pour un feature
+  evaluateForFeature(config: Record<string, unknown>, feature: GeoJSON.Feature, zoom: number): EvaluatedConfig;
+
+  // Vérifie si une config contient des expressions
+  hasExpression(key: string): boolean;
+  hasDataDrivenExpressions(): boolean;
+}
+```
+
+### 6. TimeOffsetCalculator (Animation Timing)
+
+Calcule les décalages temporels per-feature pour les animations.
+
+```typescript
+interface TimeOffsetCalculator {
+  // Calcule les offsets pour tous les features
+  calculateOffsets(features: GeoJSON.Feature[], config: AnimationTimingConfig): Float32Array;
+}
+
+// Modes de calcul supportés
+type TimeOffsetValue =
+  | number                        // Décalage fixe
+  | 'random'                      // Aléatoire [0, period]
+  | ['get', string]               // Depuis propriété
+  | ['hash', string]              // Hash stable d'une propriété
+  | { min: number; max: number }; // Range aléatoire
+```
+
+---
+
+## Architecture Data-Driven
+
+Le système data-driven permet de configurer les paramètres de shader (couleur, intensité, etc.) à partir des propriétés GeoJSON de chaque feature.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      Configuration Shader                        │
+│  {                                                               │
+│    color: ['match', ['get', 'status'], 'high', '#f00', '#00f'], │
+│    intensity: ['get', 'priority'],                              │
+│    speed: 1.5  // valeur statique                               │
+│  }                                                               │
+├─────────────────────────────────────────────────────────────────┤
+│                    ExpressionEvaluator                           │
+│  ┌─────────────────┐    ┌─────────────────┐                     │
+│  │ Compile via     │───▶│ CompiledExpr    │                     │
+│  │ @maplibre/...   │    │ (cached)        │                     │
+│  └─────────────────┘    └────────┬────────┘                     │
+│                                  │                               │
+│                          evaluate(feature, zoom)                 │
+│                                  ▼                               │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │ { color: [1,0,0,1], intensity: 0.8, speed: 1.5 }        │    │
+│  └─────────────────────────────────────────────────────────┘    │
+├─────────────────────────────────────────────────────────────────┤
+│                      ShaderLayer (GPU)                           │
+│  ┌─────────────────┐    ┌─────────────────┐                     │
+│  │ Main Buffer     │    │ DataDriven      │                     │
+│  │ (pos, uv, ...)  │    │ Buffer          │                     │
+│  │                 │    │ (color, intens) │                     │
+│  └─────────────────┘    └─────────────────┘                     │
+│           │                      │                               │
+│           ▼                      ▼                               │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │                    Vertex Shader                         │    │
+│  │  attribute vec4 a_color;     // per-vertex              │    │
+│  │  attribute float a_intensity; // per-vertex             │    │
+│  │  varying vec4 v_color;                                  │    │
+│  │  varying float v_intensity;                             │    │
+│  └─────────────────────────────────────────────────────────┘    │
+│                          │                                       │
+│                          ▼                                       │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │                   Fragment Shader                        │    │
+│  │  // Utilise v_color et v_intensity si data-driven       │    │
+│  │  vec4 finalColor = mix(u_color, v_color, u_useDD);      │    │
+│  └─────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Flux de données
+
+1. **Configuration** — L'utilisateur fournit une config avec expressions ou valeurs statiques
+2. **Compilation** — `ExpressionEvaluator` compile les expressions via `@maplibre/maplibre-gl-style-spec`
+3. **Évaluation** — Pour chaque feature, les expressions sont évaluées
+4. **Buffer GPU** — Les valeurs sont écrites dans un buffer séparé (dataDrivenBuffer)
+5. **Rendu** — Le vertex shader lit les attributs per-vertex et les passe au fragment shader
+
+### Propriétés supportées
+
+| Propriété | Type | Description |
+|-----------|------|-------------|
+| `color` | `color` | Couleur RGBA per-feature |
+| `intensity` | `number` | Intensité de l'effet (0-1) |
 
 ---
 
@@ -156,6 +266,21 @@ maplibre-animated-shaders/
 │   ├── AnimationLoop.ts
 │   ├── ShaderRegistry.ts
 │   ├── ConfigResolver.ts
+│   │
+│   ├── expressions/                # Data-driven expressions (Phase 2)
+│   │   ├── index.ts                # Exports du module
+│   │   ├── ExpressionEvaluator.ts  # Wrapper MapLibre expressions
+│   │   └── FeatureDataBuffer.ts    # Buffer GPU per-feature
+│   │
+│   ├── timing/                     # Animation timing (Phase 1)
+│   │   ├── index.ts                # Exports du module
+│   │   └── TimeOffsetCalculator.ts # Calcul des offsets
+│   │
+│   ├── layers/                     # WebGL Custom Layers
+│   │   ├── index.ts
+│   │   ├── PointShaderLayer.ts     # Points avec data-driven
+│   │   ├── LineShaderLayer.ts      # Lignes avec data-driven
+│   │   └── PolygonShaderLayer.ts   # Polygones avec data-driven
 │   │
 │   ├── shaders/
 │   │   ├── index.ts                # Export tous les shaders
