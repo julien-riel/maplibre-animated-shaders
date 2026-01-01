@@ -145,6 +145,7 @@ uniform float u_intensity;
 
 varying vec2 v_pos;
 varying float v_timeOffset;
+varying float v_effectiveTime;
 
 float sdRing(vec2 p, float r, float w) {
   float d = length(p) - r;
@@ -165,7 +166,7 @@ void main() {
   float normalizedAngle = angle < 0.0 ? angle + TWO_PI : angle;
 
   // Apply per-feature time offset for animation desynchronization
-  float localTime = u_time + v_timeOffset;
+  float localTime = v_effectiveTime;
 
   // Current sweep angle
   float sweepAngle = fract(localTime) * TWO_PI;

@@ -69,6 +69,9 @@ export type { EvaluatedConfig, AttributeType } from './expressions';
 // Timing utilities (Phase 1)
 export { TimeOffsetCalculator, defaultTimeOffsetCalculator } from './timing';
 
+// Interaction utilities (Phase 3)
+export { FeatureAnimationStateManager, FeatureInteractionHandler } from './interaction';
+
 // Utilities
 export * from './utils';
 

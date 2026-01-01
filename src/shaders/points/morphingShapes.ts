@@ -157,6 +157,7 @@ uniform float u_shape4;
 
 varying vec2 v_pos;
 varying float v_timeOffset;
+varying float v_effectiveTime;
 
 // Easing
 float easeInOutCubic(float t) {
@@ -239,7 +240,7 @@ void main() {
   vec2 pos = v_pos * u_size;
 
   // Apply per-feature time offset for animation desynchronization
-  float localTime = u_time + v_timeOffset;
+  float localTime = v_effectiveTime;
 
   // Apply rotation if enabled
   if (u_rotate > 0.5) {

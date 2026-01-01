@@ -120,6 +120,7 @@ uniform float u_intensity;
 varying vec2 v_uv;
 varying vec2 v_screen_pos;
 varying float v_timeOffset;
+varying float v_effectiveTime;
 
 void main() {
   // Calculate pattern based on direction
@@ -136,7 +137,7 @@ void main() {
   }
 
   // Apply per-feature time offset for animation desynchronization
-  float localTime = u_time + v_timeOffset;
+  float localTime = v_effectiveTime;
 
   // Animate the pattern
   float phase = localTime * 50.0;

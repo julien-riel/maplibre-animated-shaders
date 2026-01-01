@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### Interactive Animation Control (Phase 3)
+- **FeatureAnimationStateManager** - Per-feature animation state management with dirty tracking
+- **FeatureInteractionHandler** - MapLibre click/hover event handling for animation control
+- Support for per-feature animation control via `perFeatureControl: true`
+- Interaction actions: `toggle`, `play`, `pause`, `reset`, `playOnce`
+- Custom interaction handlers with access to feature and animation state
+- `InteractiveShaderController` interface with extended methods:
+  - `playFeature(id)`, `pauseFeature(id)`, `toggleFeature(id)`, `resetFeature(id)`
+  - `getFeatureState(id)` - Get animation state for a specific feature
+  - `playAll()`, `pauseAll()`, `resetAll()` - Bulk control
+- Hover interaction support with `onHover.enter` and `onHover.leave`
+- Configurable feature ID property via `featureIdProperty`
+- GPU buffer optimization with dirty tracking for minimal updates
+- New shader attributes: `a_isPlaying`, `a_localTime`
+- New varying: `v_effectiveTime` for per-feature animation timing
+
 #### Data-Driven Expressions (Phase 2)
 - **ExpressionEvaluator** - Wrapper around MapLibre's expression system for data-driven shader properties
 - **FeatureDataBuffer** - GPU buffer manager for per-feature attribute data
@@ -33,8 +49,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Moved `@maplibre/maplibre-gl-style-spec` from devDependencies to dependencies
-- Updated all ShaderLayers (Point, Line, Polygon) to support data-driven properties
-- Enhanced vertex shaders with data-driven attribute support
+- Updated all ShaderLayers (Point, Line, Polygon) to support data-driven properties and interactive control
+- Enhanced vertex shaders with data-driven attribute support and per-feature animation attributes
+- Updated all 21 fragment shaders to use `v_effectiveTime` for per-feature animation timing
+- Extended `applyShader()` to return `InteractiveShaderController` when `perFeatureControl` is enabled
 
 ---
 

@@ -122,6 +122,7 @@ uniform float u_intensity;
 varying vec2 v_uv;
 varying vec2 v_screen_pos;
 varying float v_timeOffset;
+varying float v_effectiveTime;
 
 void main() {
   // Calculate distance from edges (using UV coordinates)
@@ -155,7 +156,7 @@ void main() {
   }
 
   // Apply per-feature time offset for animation desynchronization
-  float localTime = u_time + v_timeOffset;
+  float localTime = v_effectiveTime;
 
   // Create marching pattern using screen position for consistency
   float perimeter = (v_screen_pos.x + v_screen_pos.y);

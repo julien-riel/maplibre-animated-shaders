@@ -101,6 +101,7 @@ uniform float u_intensity;
 
 varying vec2 v_uv;
 varying float v_timeOffset;
+varying float v_effectiveTime;
 
 void main() {
   // Calculate distance from center (using UV coordinates, centered at 0.5, 0.5)
@@ -111,7 +112,7 @@ void main() {
   float dist = length(delta) * 2.0;
 
   // Apply per-feature time offset for animation desynchronization
-  float localTime = u_time + v_timeOffset;
+  float localTime = v_effectiveTime;
 
   // Create ripple pattern
   float phase = localTime * 2.0;

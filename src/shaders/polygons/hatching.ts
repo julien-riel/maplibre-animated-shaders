@@ -121,6 +121,7 @@ uniform float u_intensity;
 
 varying vec2 v_screen_pos;
 varying float v_timeOffset;
+varying float v_effectiveTime;
 
 // Rotate a 2D vector
 vec2 rotate2D(vec2 v, float angle) {
@@ -141,7 +142,7 @@ void main() {
   float angleRad = u_angle * 3.14159 / 180.0;
 
   // Apply per-feature time offset for animation desynchronization
-  float localTime = u_time + v_timeOffset;
+  float localTime = v_effectiveTime;
 
   // Animation offset
   float offset = localTime * 20.0;

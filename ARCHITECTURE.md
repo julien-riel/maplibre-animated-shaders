@@ -138,6 +138,83 @@ type TimeOffsetValue =
   | { min: number; max: number }; // Range aléatoire
 ```
 
+### 7. FeatureAnimationStateManager (Interactive Control)
+
+Gère l'état d'animation per-feature pour le contrôle interactif (play/pause/toggle/reset).
+
+```typescript
+interface FeatureAnimationStateManager {
+  // Initialise l'état pour tous les features
+  initializeFromFeatures(features: GeoJSON.Feature[]): void;
+
+  // Contrôle d'un feature individuel
+  playFeature(featureId: string | number): void;
+  pauseFeature(featureId: string | number): void;
+  toggleFeature(featureId: string | number): void;
+  resetFeature(featureId: string | number): void;
+
+  // Contrôle global
+  playAll(): void;
+  pauseAll(): void;
+  resetAll(): void;
+
+  // État
+  getState(featureId: string | number): FeatureAnimationState | undefined;
+
+  // Mise à jour par frame
+  tick(globalTime: number, deltaTime: number): void;
+
+  // Génération des données GPU
+  generateBufferData(verticesPerFeature: number): {
+    isPlayingData: Float32Array;  // 0.0 ou 1.0 par vertex
+    localTimeData: Float32Array;  // Temps gelé quand en pause
+  };
+
+  // Dirty tracking pour optimisation
+  isDirty(): boolean;
+  clearDirty(): void;
+}
+
+interface FeatureAnimationState {
+  featureId: string | number;
+  isPlaying: boolean;       // true = animation active
+  localTime: number;        // Temps local (gelé quand en pause)
+  playCount: number;        // Nombre de lectures complètes
+}
+```
+
+### 8. FeatureInteractionHandler (Event Handling)
+
+Gère les événements MapLibre (click/hover) et les dispatch au state manager.
+
+```typescript
+interface FeatureInteractionHandler {
+  constructor(
+    map: MapLibreMap,
+    layerId: string,  // Layer ID pour les événements
+    stateManager: FeatureAnimationStateManager,
+    config: InteractivityConfig
+  );
+
+  // Nettoie les event listeners
+  dispose(): void;
+}
+
+interface InteractivityConfig {
+  perFeatureControl?: boolean;
+  initialState?: 'playing' | 'paused';
+  onClick?: InteractionAction | InteractionHandler;
+  onHover?: {
+    enter?: InteractionAction | InteractionHandler;
+    leave?: InteractionAction | InteractionHandler;
+  };
+  featureIdProperty?: string;
+}
+
+type InteractionAction = 'toggle' | 'play' | 'pause' | 'reset' | 'playOnce';
+type InteractionHandler = (feature: GeoJSON.Feature, state: FeatureAnimationState) => void;
+```
+
 ---
 
 ## Architecture Data-Driven
@@ -204,6 +281,106 @@ Le système data-driven permet de configurer les paramètres de shader (couleur,
 |-----------|------|-------------|
 | `color` | `color` | Couleur RGBA per-feature |
 | `intensity` | `number` | Intensité de l'effet (0-1) |
+
+---
+
+## Architecture Interactive Animation Control
+
+Le système de contrôle interactif permet de gérer l'état d'animation de chaque feature individuellement via des événements click/hover.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      Configuration Shader                        │
+│  {                                                               │
+│    perFeatureControl: true,                                      │
+│    initialState: 'paused',                                       │
+│    onClick: 'toggle',                                            │
+│    onHover: { enter: 'play', leave: 'pause' }                    │
+│  }                                                               │
+├─────────────────────────────────────────────────────────────────┤
+│               FeatureInteractionHandler                          │
+│  ┌─────────────────┐    ┌─────────────────┐                     │
+│  │ MapLibre Events │───▶│ Event Dispatch  │                     │
+│  │ click/mouseenter│    │ to StateManager │                     │
+│  │ mouseleave      │    │                 │                     │
+│  └─────────────────┘    └────────┬────────┘                     │
+│                                  │                               │
+│                          action: 'toggle' | 'play' | etc.        │
+│                                  ▼                               │
+├─────────────────────────────────────────────────────────────────┤
+│            FeatureAnimationStateManager                          │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │ states: Map<featureId, FeatureAnimationState>           │    │
+│  │                                                         │    │
+│  │ Feature 1: { isPlaying: true,  localTime: 2.5 }        │    │
+│  │ Feature 2: { isPlaying: false, localTime: 1.2 }        │    │
+│  │ Feature 3: { isPlaying: true,  localTime: 0.8 }        │    │
+│  └─────────────────────────────────────────────────────────┘    │
+│                          │                                       │
+│              tick(globalTime, deltaTime)                         │
+│              generateBufferData(verticesPerFeature)              │
+│                          ▼                                       │
+├─────────────────────────────────────────────────────────────────┤
+│                      ShaderLayer (GPU)                           │
+│  ┌─────────────────┐    ┌─────────────────┐                     │
+│  │ Main Buffer     │    │ Interaction     │                     │
+│  │ (pos, uv, ...)  │    │ Buffer          │                     │
+│  │                 │    │ (isPlaying,     │                     │
+│  │                 │    │  localTime)     │                     │
+│  └─────────────────┘    └─────────────────┘                     │
+│           │                      │                               │
+│           ▼                      ▼                               │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │                    Vertex Shader                         │    │
+│  │  attribute float a_isPlaying;   // 0.0 ou 1.0           │    │
+│  │  attribute float a_localTime;   // Temps gelé si pause  │    │
+│  │  attribute float a_timeOffset;  // Offset de timing     │    │
+│  │  varying float v_effectiveTime;                         │    │
+│  │                                                         │    │
+│  │  // Calcul du temps effectif                            │    │
+│  │  float globalAnimTime = u_time + a_timeOffset;          │    │
+│  │  v_effectiveTime = mix(a_localTime, globalAnimTime,     │    │
+│  │                        a_isPlaying);                    │    │
+│  └─────────────────────────────────────────────────────────┘    │
+│                          │                                       │
+│                          ▼                                       │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │                   Fragment Shader                        │    │
+│  │  // Utilise v_effectiveTime pour l'animation            │    │
+│  │  float phase = fract(v_effectiveTime * u_speed);        │    │
+│  └─────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Flux d'interaction
+
+1. **Événement** — L'utilisateur clique ou survole un feature sur la carte
+2. **Dispatch** — `FeatureInteractionHandler` reçoit l'événement via MapLibre
+3. **Action** — L'action configurée (toggle/play/pause/reset) est exécutée
+4. **State Update** — `FeatureAnimationStateManager` met à jour l'état du feature
+5. **Dirty Flag** — Le buffer est marqué comme nécessitant une mise à jour
+6. **Buffer Update** — Lors du prochain frame, les données sont uploadées au GPU
+7. **Rendu** — Le shader utilise `v_effectiveTime` pour l'animation
+
+### Gestion du temps effectif
+
+Le temps effectif (`v_effectiveTime`) combine plusieurs composantes:
+
+| État | Calcul |
+|------|--------|
+| **Playing** | `u_time + a_timeOffset` (temps global + offset) |
+| **Paused** | `a_localTime` (temps gelé au moment de la pause) |
+
+La formule GLSL: `mix(a_localTime, u_time + a_timeOffset, a_isPlaying)`
+
+### Optimisation avec dirty tracking
+
+Pour éviter les mises à jour GPU inutiles:
+
+1. `FeatureAnimationStateManager` maintient un flag `dirty`
+2. Le flag devient `true` uniquement lors d'un changement d'état
+3. Le buffer n'est mis à jour que si `isDirty() === true`
+4. Après upload, `clearDirty()` est appelé
 
 ---
 
@@ -275,6 +452,11 @@ maplibre-animated-shaders/
 │   ├── timing/                     # Animation timing (Phase 1)
 │   │   ├── index.ts                # Exports du module
 │   │   └── TimeOffsetCalculator.ts # Calcul des offsets
+│   │
+│   ├── interaction/                # Interactive control (Phase 3)
+│   │   ├── index.ts                # Exports du module
+│   │   ├── FeatureAnimationStateManager.ts  # État per-feature
+│   │   └── InteractionHandler.ts   # Gestion événements click/hover
 │   │
 │   ├── layers/                     # WebGL Custom Layers
 │   │   ├── index.ts

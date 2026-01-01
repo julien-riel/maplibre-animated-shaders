@@ -138,6 +138,7 @@ varying float v_progress;
 varying float v_line_index;
 varying float v_width;
 varying float v_timeOffset;
+varying float v_effectiveTime;
 
 // Pseudo-random for flicker
 float random(float x) {
@@ -155,7 +156,7 @@ void main() {
   float dist = abs(v_pos.y) * u_width;
 
   // Apply per-feature time offset for animation desynchronization
-  float localTime = u_time + v_timeOffset;
+  float localTime = v_effectiveTime;
 
   // Calculate flicker
   float flicker1 = noise(localTime * u_flickerSpeed);

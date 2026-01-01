@@ -346,6 +346,115 @@ shaderManager.register('points-layer', 'heartbeat', {
 });
 ```
 
+## Interactive Animation Control
+
+Control animations on a per-feature basis via click/hover interactions. This enables individual features to have their animations independently played, paused, toggled, or reset.
+
+### Basic Usage
+
+```typescript
+import { applyShader } from 'maplibre-animated-shaders';
+
+// Apply shader with per-feature control
+const controller = applyShader(map, 'alerts-layer', 'pulse', {
+  color: '#ef4444',
+  speed: 1.5,
+
+  // Enable per-feature control
+  perFeatureControl: true,
+  initialState: 'paused',  // 'playing' | 'paused'
+
+  // Toggle animation on click
+  onClick: 'toggle',
+
+  // Play on hover, pause on leave
+  onHover: {
+    enter: 'play',
+    leave: 'pause'
+  }
+});
+```
+
+### Programmatic Control
+
+When `perFeatureControl` is enabled, the returned controller has additional methods:
+
+```typescript
+const controller = applyShader(map, 'layer', 'pulse', {
+  perFeatureControl: true
+});
+
+// Control individual features
+controller.playFeature('feature-id-1');
+controller.pauseFeature('feature-id-2');
+controller.toggleFeature('feature-id-3');
+controller.resetFeature('feature-id-4');
+
+// Get feature state
+const state = controller.getFeatureState('feature-id-1');
+// { featureId: 'feature-id-1', isPlaying: true, localTime: 2.5, playCount: 1 }
+
+// Control all features at once
+controller.playAll();
+controller.pauseAll();
+controller.resetAll();
+```
+
+### Interaction Actions
+
+Available actions for `onClick` and `onHover.enter`/`onHover.leave`:
+
+| Action | Description |
+|--------|-------------|
+| `'toggle'` | Toggle between play and pause |
+| `'play'` | Start or resume the animation |
+| `'pause'` | Pause the animation at current time |
+| `'reset'` | Reset animation to the beginning |
+| `'playOnce'` | Play once then pause at the end |
+
+### Custom Interaction Handlers
+
+Use custom functions for advanced interaction logic:
+
+```typescript
+applyShader(map, 'layer', 'pulse', {
+  perFeatureControl: true,
+
+  onClick: (feature, state) => {
+    console.log(`Clicked feature ${feature.id}`);
+    console.log(`Currently playing: ${state.isPlaying}`);
+    console.log(`Animation time: ${state.localTime}`);
+
+    // Custom logic based on feature properties
+    if (feature.properties?.priority === 'high') {
+      // Handle high priority features differently
+    }
+  },
+
+  onHover: {
+    enter: (feature, state) => {
+      // Custom hover enter logic
+    },
+    leave: (feature, state) => {
+      // Custom hover leave logic
+    }
+  }
+});
+```
+
+### Feature ID Configuration
+
+By default, features are identified by their `id` property. Customize this with `featureIdProperty`:
+
+```typescript
+applyShader(map, 'layer', 'pulse', {
+  perFeatureControl: true,
+
+  // Use 'uuid' property as feature identifier
+  featureIdProperty: 'uuid'
+});
+```
+
 ### GeoJSON Data Example
 
 ```typescript

@@ -139,6 +139,7 @@ uniform float u_intensity;
 
 varying vec2 v_pos;
 varying float v_timeOffset;
+varying float v_effectiveTime;
 
 void main() {
   vec2 pos = v_pos * u_radius;
@@ -148,7 +149,7 @@ void main() {
   float normalizedDist = dist / u_radius;
 
   // Apply per-feature time offset for animation desynchronization
-  float localTime = u_time + v_timeOffset;
+  float localTime = v_effectiveTime;
 
   // Calculate pulsating intensity
   float pulse = sin(localTime * PI * 2.0) * 0.5 + 0.5;

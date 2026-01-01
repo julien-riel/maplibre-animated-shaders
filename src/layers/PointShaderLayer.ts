@@ -11,10 +11,11 @@
  */
 
 import type { CustomLayerInterface, Map as MapLibreMap } from 'maplibre-gl';
-import type { ShaderDefinition, ShaderConfig, AnimationTimingConfig } from '../types';
+import type { ShaderDefinition, ShaderConfig, AnimationTimingConfig, InteractivityConfig } from '../types';
 import type { mat4 } from 'gl-matrix';
 import { TimeOffsetCalculator } from '../timing';
 import { ExpressionEvaluator, isExpression } from '../expressions';
+import { FeatureAnimationStateManager, FeatureInteractionHandler } from '../interaction';
 import { hexToRgba } from '../utils/color';
 import {
   ShaderError,
@@ -32,6 +33,10 @@ import {
  * Supports data-driven properties via per-vertex attributes:
  * - a_color: Per-feature color (RGBA)
  * - a_intensity: Per-feature intensity
+ *
+ * Supports per-feature interactive animation:
+ * - a_isPlaying: 0.0 = paused, 1.0 = playing
+ * - a_localTime: Frozen time when paused
  */
 const POINT_VERTEX_SHADER = `
   attribute vec2 a_pos;
@@ -40,9 +45,12 @@ const POINT_VERTEX_SHADER = `
   attribute float a_timeOffset;
   attribute vec4 a_color;
   attribute float a_intensity;
+  attribute float a_isPlaying;
+  attribute float a_localTime;
 
   uniform mat4 u_matrix;
   uniform float u_size;
+  uniform float u_time;
   uniform vec2 u_resolution;
   uniform float u_useDataDrivenColor;
   uniform float u_useDataDrivenIntensity;
@@ -50,6 +58,7 @@ const POINT_VERTEX_SHADER = `
   varying vec2 v_pos;
   varying float v_index;
   varying float v_timeOffset;
+  varying float v_effectiveTime;
   varying vec4 v_color;
   varying float v_intensity;
   varying float v_useDataDrivenColor;
@@ -74,6 +83,12 @@ const POINT_VERTEX_SHADER = `
     v_pos = a_offset;
     v_index = a_index;
     v_timeOffset = a_timeOffset;
+
+    // Calculate effective time for interactive animation
+    // When playing (a_isPlaying = 1.0): use global time + offset
+    // When paused (a_isPlaying = 0.0): use stored local time
+    float globalAnimTime = u_time + a_timeOffset;
+    v_effectiveTime = mix(a_localTime, globalAnimTime, a_isPlaying);
 
     // Pass data-driven properties
     v_color = a_color;
@@ -129,6 +144,8 @@ export class PointShaderLayer implements CustomLayerInterface {
   private aTimeOffset: number = -1;
   private aColor: number = -1;
   private aIntensity: number = -1;
+  private aIsPlaying: number = -1;
+  private aLocalTime: number = -1;
 
   // Time offset calculator
   private timeOffsetCalculator: TimeOffsetCalculator = new TimeOffsetCalculator();
@@ -151,16 +168,31 @@ export class PointShaderLayer implements CustomLayerInterface {
   private initializationError: Error | null = null;
   private hasLoggedError: boolean = false;
 
+  // Interactive animation state
+  private interactionEnabled: boolean = false;
+  private interactivityConfig: InteractivityConfig | null = null;
+  private stateManager: FeatureAnimationStateManager | null = null;
+  private interactionHandler: FeatureInteractionHandler | null = null;
+  private interactionBuffer: WebGLBuffer | null = null;
+
   constructor(
     id: string,
     sourceId: string,
     definition: ShaderDefinition,
-    config: ShaderConfig
+    config: ShaderConfig,
+    interactivityConfig?: InteractivityConfig
   ) {
     this.id = id;
     this.sourceId = sourceId;
     this.definition = definition;
     this.config = { ...definition.defaultConfig, ...config };
+
+    // Initialize interaction if enabled
+    if (interactivityConfig?.perFeatureControl) {
+      this.interactionEnabled = true;
+      this.interactivityConfig = interactivityConfig;
+      this.stateManager = new FeatureAnimationStateManager(interactivityConfig);
+    }
 
     // Compile expressions from config
     this.compileExpressions();
@@ -274,6 +306,8 @@ export class PointShaderLayer implements CustomLayerInterface {
       this.aTimeOffset = gl.getAttribLocation(this.program, 'a_timeOffset');
       this.aColor = gl.getAttribLocation(this.program, 'a_color');
       this.aIntensity = gl.getAttribLocation(this.program, 'a_intensity');
+      this.aIsPlaying = gl.getAttribLocation(this.program, 'a_isPlaying');
+      this.aLocalTime = gl.getAttribLocation(this.program, 'a_localTime');
 
       // Get uniform locations
       this.cacheUniformLocations(gl);
@@ -282,6 +316,11 @@ export class PointShaderLayer implements CustomLayerInterface {
       this.vertexBuffer = createBufferWithErrorHandling(gl, 'vertex', this.id);
       this.indexBuffer = createBufferWithErrorHandling(gl, 'index', this.id);
       this.dataDrivenBuffer = createBufferWithErrorHandling(gl, 'dataDriven', this.id);
+
+      // Create interaction buffer if interaction is enabled
+      if (this.interactionEnabled) {
+        this.interactionBuffer = createBufferWithErrorHandling(gl, 'interaction', this.id);
+      }
 
     } catch (error) {
       this.initializationError = error as Error;
@@ -315,6 +354,18 @@ export class PointShaderLayer implements CustomLayerInterface {
     }, 100);
 
     this.lastFrameTime = performance.now();
+
+    // Setup interaction handler if enabled
+    if (this.interactionEnabled && this.stateManager && this.interactivityConfig) {
+      // Original layer ID for events (remove -shader suffix)
+      const originalLayerId = this.id.replace('-shader', '');
+      this.interactionHandler = new FeatureInteractionHandler(
+        map,
+        originalLayerId,
+        this.stateManager,
+        this.interactivityConfig
+      );
+    }
   }
 
   /**
@@ -332,18 +383,26 @@ export class PointShaderLayer implements CustomLayerInterface {
    * Called when the layer is removed
    */
   onRemove(_map: MapLibreMap, gl: WebGLRenderingContext): void {
+    // Dispose interaction handler
+    if (this.interactionHandler) {
+      this.interactionHandler.dispose();
+      this.interactionHandler = null;
+    }
+
     // Use safe cleanup to handle any errors during resource disposal
     safeCleanup(gl, {
       program: this.program,
-      buffers: [this.vertexBuffer, this.indexBuffer, this.dataDrivenBuffer],
+      buffers: [this.vertexBuffer, this.indexBuffer, this.dataDrivenBuffer, this.interactionBuffer],
     });
 
     this.program = null;
     this.vertexBuffer = null;
     this.indexBuffer = null;
     this.dataDrivenBuffer = null;
+    this.interactionBuffer = null;
     this.map = null;
     this.initializationError = null;
+    this.stateManager = null;
     this.expressionEvaluator.clear();
   }
 
@@ -375,6 +434,18 @@ export class PointShaderLayer implements CustomLayerInterface {
 
     if (this.isPlaying) {
       this.time += deltaTime * this.speed;
+    }
+
+    // Update interaction state manager
+    if (this.interactionEnabled && this.stateManager) {
+      this.stateManager.tick(this.time, deltaTime);
+
+      // Update interaction buffer if state changed
+      if (this.stateManager.isDirty() && this.interactionBuffer) {
+        const { isPlayingData, localTimeData } = this.stateManager.generateBufferData(4); // 4 vertices per point
+        this.updateInteractionBuffer(gl, isPlayingData, localTimeData);
+        this.stateManager.clearDirty();
+      }
     }
 
     // Use our shader program
@@ -462,6 +533,36 @@ export class PointShaderLayer implements CustomLayerInterface {
       }
     }
 
+    // Bind interaction buffer for a_isPlaying and a_localTime attributes
+    if (this.interactionEnabled && this.interactionBuffer) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.interactionBuffer);
+
+      // Interaction stride: isPlaying (1 float) + localTime (1 float) = 2 floats = 8 bytes
+      const interactionStride = 8;
+
+      if (this.aIsPlaying >= 0) {
+        gl.enableVertexAttribArray(this.aIsPlaying);
+        gl.vertexAttribPointer(this.aIsPlaying, 1, gl.FLOAT, false, interactionStride, 0);
+      }
+
+      if (this.aLocalTime >= 0) {
+        gl.enableVertexAttribArray(this.aLocalTime);
+        gl.vertexAttribPointer(this.aLocalTime, 1, gl.FLOAT, false, interactionStride, 4);
+      }
+    } else {
+      // When interaction is not enabled, set default constant attribute values
+      // a_isPlaying = 1.0 means always playing (use global time)
+      // a_localTime = 0.0 is ignored when playing
+      if (this.aIsPlaying >= 0) {
+        gl.disableVertexAttribArray(this.aIsPlaying);
+        gl.vertexAttrib1f(this.aIsPlaying, 1.0);
+      }
+      if (this.aLocalTime >= 0) {
+        gl.disableVertexAttribArray(this.aLocalTime);
+        gl.vertexAttrib1f(this.aLocalTime, 0.0);
+      }
+    }
+
     // Bind index buffer and draw
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
     gl.drawElements(gl.TRIANGLES, this.vertexCount, gl.UNSIGNED_SHORT, 0);
@@ -473,6 +574,8 @@ export class PointShaderLayer implements CustomLayerInterface {
     if (this.aTimeOffset >= 0) gl.disableVertexAttribArray(this.aTimeOffset);
     if (this.aColor >= 0) gl.disableVertexAttribArray(this.aColor);
     if (this.aIntensity >= 0) gl.disableVertexAttribArray(this.aIntensity);
+    if (this.aIsPlaying >= 0) gl.disableVertexAttribArray(this.aIsPlaying);
+    if (this.aLocalTime >= 0) gl.disableVertexAttribArray(this.aLocalTime);
 
     // Request another frame
     if (this.isPlaying) {
@@ -726,6 +829,12 @@ export class PointShaderLayer implements CustomLayerInterface {
       this.buildDataDrivenBuffer(gl);
     }
 
+    // Initialize interaction state manager with features
+    if (this.interactionEnabled && this.stateManager) {
+      this.stateManager.initializeFromFeatures(this.features);
+      this.buildInteractionBuffer(gl);
+    }
+
     this.vertexCount = indexData.length;
   }
 
@@ -806,5 +915,45 @@ export class PointShaderLayer implements CustomLayerInterface {
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.dataDrivenBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, dataDrivenData, gl.DYNAMIC_DRAW);
+  }
+
+  /**
+   * Build the interaction buffer for per-feature animation state
+   */
+  private buildInteractionBuffer(gl: WebGLRenderingContext): void {
+    if (!this.interactionBuffer || !this.stateManager) return;
+
+    const { isPlayingData, localTimeData } = this.stateManager.generateBufferData(4); // 4 vertices per point
+    this.updateInteractionBuffer(gl, isPlayingData, localTimeData);
+    this.stateManager.clearDirty();
+  }
+
+  /**
+   * Update the interaction buffer with new state data
+   */
+  private updateInteractionBuffer(
+    gl: WebGLRenderingContext,
+    isPlayingData: Float32Array,
+    localTimeData: Float32Array
+  ): void {
+    if (!this.interactionBuffer) return;
+
+    // Interleave isPlaying and localTime data
+    // Layout: [isPlaying0, localTime0, isPlaying1, localTime1, ...]
+    const interleavedData = new Float32Array(isPlayingData.length * 2);
+    for (let i = 0; i < isPlayingData.length; i++) {
+      interleavedData[i * 2] = isPlayingData[i];
+      interleavedData[i * 2 + 1] = localTimeData[i];
+    }
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.interactionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, interleavedData, gl.DYNAMIC_DRAW);
+  }
+
+  /**
+   * Get the state manager for external control of per-feature animation
+   */
+  getStateManager(): FeatureAnimationStateManager | null {
+    return this.stateManager;
   }
 }

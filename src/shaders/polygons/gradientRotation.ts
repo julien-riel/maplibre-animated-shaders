@@ -87,6 +87,7 @@ uniform float u_intensity;
 
 varying vec2 v_uv;
 varying float v_timeOffset;
+varying float v_effectiveTime;
 
 const float PI = 3.14159265359;
 const float TWO_PI = 6.28318530718;
@@ -125,7 +126,7 @@ void main() {
   vec2 pos = v_uv - center;
 
   // Apply per-feature time offset for animation desynchronization
-  float localTime = u_time + v_timeOffset;
+  float localTime = v_effectiveTime;
 
   float t;
 

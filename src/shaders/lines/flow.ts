@@ -133,6 +133,7 @@ varying float v_progress;
 varying float v_line_index;
 varying float v_width;
 varying float v_timeOffset;
+varying float v_effectiveTime;
 
 void main() {
   // Calculate perpendicular distance from line center
@@ -143,7 +144,7 @@ void main() {
   float lineAlpha = 1.0 - smoothstep(1.0 - aa, 1.0, dist);
 
   // Apply per-feature time offset for animation desynchronization
-  float localTime = u_time + v_timeOffset;
+  float localTime = v_effectiveTime;
 
   // Calculate dash pattern
   float cycleLength = u_dashLength + u_gapLength;

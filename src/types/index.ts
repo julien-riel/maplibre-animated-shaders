@@ -501,12 +501,14 @@ export interface InteractiveShaderController extends ShaderController {
   pauseFeature: (featureId: string | number) => void;
   /** Reset animation for a specific feature */
   resetFeature: (featureId: string | number) => void;
+  /** Toggle animation for a specific feature */
+  toggleFeature: (featureId: string | number) => void;
   /** Set state for a specific feature */
-  setFeatureState: (featureId: string | number, state: Partial<FeatureAnimationState>) => void;
+  setFeatureState?: (featureId: string | number, state: Partial<FeatureAnimationState>) => void;
   /** Get state for a specific feature */
   getFeatureState: (featureId: string | number) => FeatureAnimationState | undefined;
   /** Get all feature states */
-  getAllFeatureStates: () => Map<string | number, FeatureAnimationState>;
+  getAllFeatureStates?: () => Map<string | number, FeatureAnimationState>;
   /** Play all features */
   playAll: () => void;
   /** Pause all features */

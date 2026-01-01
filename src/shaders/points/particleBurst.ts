@@ -161,6 +161,7 @@ uniform float u_intensity;
 
 varying vec2 v_pos;
 varying float v_timeOffset;
+varying float v_effectiveTime;
 
 // Pseudo-random function
 float hash(float n) {
@@ -176,7 +177,7 @@ void main() {
   float alpha = 0.0;
 
   // Apply per-feature time offset for animation desynchronization
-  float localTime = u_time + v_timeOffset;
+  float localTime = v_effectiveTime;
 
   // Convert spread to radians
   float spreadRad = u_spread * PI / 180.0;

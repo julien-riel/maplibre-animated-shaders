@@ -157,6 +157,7 @@ uniform float u_intensity;
 
 varying vec2 v_pos;
 varying float v_timeOffset;
+varying float v_effectiveTime;
 
 // Easing functions
 float easeInQuad(float t) { return t * t; }
@@ -208,7 +209,7 @@ float applyEasing(float t, float easingType) {
 
 void main() {
   // Apply per-feature time offset for animation desynchronization
-  float localTime = u_time + v_timeOffset;
+  float localTime = v_effectiveTime;
 
   // Create heartbeat pattern: quick beat, rest, quick beat
   float cycle = fract(localTime);

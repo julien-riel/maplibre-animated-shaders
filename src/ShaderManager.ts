@@ -3,6 +3,8 @@ import type {
   MapLibreMapInstance,
   ShaderConfig,
   ShaderController,
+  InteractiveShaderController,
+  InteractivityConfig,
   ShaderDefinition,
   ShaderInstance,
   ShaderManagerOptions,
@@ -14,6 +16,7 @@ import { PointShaderLayer } from './layers/PointShaderLayer';
 import { LineShaderLayer } from './layers/LineShaderLayer';
 import { PolygonShaderLayer } from './layers/PolygonShaderLayer';
 import { GlobalShaderLayer } from './layers/GlobalShaderLayer';
+import { FeatureAnimationStateManager } from './interaction';
 
 /**
  * Main entry point for managing animated shaders on a MapLibre map.
@@ -52,7 +55,12 @@ export class ShaderManager implements IShaderManager {
   /**
    * Register a shader on a layer
    */
-  register(layerId: string, shaderName: string, config?: Partial<ShaderConfig>): void {
+  register(
+    layerId: string,
+    shaderName: string,
+    config?: Partial<ShaderConfig>,
+    interactivityConfig?: InteractivityConfig
+  ): void {
     // Get shader definition
     const definition = this.registry.get(shaderName);
     if (!definition) {
@@ -80,19 +88,19 @@ export class ShaderManager implements IShaderManager {
 
     // For point shaders, use WebGL custom layer
     if (definition.geometry === 'point') {
-      this.registerPointShader(layerId, definition, resolvedConfig);
+      this.registerPointShader(layerId, definition, resolvedConfig, interactivityConfig);
       return;
     }
 
     // For line shaders, use WebGL custom layer
     if (definition.geometry === 'line') {
-      this.registerLineShader(layerId, definition, resolvedConfig);
+      this.registerLineShader(layerId, definition, resolvedConfig, interactivityConfig);
       return;
     }
 
     // For polygon shaders, use WebGL custom layer
     if (definition.geometry === 'polygon') {
-      this.registerPolygonShader(layerId, definition, resolvedConfig);
+      this.registerPolygonShader(layerId, definition, resolvedConfig, interactivityConfig);
       return;
     }
 
@@ -112,7 +120,8 @@ export class ShaderManager implements IShaderManager {
   private registerPointShader(
     layerId: string,
     definition: ShaderDefinition,
-    config: ShaderConfig
+    config: ShaderConfig,
+    interactivityConfig?: InteractivityConfig
   ): void {
     // Get the source ID from the existing layer
     const existingLayer = this.map.getLayer(layerId);
@@ -144,7 +153,8 @@ export class ShaderManager implements IShaderManager {
       customLayerId,
       sourceId,
       definition,
-      config
+      config,
+      interactivityConfig
     );
 
     // Add the custom layer to the map
@@ -174,7 +184,8 @@ export class ShaderManager implements IShaderManager {
   private registerLineShader(
     layerId: string,
     definition: ShaderDefinition,
-    config: ShaderConfig
+    config: ShaderConfig,
+    interactivityConfig?: InteractivityConfig
   ): void {
     // Get the source ID from the existing layer
     const existingLayer = this.map.getLayer(layerId);
@@ -204,7 +215,8 @@ export class ShaderManager implements IShaderManager {
       customLayerId,
       sourceId,
       definition,
-      config
+      config,
+      interactivityConfig
     );
 
     // Add the custom layer to the map
@@ -234,7 +246,8 @@ export class ShaderManager implements IShaderManager {
   private registerPolygonShader(
     layerId: string,
     definition: ShaderDefinition,
-    config: ShaderConfig
+    config: ShaderConfig,
+    interactivityConfig?: InteractivityConfig
   ): void {
     // Get the source ID from the existing layer
     const existingLayer = this.map.getLayer(layerId);
@@ -264,7 +277,8 @@ export class ShaderManager implements IShaderManager {
       customLayerId,
       sourceId,
       definition,
-      config
+      config,
+      interactivityConfig
     );
 
     // Add the custom layer to the map
@@ -533,6 +547,13 @@ export class ShaderManager implements IShaderManager {
   }
 
   /**
+   * Get custom layer for a layer ID
+   */
+  getCustomLayer(layerId: string): PointShaderLayer | LineShaderLayer | PolygonShaderLayer | GlobalShaderLayer | undefined {
+    return this.customLayers.get(layerId);
+  }
+
+  /**
    * Clean up all resources
    */
   destroy(): void {
@@ -709,12 +730,21 @@ export function applyShader(
   map: MapLibreMapInstance,
   layerId: string,
   shaderName: string,
-  config?: Partial<ShaderConfig>
-): ShaderController {
-  const manager = new ShaderManager(map, { autoStart: true });
-  manager.register(layerId, shaderName, config);
+  config?: Partial<ShaderConfig & InteractivityConfig>
+): ShaderController | InteractiveShaderController {
+  // Extract interactivity config from combined config
+  const interactivityConfig: InteractivityConfig | undefined = config?.perFeatureControl ? {
+    perFeatureControl: config.perFeatureControl,
+    initialState: config.initialState,
+    onClick: config.onClick,
+    onHover: config.onHover,
+    featureIdProperty: config.featureIdProperty,
+  } : undefined;
 
-  return {
+  const manager = new ShaderManager(map, { autoStart: true });
+  manager.register(layerId, shaderName, config, interactivityConfig);
+
+  const baseController: ShaderController = {
     pause: () => manager.pause(layerId),
     play: () => manager.play(layerId),
     update: (newConfig) => manager.updateConfig(layerId, newConfig),
@@ -724,6 +754,28 @@ export function applyShader(
     },
     isPlaying: () => manager.getInstance(layerId)?.isPlaying ?? false,
   };
+
+  // Return InteractiveShaderController if perFeatureControl is enabled
+  if (interactivityConfig?.perFeatureControl) {
+    const customLayer = manager.getCustomLayer(layerId);
+    const stateManager = (customLayer as { getStateManager?: () => FeatureAnimationStateManager | null })?.getStateManager?.();
+
+    if (stateManager) {
+      return {
+        ...baseController,
+        playFeature: (featureId: string | number) => stateManager.playFeature(featureId),
+        pauseFeature: (featureId: string | number) => stateManager.pauseFeature(featureId),
+        resetFeature: (featureId: string | number) => stateManager.resetFeature(featureId),
+        toggleFeature: (featureId: string | number) => stateManager.toggleFeature(featureId),
+        playAll: () => stateManager.playAll(),
+        pauseAll: () => stateManager.pauseAll(),
+        resetAll: () => stateManager.resetAll(),
+        getFeatureState: (featureId: string | number) => stateManager.getFeatureState(featureId),
+      };
+    }
+  }
+
+  return baseController;
 }
 
 /**

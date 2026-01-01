@@ -137,6 +137,7 @@ varying float v_progress;
 varying float v_line_index;
 varying float v_width;
 varying float v_timeOffset;
+varying float v_effectiveTime;
 
 // Simple pseudo-random function
 float random(float x) {
@@ -155,7 +156,7 @@ void main() {
   float pos = v_progress * 1000.0;
 
   // Apply per-feature time offset for animation desynchronization
-  float localTime = u_time + v_timeOffset;
+  float localTime = v_effectiveTime;
 
   // Create electric distortion
   float wave1 = sin(pos * u_frequency + localTime * 5.0) * u_amplitude;

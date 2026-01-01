@@ -110,6 +110,7 @@ uniform float u_noiseType;
 varying vec2 v_screen_pos;
 varying vec2 v_uv;
 varying float v_timeOffset;
+varying float v_effectiveTime;
 
 // Simplex noise helper functions
 vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
@@ -189,7 +190,7 @@ void main() {
   vec2 noiseCoord = v_screen_pos * u_scale;
 
   // Apply per-feature time offset for animation desynchronization
-  float localTime = u_time + v_timeOffset;
+  float localTime = v_effectiveTime;
 
   // Add time for animation (except for static noise)
   if (u_noiseType > 0.5) {

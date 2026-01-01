@@ -8,7 +8,7 @@ Ce document décrit le plan d'implémentation pour trois nouvelles fonctionnalit
 |---|----------------|------------|-------------|--------|
 | 1 | Configuration par propriétés de feature | **Moyenne** ✨ | Aucune | ✅ Complété |
 | 2 | Offset/randomisation des animations | Moyenne | Bénéficie de #1 | ✅ Complété |
-| 3 | Contrôle interactif (clic/hover) | Haute | Bénéficie de #1 et #2 | 🔜 À venir |
+| 3 | Contrôle interactif (clic/hover) | Haute | Bénéficie de #1 et #2 | ✅ Complété |
 
 > ✨ Complexité réduite grâce à la réutilisation de `@maplibre/maplibre-gl-style-spec`
 
@@ -673,19 +673,19 @@ class MapLibreStateSync {
 
 > **Avantage:** En réutilisant le package MapLibre, on supporte automatiquement TOUTES les expressions MapLibre (match, interpolate, case, math, string, color, etc.) sans avoir à les implémenter nous-mêmes!
 
-### Phase 3: Interactivité (Fonctionnalité #3)
+### Phase 3: Interactivité (Fonctionnalité #3) ✅ COMPLÉTÉ
 **Pourquoi en dernier:**
 - Dépend des deux phases précédentes
 - Plus complexe (gestion d'état, événements)
 - Peut utiliser les expressions pour la config d'interaction
 
 **Livrables:**
-- [ ] `FeatureAnimationStateManager`
-- [ ] `InteractionHandler`
-- [ ] `MapLibreStateSync` (optionnel)
-- [ ] API `ShaderController` étendue
+- [x] `FeatureAnimationStateManager`
+- [x] `InteractionHandler`
+- [ ] `MapLibreStateSync` (optionnel - non implémenté)
+- [x] API `ShaderController` étendue (`InteractiveShaderController`)
 - [ ] Tests unitaires
-- [ ] Documentation
+- [x] Documentation (inline code comments)
 - [ ] Démo interactive complète
 
 ---
@@ -732,7 +732,7 @@ Pour chaque phase:
 |-------|--------|-------------|--------|
 | Phase 1 (Offset) | Modéré | Aucune | ✅ Complété |
 | Phase 2 (Data-Driven) | Élevé | Phase 1 (bénéficie de) | ✅ Complété |
-| Phase 3 (Interactivité) | Élevé | Phase 1 + 2 (bénéficie de) | 🔜 À venir |
+| Phase 3 (Interactivité) | Élevé | Phase 1 + 2 (bénéficie de) | ✅ Complété |
 
 ---
 
