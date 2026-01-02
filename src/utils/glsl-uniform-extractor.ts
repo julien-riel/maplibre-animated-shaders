@@ -44,7 +44,8 @@ export interface ExtractedUniform {
  * - uniform mat4 u_matrix;
  * - uniform float u_values[10];
  */
-const UNIFORM_REGEX = /uniform\s+(float|int|bool|vec[234]|mat[234]|sampler2D|samplerCube)\s+(\w+)(?:\[(\d+)\])?;/g;
+const UNIFORM_REGEX =
+  /uniform\s+(float|int|bool|vec[234]|mat[234]|sampler2D|samplerCube)\s+(\w+)(?:\[(\d+)\])?;/g;
 
 /**
  * Extract uniform declarations from GLSL shader code.
@@ -144,7 +145,15 @@ export function validateUniforms(
  * @returns Information about how to set this uniform type
  */
 export function getUniformSetterInfo(type: GLSLUniformType): {
-  setter: 'uniform1f' | 'uniform1i' | 'uniform2fv' | 'uniform3fv' | 'uniform4fv' | 'uniformMatrix2fv' | 'uniformMatrix3fv' | 'uniformMatrix4fv';
+  setter:
+    | 'uniform1f'
+    | 'uniform1i'
+    | 'uniform2fv'
+    | 'uniform3fv'
+    | 'uniform4fv'
+    | 'uniformMatrix2fv'
+    | 'uniformMatrix3fv'
+    | 'uniformMatrix4fv';
   componentCount: number;
 } {
   switch (type) {

@@ -48,6 +48,9 @@
     "bench:ci": "vitest bench --run --reporter=json --outputFile=benchmark-results.json",
     "docs": "typedoc",
     "docs:watch": "typedoc --watch",
+    "changelog": "npx tsx scripts/generate-changelog.ts",
+    "changelog:write": "npx tsx scripts/generate-changelog.ts --write",
+    "version": "npm run changelog:write && git add CHANGELOG.md",
     "prepublishOnly": "npm run build:lib"
   },
   "keywords": [

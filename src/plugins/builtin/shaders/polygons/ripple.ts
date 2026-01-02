@@ -162,7 +162,8 @@ void main() {
 export const rippleShader: ShaderDefinition<RippleConfig> = {
   name: 'ripple',
   displayName: 'Ripple',
-  description: 'Concentric ripples spreading from polygon center - perfect for selection and impact effects',
+  description:
+    'Concentric ripples spreading from polygon center - perfect for selection and impact effects',
   geometry: 'polygon',
   tags: ['selection', 'impact', 'waves', 'animation', 'highlight'],
 
@@ -172,9 +173,7 @@ export const rippleShader: ShaderDefinition<RippleConfig> = {
   configSchema: rippleConfigSchema,
 
   getUniforms: (config: RippleConfig, time: number, _deltaTime: number) => {
-    const rgba = typeof config.color === 'string'
-      ? hexToRgba(config.color)
-      : config.color;
+    const rgba = typeof config.color === 'string' ? hexToRgba(config.color) : config.color;
 
     return {
       u_time: time * config.speed,

@@ -179,7 +179,8 @@ void main() {
 export const heatShimmerShader: ShaderDefinition<HeatShimmerConfig> = {
   name: 'heatShimmer',
   displayName: 'Heat Shimmer',
-  description: 'Distortion effect like heat waves on hot asphalt - perfect for desert and summer scenes',
+  description:
+    'Distortion effect like heat waves on hot asphalt - perfect for desert and summer scenes',
   geometry: 'global',
   tags: ['heat', 'distortion', 'weather', 'atmosphere', 'desert'],
 

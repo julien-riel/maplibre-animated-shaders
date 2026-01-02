@@ -22,10 +22,7 @@
  * map.on('sourcedata', throttledUpdate);
  * ```
  */
-export function throttle<T extends (...args: unknown[]) => void>(
-  fn: T,
-  intervalMs: number
-): T {
+export function throttle<T extends (...args: unknown[]) => void>(fn: T, intervalMs: number): T {
   let lastCall = 0;
   let scheduledCall: ReturnType<typeof setTimeout> | null = null;
 
@@ -73,10 +70,7 @@ export function throttle<T extends (...args: unknown[]) => void>(
  * debouncedUpdate();
  * ```
  */
-export function debounce<T extends (...args: unknown[]) => void>(
-  fn: T,
-  waitMs: number
-): T {
+export function debounce<T extends (...args: unknown[]) => void>(fn: T, waitMs: number): T {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
   return ((...args: unknown[]) => {

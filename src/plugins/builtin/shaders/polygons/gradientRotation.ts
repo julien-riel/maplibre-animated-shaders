@@ -177,9 +177,7 @@ export const gradientRotationShader: ShaderDefinition<GradientRotationConfig> = 
   configSchema: gradientRotationConfigSchema,
 
   getUniforms: (config: GradientRotationConfig, time: number, _deltaTime: number) => {
-    const colors = config.colors.map(c =>
-      typeof c === 'string' ? hexToRgba(c) : c
-    );
+    const colors = config.colors.map((c) => (typeof c === 'string' ? hexToRgba(c) : c));
 
     // Pad with transparent if less than 4 colors
     while (colors.length < 4) {

@@ -11,7 +11,12 @@
  */
 
 import type { CustomLayerInterface, Map as MapLibreMap } from 'maplibre-gl';
-import type { ShaderDefinition, ShaderConfig, AnimationTimingConfig, InteractivityConfig } from '../types';
+import type {
+  ShaderDefinition,
+  ShaderConfig,
+  AnimationTimingConfig,
+  InteractivityConfig,
+} from '../types';
 import type { mat4 } from 'gl-matrix';
 import { TimeOffsetCalculator } from '../timing';
 import { ExpressionEvaluator, isExpression } from '../expressions';
@@ -40,7 +45,7 @@ export interface FeatureData {
  */
 export abstract class BaseShaderLayer implements CustomLayerInterface {
   id: string;
-  type: 'custom' = 'custom';
+  type = 'custom' as const;
   renderingMode: '2d' | '3d' = '2d';
 
   protected map: MapLibreMap | null = null;
@@ -227,7 +232,6 @@ export abstract class BaseShaderLayer implements CustomLayerInterface {
       if (this.interactionEnabled) {
         this.interactionBuffer = createBufferWithErrorHandling(gl, 'interaction', this.id);
       }
-
     } catch (error) {
       this.initializationError = error as Error;
       console.error(
@@ -325,7 +329,9 @@ export abstract class BaseShaderLayer implements CustomLayerInterface {
     // Skip rendering if there was an initialization error
     if (this.initializationError) {
       if (!this.hasLoggedError) {
-        console.warn(`[${this.layerTypeName}] Skipping render for layer "${this.id}" due to initialization error`);
+        console.warn(
+          `[${this.layerTypeName}] Skipping render for layer "${this.id}" due to initialization error`
+        );
         this.hasLoggedError = true;
       }
       return;
@@ -380,7 +386,8 @@ export abstract class BaseShaderLayer implements CustomLayerInterface {
     const uUseDataDrivenColor = this.uniforms.get('u_useDataDrivenColor');
     const uUseDataDrivenIntensity = this.uniforms.get('u_useDataDrivenIntensity');
     if (uUseDataDrivenColor) gl.uniform1f(uUseDataDrivenColor, this.hasDataDrivenColor ? 1.0 : 0.0);
-    if (uUseDataDrivenIntensity) gl.uniform1f(uUseDataDrivenIntensity, this.hasDataDrivenIntensity ? 1.0 : 0.0);
+    if (uUseDataDrivenIntensity)
+      gl.uniform1f(uUseDataDrivenIntensity, this.hasDataDrivenIntensity ? 1.0 : 0.0);
 
     // Set shader-specific uniforms
     this.setShaderUniforms(gl);
@@ -418,19 +425,13 @@ export abstract class BaseShaderLayer implements CustomLayerInterface {
       );
 
       // Link program using error handling utilities
-      const program = linkProgramWithErrorHandling(
-        gl,
-        vertexShader,
-        fragmentShader,
-        this.id
-      );
+      const program = linkProgramWithErrorHandling(gl, vertexShader, fragmentShader, this.id);
 
       // Clean up shaders (they're now part of the program)
       gl.deleteShader(vertexShader);
       gl.deleteShader(fragmentShader);
 
       return program;
-
     } catch (error) {
       // Clean up any created shaders on error
       if (vertexShader) gl.deleteShader(vertexShader);
@@ -477,11 +478,7 @@ export abstract class BaseShaderLayer implements CustomLayerInterface {
     const sanitizedConfig = this.getSanitizedConfigForUniforms();
 
     // Get uniforms from the shader's getUniforms function
-    const uniforms = this.definition.getUniforms(
-      sanitizedConfig,
-      this.time,
-      0
-    );
+    const uniforms = this.definition.getUniforms(sanitizedConfig, this.time, 0);
 
     for (const [key, value] of Object.entries(uniforms)) {
       const location = this.uniforms.get(key);
@@ -527,12 +524,17 @@ export abstract class BaseShaderLayer implements CustomLayerInterface {
     let defaultColor: [number, number, number, number] = [1, 1, 1, 1];
     if (typeof defaultColorValue === 'string' && !isExpression(defaultColorValue)) {
       defaultColor = hexToRgba(defaultColorValue);
-    } else if (Array.isArray(defaultColorValue) && defaultColorValue.length === 4 && typeof defaultColorValue[0] === 'number') {
+    } else if (
+      Array.isArray(defaultColorValue) &&
+      defaultColorValue.length === 4 &&
+      typeof defaultColorValue[0] === 'number'
+    ) {
       defaultColor = defaultColorValue as [number, number, number, number];
     }
 
     // Get default intensity from config
-    const defaultIntensity = typeof this.config.intensity === 'number' ? this.config.intensity : 1.0;
+    const defaultIntensity =
+      typeof this.config.intensity === 'number' ? this.config.intensity : 1.0;
 
     for (let i = 0; i < this.features.length; i++) {
       const feature = this.features[i];

@@ -167,7 +167,8 @@ void main() {
 export const pulseShader: ShaderDefinition<PulseConfig> = {
   name: 'pulse',
   displayName: 'Pulse',
-  description: 'Expanding concentric rings from point center - perfect for alerts, POIs, and events',
+  description:
+    'Expanding concentric rings from point center - perfect for alerts, POIs, and events',
   geometry: 'point',
   tags: ['alert', 'notification', 'radar', 'expand', 'ripple'],
 
@@ -181,9 +182,7 @@ export const pulseShader: ShaderDefinition<PulseConfig> = {
    * This provides a fallback animation using circle properties
    */
   getUniforms: (config: PulseConfig, time: number, _deltaTime: number) => {
-    const rgba = typeof config.color === 'string'
-      ? hexToRgba(config.color)
-      : config.color;
+    const rgba = typeof config.color === 'string' ? hexToRgba(config.color) : config.color;
 
     // Calculate animation phase (0 to 1)
     const phase = (time * config.speed * 0.5) % 1;
@@ -195,7 +194,7 @@ export const pulseShader: ShaderDefinition<PulseConfig> = {
     // Opacity fades as ring expands (if fadeOut enabled)
     const opacity = config.fadeOut
       ? (1 - phase) * (config.intensity ?? 1)
-      : config.intensity ?? 1;
+      : (config.intensity ?? 1);
 
     // Convert color to CSS format for MapLibre
     const colorRgba = `rgba(${Math.round(rgba[0] * 255)}, ${Math.round(rgba[1] * 255)}, ${Math.round(rgba[2] * 255)}, ${opacity})`;

@@ -53,7 +53,7 @@ const GLOBAL_VERTEX_SHADER = `
  */
 export class GlobalShaderLayer implements CustomLayerInterface {
   id: string;
-  type: 'custom' = 'custom';
+  type = 'custom' as const;
   renderingMode: '2d' | '3d' = '2d';
 
   private map: MapLibreMap | null = null;
@@ -78,11 +78,7 @@ export class GlobalShaderLayer implements CustomLayerInterface {
   private initializationError: Error | null = null;
   private hasLoggedError: boolean = false;
 
-  constructor(
-    id: string,
-    definition: ShaderDefinition,
-    config: ShaderConfig
-  ) {
+  constructor(id: string, definition: ShaderDefinition, config: ShaderConfig) {
     this.id = id;
     this.definition = definition;
     this.config = { ...definition.defaultConfig, ...config };
@@ -158,14 +154,8 @@ export class GlobalShaderLayer implements CustomLayerInterface {
       this.vertexBuffer = createBufferWithErrorHandling(gl, 'vertex', this.id);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
 
-      const vertices = new Float32Array([
-        -1, -1,
-         1, -1,
-        -1,  1,
-         1,  1,
-      ]);
+      const vertices = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
       gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
-
     } catch (error) {
       this.initializationError = error as Error;
       console.error(
@@ -199,7 +189,9 @@ export class GlobalShaderLayer implements CustomLayerInterface {
   render(gl: WebGLRenderingContext, matrix: mat4): void {
     if (this.initializationError) {
       if (!this.hasLoggedError) {
-        console.warn(`[GlobalShaderLayer] Skipping render for layer "${this.id}" due to initialization error`);
+        console.warn(
+          `[GlobalShaderLayer] Skipping render for layer "${this.id}" due to initialization error`
+        );
         this.hasLoggedError = true;
       }
       return;
@@ -305,18 +297,12 @@ export class GlobalShaderLayer implements CustomLayerInterface {
         this.id
       );
 
-      const program = linkProgramWithErrorHandling(
-        gl,
-        vertexShader,
-        fragmentShader,
-        this.id
-      );
+      const program = linkProgramWithErrorHandling(gl, vertexShader, fragmentShader, this.id);
 
       gl.deleteShader(vertexShader);
       gl.deleteShader(fragmentShader);
 
       return program;
-
     } catch (error) {
       if (vertexShader) gl.deleteShader(vertexShader);
       if (fragmentShader) gl.deleteShader(fragmentShader);
@@ -332,29 +318,52 @@ export class GlobalShaderLayer implements CustomLayerInterface {
 
     // Common uniforms
     const commonUniforms = [
-      'u_matrix', 'u_resolution', 'u_center', 'u_zoom', 'u_time',
-      'u_color', 'u_intensity', 'u_opacity', 'u_speed'
+      'u_matrix',
+      'u_resolution',
+      'u_center',
+      'u_zoom',
+      'u_time',
+      'u_color',
+      'u_intensity',
+      'u_opacity',
+      'u_speed',
     ];
 
     // Get uniform names from config schema
-    const schemaUniforms = Object.keys(this.definition.configSchema).map(
-      key => `u_${key}`
-    );
+    const schemaUniforms = Object.keys(this.definition.configSchema).map((key) => `u_${key}`);
 
     // Global-specific uniforms
     const globalUniforms = [
       // Heat Shimmer
-      'u_distortionIntensity', 'u_distortionScale', 'u_direction',
+      'u_distortionIntensity',
+      'u_distortionScale',
+      'u_direction',
       // Day Night Cycle
-      'u_timeOfDay', 'u_ambientDay', 'u_ambientNight', 'u_sunColor', 'u_shadowIntensity',
+      'u_timeOfDay',
+      'u_ambientDay',
+      'u_ambientNight',
+      'u_sunColor',
+      'u_shadowIntensity',
       // Depth Fog
-      'u_fogColor', 'u_density', 'u_minZoom', 'u_maxZoom', 'u_animated',
+      'u_fogColor',
+      'u_density',
+      'u_minZoom',
+      'u_maxZoom',
+      'u_animated',
       // Weather
-      'u_weatherType', 'u_particleCount', 'u_particleSize', 'u_wind', 'u_fallSpeed',
+      'u_weatherType',
+      'u_particleCount',
+      'u_particleSize',
+      'u_wind',
+      'u_fallSpeed',
       // Holographic Grid
-      'u_gridSize', 'u_lineWidth', 'u_pulseWave', 'u_glowIntensity',
+      'u_gridSize',
+      'u_lineWidth',
+      'u_pulseWave',
+      'u_glowIntensity',
       // Additional
-      'u_bounds', 'u_scale'
+      'u_bounds',
+      'u_scale',
     ];
 
     const allUniforms = new Set([...commonUniforms, ...schemaUniforms, ...globalUniforms]);
@@ -369,11 +378,7 @@ export class GlobalShaderLayer implements CustomLayerInterface {
    */
   private setShaderUniforms(gl: WebGLRenderingContext): void {
     // Get uniforms from the shader's getUniforms function
-    const uniforms = this.definition.getUniforms(
-      this.config,
-      this.time,
-      0
-    );
+    const uniforms = this.definition.getUniforms(this.config, this.time, 0);
 
     for (const [key, value] of Object.entries(uniforms)) {
       const location = this.uniforms.get(key);

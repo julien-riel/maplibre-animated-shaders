@@ -156,26 +156,52 @@ export class LineShaderLayer extends BaseShaderLayer {
 
     // Common uniforms
     const commonUniforms = [
-      'u_matrix', 'u_resolution', 'u_width', 'u_time', 'u_total_length',
-      'u_color', 'u_intensity', 'u_opacity',
+      'u_matrix',
+      'u_resolution',
+      'u_width',
+      'u_time',
+      'u_total_length',
+      'u_color',
+      'u_intensity',
+      'u_opacity',
       // Data-driven flags
-      'u_useDataDrivenColor', 'u_useDataDrivenIntensity'
+      'u_useDataDrivenColor',
+      'u_useDataDrivenIntensity',
     ];
 
     // Get uniform names from config schema
-    const schemaUniforms = Object.keys(this.definition.configSchema).map(
-      key => `u_${key}`
-    );
+    const schemaUniforms = Object.keys(this.definition.configSchema).map((key) => `u_${key}`);
 
     // Line-specific uniforms
     const lineUniforms = [
-      'u_dashLength', 'u_gapLength', 'u_direction', 'u_gradient',
-      'u_colorStart', 'u_colorEnd', 'u_wavelength', 'u_mode',
-      'u_amplitude', 'u_frequency', 'u_noiseScale', 'u_glow',
-      'u_headLength', 'u_fadeLength', 'u_minOpacity', 'u_loop',
-      'u_minWidth', 'u_maxWidth', 'u_easing', 'u_syncToData',
-      'u_headColor', 'u_tailColor', 'u_length', 'u_baseColor',
-      'u_glowRadius', 'u_flickerIntensity', 'u_flickerSpeed', 'u_layers'
+      'u_dashLength',
+      'u_gapLength',
+      'u_direction',
+      'u_gradient',
+      'u_colorStart',
+      'u_colorEnd',
+      'u_wavelength',
+      'u_mode',
+      'u_amplitude',
+      'u_frequency',
+      'u_noiseScale',
+      'u_glow',
+      'u_headLength',
+      'u_fadeLength',
+      'u_minOpacity',
+      'u_loop',
+      'u_minWidth',
+      'u_maxWidth',
+      'u_easing',
+      'u_syncToData',
+      'u_headColor',
+      'u_tailColor',
+      'u_length',
+      'u_baseColor',
+      'u_glowRadius',
+      'u_flickerIntensity',
+      'u_flickerSpeed',
+      'u_layers',
     ];
 
     const allUniforms = new Set([...commonUniforms, ...schemaUniforms, ...lineUniforms]);
@@ -244,10 +270,7 @@ export class LineShaderLayer extends BaseShaderLayer {
 
     for (const feature of features) {
       if (feature.geometry.type === 'LineString') {
-        this.processLineString(
-          (feature.geometry as GeoJSON.LineString).coordinates,
-          lineIndex++
-        );
+        this.processLineString((feature.geometry as GeoJSON.LineString).coordinates, lineIndex++);
       } else if (feature.geometry.type === 'MultiLineString') {
         for (const line of (feature.geometry as GeoJSON.MultiLineString).coordinates) {
           this.processLineString(line, lineIndex++);
@@ -328,7 +351,7 @@ export class LineShaderLayer extends BaseShaderLayer {
     for (let i = 0; i < this.segments.length; i++) {
       const seg = this.segments[i];
       const vi = i * 4 * 9; // Vertex data index
-      const ii = i * 6;     // Index data index
+      const ii = i * 6; // Index data index
       const baseVertex = i * 4;
       const timeOffset = timeOffsets[seg.lineIndex] ?? 0;
 

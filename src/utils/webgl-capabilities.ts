@@ -57,8 +57,9 @@ export function detectWebGLCapabilities(): BrowserWebGLCapabilities {
   const canvas = document.createElement('canvas');
 
   // Try WebGL 2 first, then fall back to WebGL 1
-  let gl: WebGLRenderingContext | WebGL2RenderingContext | null =
-    canvas.getContext('webgl2') as WebGL2RenderingContext | null;
+  let gl: WebGLRenderingContext | WebGL2RenderingContext | null = canvas.getContext(
+    'webgl2'
+  ) as WebGL2RenderingContext | null;
 
   let version: 1 | 2 | null = gl ? 2 : null;
 
@@ -84,12 +85,8 @@ export function detectWebGLCapabilities(): BrowserWebGLCapabilities {
   }
 
   // Check high precision support in fragment shaders
-  const highPrecision = gl.getShaderPrecisionFormat(
-    gl.FRAGMENT_SHADER,
-    gl.HIGH_FLOAT
-  );
-  const highPrecisionSupported =
-    highPrecision !== null && highPrecision.precision > 0;
+  const highPrecision = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT);
+  const highPrecisionSupported = highPrecision !== null && highPrecision.precision > 0;
 
   return {
     supported: true,
@@ -100,10 +97,8 @@ export function detectWebGLCapabilities(): BrowserWebGLCapabilities {
     highPrecisionSupported,
     extensions: {
       floatTextures: !!gl.getExtension('OES_texture_float'),
-      instancedArrays:
-        version === 2 || !!gl.getExtension('ANGLE_instanced_arrays'),
-      vertexArrayObjects:
-        version === 2 || !!gl.getExtension('OES_vertex_array_object'),
+      instancedArrays: version === 2 || !!gl.getExtension('ANGLE_instanced_arrays'),
+      vertexArrayObjects: version === 2 || !!gl.getExtension('OES_vertex_array_object'),
     },
   };
 }
@@ -123,21 +118,21 @@ export function checkMinimumRequirements(): RequirementsCheckResult {
     if (!capabilities.highPrecisionSupported) {
       errors.push(
         'High precision floats are not supported in fragment shaders. ' +
-        'Some visual effects may not render correctly.'
+          'Some visual effects may not render correctly.'
       );
     }
 
     if (capabilities.maxTextureSize < 2048) {
       errors.push(
         `Maximum texture size (${capabilities.maxTextureSize}px) is below ` +
-        'the recommended minimum (2048px)'
+          'the recommended minimum (2048px)'
       );
     }
 
     if (capabilities.maxFragmentUniforms < 64) {
       errors.push(
         `Maximum fragment uniforms (${capabilities.maxFragmentUniforms}) is below ` +
-        'the recommended minimum (64). Some complex shaders may not work.'
+          'the recommended minimum (64). Some complex shaders may not work.'
       );
     }
   }

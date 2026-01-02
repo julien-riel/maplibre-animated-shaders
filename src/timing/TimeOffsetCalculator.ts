@@ -25,15 +25,15 @@ export class TimeOffsetCalculator {
   /**
    * Calculate time offsets for an array of features
    */
-  calculateOffsets(
-    features: GeoJSON.Feature[],
-    config: AnimationTimingConfig
-  ): Float32Array {
+  calculateOffsets(features: GeoJSON.Feature[], config: AnimationTimingConfig): Float32Array {
     const offsets = new Float32Array(features.length);
     const period = config.period ?? 1;
-    const randomSeed = config.randomSeed !== undefined
-      ? (typeof config.randomSeed === 'string' ? this.hashString(config.randomSeed) : config.randomSeed)
-      : this.seed;
+    const randomSeed =
+      config.randomSeed !== undefined
+        ? typeof config.randomSeed === 'string'
+          ? this.hashString(config.randomSeed)
+          : config.randomSeed
+        : this.seed;
 
     for (let i = 0; i < features.length; i++) {
       offsets[i] = this.calculateSingleOffset(
@@ -115,7 +115,7 @@ export class TimeOffsetCalculator {
     h ^= h >>> 13;
     h = Math.imul(h, 0xc2b2ae35);
     h ^= h >>> 16;
-    return (h >>> 0) / 0xFFFFFFFF;
+    return (h >>> 0) / 0xffffffff;
   }
 
   /**
@@ -130,7 +130,7 @@ export class TimeOffsetCalculator {
     h ^= h >>> 13;
     h = Math.imul(h, 0xc2b2ae35);
     h ^= h >>> 16;
-    return (h >>> 0) / 0xFFFFFFFF;
+    return (h >>> 0) / 0xffffffff;
   }
 
   /**

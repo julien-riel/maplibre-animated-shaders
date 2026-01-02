@@ -222,15 +222,12 @@ export const snakeShader: ShaderDefinition<SnakeConfig> = {
   configSchema: snakeConfigSchema,
 
   getUniforms: (config: SnakeConfig, time: number, _deltaTime: number) => {
-    const headRgba = typeof config.headColor === 'string'
-      ? hexToRgba(config.headColor)
-      : config.headColor;
-    const tailRgba = typeof config.tailColor === 'string'
-      ? hexToRgba(config.tailColor)
-      : config.tailColor;
-    const baseRgba = typeof config.baseColor === 'string'
-      ? hexToRgba(config.baseColor)
-      : config.baseColor;
+    const headRgba =
+      typeof config.headColor === 'string' ? hexToRgba(config.headColor) : config.headColor;
+    const tailRgba =
+      typeof config.tailColor === 'string' ? hexToRgba(config.tailColor) : config.tailColor;
+    const baseRgba =
+      typeof config.baseColor === 'string' ? hexToRgba(config.baseColor) : config.baseColor;
 
     return {
       u_time: time * config.speed,

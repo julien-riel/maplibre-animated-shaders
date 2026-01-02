@@ -221,9 +221,7 @@ export const glowShader: ShaderDefinition<GlowConfig> = {
   configSchema: glowConfigSchema,
 
   getUniforms: (config: GlowConfig, time: number, _deltaTime: number) => {
-    const rgba = typeof config.color === 'string'
-      ? hexToRgba(config.color)
-      : config.color;
+    const rgba = typeof config.color === 'string' ? hexToRgba(config.color) : config.color;
 
     // Calculate current pulse intensity
     const pulse = Math.sin(time * config.speed * Math.PI * 2) * 0.5 + 0.5;

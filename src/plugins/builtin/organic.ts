@@ -62,15 +62,20 @@ export const organicPlugin: ShaderPlugin = {
       config: { color: '#ff8800', speed: 1.5, minWidth: 1, maxWidth: 8 },
     },
     // Particle presets
-    'celebration': {
+    celebration: {
       shader: 'particleBurst',
-      config: { colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00'], speed: 1.0, count: 20, spread: 1.0 },
+      config: {
+        colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00'],
+        speed: 1.0,
+        count: 20,
+        spread: 1.0,
+      },
     },
-    'firework': {
+    firework: {
       shader: 'particleBurst',
       config: { colors: ['#ffff00', '#ff8800', '#ff0000'], speed: 1.5, count: 30, spread: 1.2 },
     },
-    'sparkle': {
+    sparkle: {
       shader: 'particleBurst',
       config: { colors: ['#ffffff', '#ffffcc'], speed: 0.5, count: 10, spread: 0.5 },
     },
@@ -92,7 +97,7 @@ export const organicPlugin: ShaderPlugin = {
       shader: 'dissolve',
       config: { speed: 0.5, direction: 'in', noiseScale: 0.1 },
     },
-    'pixelate': {
+    pixelate: {
       shader: 'dissolve',
       config: { speed: 0.3, direction: 'out', noiseScale: 0.05 },
     },
@@ -106,20 +111,23 @@ export const organicPlugin: ShaderPlugin = {
       config: { color: '#aaaaff', length: 0.8, opacity: 0.4 },
     },
     // Hatching presets
-    'blueprint': {
+    blueprint: {
       shader: 'hatching',
       config: { color: '#0066cc', angle: 45, spacing: 5, width: 1 },
     },
-    'sketch': {
+    sketch: {
       shader: 'hatching',
       config: { color: '#333333', angle: -30, spacing: 3, width: 0.5 },
     },
     // Gradient rotation presets
     'rainbow-spin': {
       shader: 'gradientRotation',
-      config: { colors: ['#ff0000', '#ff8800', '#ffff00', '#00ff00', '#0088ff', '#8800ff'], speed: 0.5 },
+      config: {
+        colors: ['#ff0000', '#ff8800', '#ffff00', '#00ff00', '#0088ff', '#8800ff'],
+        speed: 0.5,
+      },
     },
-    'sunset': {
+    sunset: {
       shader: 'gradientRotation',
       config: { colors: ['#ff6600', '#ff0066', '#660099'], speed: 0.2 },
     },

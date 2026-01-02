@@ -202,12 +202,9 @@ export const breathingShader: ShaderDefinition<BreathingConfig> = {
   configSchema: breathingConfigSchema,
 
   getUniforms: (config: BreathingConfig, time: number, _deltaTime: number) => {
-    const rgba = typeof config.color === 'string'
-      ? hexToRgba(config.color)
-      : config.color;
+    const rgba = typeof config.color === 'string' ? hexToRgba(config.color) : config.color;
 
-    const easingValue = config.easing === 'linear' ? 0.0 :
-                        config.easing === 'sine' ? 1.0 : 2.0;
+    const easingValue = config.easing === 'linear' ? 0.0 : config.easing === 'sine' ? 1.0 : 2.0;
 
     return {
       u_time: time * config.speed,

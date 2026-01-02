@@ -53,6 +53,12 @@ export type {
   InteractivityConfig,
   InteractiveShaderController,
   FullShaderConfig,
+  // Metrics & Observability
+  ShaderMetrics,
+  PerformanceWarning,
+  PerformanceWarningType,
+  PerformanceWarningHandler,
+  MetricsConfig,
 } from './types';
 
 // Expression evaluation (Phase 2)
@@ -85,7 +91,7 @@ export type {
   IPluginManager,
 } from './types';
 
-// Built-in thematic plugins
+// Built-in thematic plugins (synchronous)
 export {
   datavizPlugin,
   atmosphericPlugin,
@@ -93,6 +99,20 @@ export {
   organicPlugin,
   corePlugin,
 } from './plugins';
+
+// Lazy loading for plugins (code splitting)
+export {
+  loadPlugin,
+  loadPlugins,
+  preloadPlugins,
+  loadDatavizPlugin,
+  loadAtmosphericPlugin,
+  loadScifiPlugin,
+  loadOrganicPlugin,
+  loadCorePlugin,
+  pluginLoaders,
+} from './plugins';
+export type { BuiltinPluginName, PluginLoader } from './plugins';
 
 // Utilities
 export * from './utils';

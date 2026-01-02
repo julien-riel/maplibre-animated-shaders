@@ -195,9 +195,7 @@ export const scanLinesShader: ShaderDefinition<ScanLinesConfig> = {
   configSchema: scanLinesConfigSchema,
 
   getUniforms: (config: ScanLinesConfig, time: number, _deltaTime: number) => {
-    const rgba = typeof config.color === 'string'
-      ? hexToRgba(config.color)
-      : config.color;
+    const rgba = typeof config.color === 'string' ? hexToRgba(config.color) : config.color;
 
     const directionMap: Record<string, number> = {
       horizontal: 0.0,

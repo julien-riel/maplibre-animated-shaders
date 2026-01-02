@@ -190,9 +190,7 @@ export const fillWaveShader: ShaderDefinition<FillWaveConfig> = {
   configSchema: fillWaveConfigSchema,
 
   getUniforms: (config: FillWaveConfig, time: number, _deltaTime: number) => {
-    const rgba = typeof config.color === 'string'
-      ? hexToRgba(config.color)
-      : config.color;
+    const rgba = typeof config.color === 'string' ? hexToRgba(config.color) : config.color;
 
     return {
       u_time: time * config.speed,

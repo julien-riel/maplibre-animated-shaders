@@ -40,7 +40,10 @@ export class ShaderError extends Error {
  * Error class for WebGL context errors
  */
 export class WebGLContextError extends Error {
-  constructor(message: string, public readonly reason?: string) {
+  constructor(
+    message: string,
+    public readonly reason?: string
+  ) {
     super(message);
     this.name = 'WebGLContextError';
   }
@@ -50,7 +53,10 @@ export class WebGLContextError extends Error {
  * Error class for buffer operation errors
  */
 export class BufferError extends Error {
-  constructor(message: string, public readonly bufferType: string) {
+  constructor(
+    message: string,
+    public readonly bufferType: string
+  ) {
     super(message);
     this.name = 'BufferError';
   }
@@ -81,7 +87,8 @@ export function getWebGLCapabilities(gl: WebGLRenderingContext): WebGLCapabiliti
   // Get extension support
   const floatTexturesExt = gl.getExtension('OES_texture_float');
   const depthTexturesExt = gl.getExtension('WEBGL_depth_texture');
-  const anisotropicExt = gl.getExtension('EXT_texture_filter_anisotropic') ||
+  const anisotropicExt =
+    gl.getExtension('EXT_texture_filter_anisotropic') ||
     gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic') ||
     gl.getExtension('MOZ_EXT_texture_filter_anisotropic');
 
@@ -95,8 +102,9 @@ export function getWebGLCapabilities(gl: WebGLRenderingContext): WebGLCapabiliti
     floatTextures: !!floatTexturesExt || isWebGL2,
     depthTextures: !!depthTexturesExt || isWebGL2,
     anisotropicFiltering: !!anisotropicExt,
-    maxAnisotropy: anisotropicExt ?
-      gl.getParameter(anisotropicExt.MAX_TEXTURE_MAX_ANISOTROPY_EXT) as number : 1,
+    maxAnisotropy: anisotropicExt
+      ? (gl.getParameter(anisotropicExt.MAX_TEXTURE_MAX_ANISOTROPY_EXT) as number)
+      : 1,
   };
 }
 
@@ -186,10 +194,7 @@ export function linkProgramWithErrorHandling(
 ): WebGLProgram {
   const program = gl.createProgram();
   if (!program) {
-    throw new ShaderError(
-      `Failed to create shader program for layer "${layerId}"`,
-      'program'
-    );
+    throw new ShaderError(`Failed to create shader program for layer "${layerId}"`, 'program');
   }
 
   gl.attachShader(program, vertexShader);

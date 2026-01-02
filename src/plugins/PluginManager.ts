@@ -213,7 +213,9 @@ export class PluginManager implements IPluginManager {
       registeredShaders.push(namespacedName);
 
       if (this.debug) {
-        console.log(`[PluginManager] Registered shader "${namespacedName}" from plugin "${plugin.name}"`);
+        console.log(
+          `[PluginManager] Registered shader "${namespacedName}" from plugin "${plugin.name}"`
+        );
       }
     }
 
@@ -232,7 +234,10 @@ export class PluginManager implements IPluginManager {
       try {
         plugin.onRegister(this.manager);
       } catch (error) {
-        console.error(`[PluginManager] Error in onRegister hook for plugin "${plugin.name}":`, error);
+        console.error(
+          `[PluginManager] Error in onRegister hook for plugin "${plugin.name}":`,
+          error
+        );
       }
     }
 
@@ -260,7 +265,10 @@ export class PluginManager implements IPluginManager {
       try {
         state.plugin.onUnregister(this.manager);
       } catch (error) {
-        console.error(`[PluginManager] Error in onUnregister hook for plugin "${pluginName}":`, error);
+        console.error(
+          `[PluginManager] Error in onUnregister hook for plugin "${pluginName}":`,
+          error
+        );
       }
     }
 
@@ -353,7 +361,10 @@ export class PluginManager implements IPluginManager {
   /**
    * Get a preset from a plugin
    */
-  getPreset(pluginName: string, presetName: string): { shader: string; config: Record<string, unknown> } | undefined {
+  getPreset(
+    pluginName: string,
+    presetName: string
+  ): { shader: string; config: Record<string, unknown> } | undefined {
     const plugin = this.getPlugin(pluginName);
     if (!plugin?.presets) {
       return undefined;

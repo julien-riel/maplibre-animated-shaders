@@ -86,7 +86,14 @@ export const morphingShapesConfigSchema: ConfigSchema = {
   easing: {
     type: 'select',
     default: 'easeInOutCubic',
-    options: ['linear', 'easeInOutQuad', 'easeInOutCubic', 'easeInOutSine', 'easeInOutElastic', 'easeInOutBounce'],
+    options: [
+      'linear',
+      'easeInOutQuad',
+      'easeInOutCubic',
+      'easeInOutSine',
+      'easeInOutElastic',
+      'easeInOutBounce',
+    ],
     label: 'Easing',
     description: 'Transition easing function',
   },
@@ -308,20 +315,20 @@ void main() {
 
 // Shape name to GLSL int mapping
 const SHAPE_MAP: Record<string, number> = {
-  'circle': 0,
-  'square': 1,
-  'triangle': 2,
-  'hexagon': 3,
-  'star': 4,
+  circle: 0,
+  square: 1,
+  triangle: 2,
+  hexagon: 3,
+  star: 4,
 };
 
 const EASING_MAP: Record<string, number> = {
-  'linear': 0,
-  'easeInOutQuad': 3,
-  'easeInOutCubic': 6,
-  'easeInOutSine': 9,
-  'easeInOutElastic': 12,
-  'easeInOutBounce': 15,
+  linear: 0,
+  easeInOutQuad: 3,
+  easeInOutCubic: 6,
+  easeInOutSine: 9,
+  easeInOutElastic: 12,
+  easeInOutBounce: 15,
 };
 
 /**
@@ -330,7 +337,8 @@ const EASING_MAP: Record<string, number> = {
 export const morphingShapesShader: ShaderDefinition<MorphingShapesConfig> = {
   name: 'morphing-shapes',
   displayName: 'Morphing Shapes',
-  description: 'Fluid transition between geometric shapes - perfect for dynamic categorization and status changes',
+  description:
+    'Fluid transition between geometric shapes - perfect for dynamic categorization and status changes',
   geometry: 'point',
   tags: ['morph', 'shape', 'transform', 'category', 'status', 'geometric'],
 
@@ -340,13 +348,11 @@ export const morphingShapesShader: ShaderDefinition<MorphingShapesConfig> = {
   configSchema: morphingShapesConfigSchema,
 
   getUniforms: (config: MorphingShapesConfig, time: number, _deltaTime: number) => {
-    const rgba = typeof config.color === 'string'
-      ? hexToRgba(config.color)
-      : config.color;
+    const rgba = typeof config.color === 'string' ? hexToRgba(config.color) : config.color;
 
     // Parse shapes string
-    const shapeNames = config.shapes.split(',').map(s => s.trim().toLowerCase());
-    const shapeIndices = shapeNames.map(name => SHAPE_MAP[name] ?? 0);
+    const shapeNames = config.shapes.split(',').map((s) => s.trim().toLowerCase());
+    const shapeIndices = shapeNames.map((name) => SHAPE_MAP[name] ?? 0);
 
     // Pad to 5 elements
     while (shapeIndices.length < 5) {

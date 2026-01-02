@@ -6,7 +6,10 @@ import type { Color } from '../types';
 export function hexToRgba(hex: string): [number, number, number, number] {
   const cleaned = hex.replace('#', '');
 
-  let r: number, g: number, b: number, a = 1;
+  let r: number,
+    g: number,
+    b: number,
+    a = 1;
 
   if (cleaned.length === 3) {
     r = parseInt(cleaned[0] + cleaned[0], 16) / 255;

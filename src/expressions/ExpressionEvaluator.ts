@@ -28,10 +28,7 @@ import {
   createExpression,
   isExpression as maplibreIsExpression,
 } from '@maplibre/maplibre-gl-style-spec';
-import type {
-  StyleExpression,
-  GlobalProperties,
-} from '@maplibre/maplibre-gl-style-spec';
+import type { StyleExpression, GlobalProperties } from '@maplibre/maplibre-gl-style-spec';
 
 /**
  * Extended expression type with 'kind' property for data-driven detection
@@ -136,10 +133,7 @@ export class ExpressionEvaluator {
    * @param config - Configuration object that may contain expressions
    * @param schema - Optional schema to determine expected types
    */
-  compileConfig(
-    config: Record<string, unknown>,
-    schema?: Record<string, { type: string }>
-  ): void {
+  compileConfig(config: Record<string, unknown>, schema?: Record<string, { type: string }>): void {
     this.clear();
 
     for (const [key, value] of Object.entries(config)) {
@@ -196,11 +190,7 @@ export class ExpressionEvaluator {
    * @param zoom - Current map zoom level
    * @returns Evaluated value or undefined if no expression for this key
    */
-  evaluateExpression(
-    key: string,
-    feature: GeoJSON.Feature,
-    zoom: number
-  ): unknown | undefined {
+  evaluateExpression(key: string, feature: GeoJSON.Feature, zoom: number): unknown | undefined {
     const compiled = this.compiledExpressions.get(key);
     if (!compiled) {
       return undefined;
@@ -216,7 +206,10 @@ export class ExpressionEvaluator {
       type: feature.geometry?.type,
     };
 
-    return compiled.expression.evaluate(globals, evalFeature as Parameters<typeof compiled.expression.evaluate>[1]);
+    return compiled.expression.evaluate(
+      globals,
+      evalFeature as Parameters<typeof compiled.expression.evaluate>[1]
+    );
   }
 
   /**
@@ -267,9 +260,7 @@ export class ExpressionEvaluator {
       return features.map(() => ({ ...config }));
     }
 
-    return features.map((feature) =>
-      this.evaluateForFeature(config, feature, zoom)
-    );
+    return features.map((feature) => this.evaluateForFeature(config, feature, zoom));
   }
 
   /**
@@ -283,20 +274,13 @@ export class ExpressionEvaluator {
    * @param zoom - Current map zoom level
    * @returns Array of values, one per feature
    */
-  extractValues<T>(
-    key: string,
-    staticValue: T,
-    features: GeoJSON.Feature[],
-    zoom: number
-  ): T[] {
+  extractValues<T>(key: string, staticValue: T, features: GeoJSON.Feature[], zoom: number): T[] {
     if (!this.expressionKeys.has(key)) {
       // No expression - return static value for all features
       return features.map(() => staticValue);
     }
 
-    return features.map(
-      (feature) => this.evaluateExpression(key, feature, zoom) as T
-    );
+    return features.map((feature) => this.evaluateExpression(key, feature, zoom) as T);
   }
 
   /**

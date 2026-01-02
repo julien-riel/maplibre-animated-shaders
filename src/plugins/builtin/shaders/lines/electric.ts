@@ -220,9 +220,7 @@ export const electricShader: ShaderDefinition<ElectricConfig> = {
   configSchema: electricConfigSchema,
 
   getUniforms: (config: ElectricConfig, time: number, _deltaTime: number) => {
-    const rgba = typeof config.color === 'string'
-      ? hexToRgba(config.color)
-      : config.color;
+    const rgba = typeof config.color === 'string' ? hexToRgba(config.color) : config.color;
 
     return {
       u_time: time * config.speed,

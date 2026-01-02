@@ -206,14 +206,12 @@ export const marchingAntsShader: ShaderDefinition<MarchingAntsConfig> = {
   configSchema: marchingAntsConfigSchema,
 
   getUniforms: (config: MarchingAntsConfig, time: number, _deltaTime: number) => {
-    const rgba = typeof config.color === 'string'
-      ? hexToRgba(config.color)
-      : config.color;
+    const rgba = typeof config.color === 'string' ? hexToRgba(config.color) : config.color;
 
     const altRgba = config.alternateColor
-      ? (typeof config.alternateColor === 'string'
+      ? typeof config.alternateColor === 'string'
         ? hexToRgba(config.alternateColor)
-        : config.alternateColor)
+        : config.alternateColor
       : [0, 0, 0, 0];
 
     return {

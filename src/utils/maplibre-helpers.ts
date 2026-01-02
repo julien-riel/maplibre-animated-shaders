@@ -3,10 +3,7 @@ import type { MapLibreMapInstance } from '../types';
 /**
  * Get the center of a layer's features in screen coordinates
  */
-export function getLayerCenter(
-  map: MapLibreMapInstance,
-  layerId: string
-): [number, number] | null {
+export function getLayerCenter(map: MapLibreMapInstance, layerId: string): [number, number] | null {
   const features = map.queryRenderedFeatures(undefined, { layers: [layerId] });
 
   if (features.length === 0) return null;

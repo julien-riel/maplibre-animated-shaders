@@ -12,9 +12,7 @@ export class ShaderRegistry implements IShaderRegistry {
    */
   register(definition: ShaderDefinition): void {
     if (this.shaders.has(definition.name)) {
-      console.warn(
-        `[ShaderRegistry] Shader "${definition.name}" already registered, overwriting.`
-      );
+      console.warn(`[ShaderRegistry] Shader "${definition.name}" already registered, overwriting.`);
     }
     this.shaders.set(definition.name, definition);
   }

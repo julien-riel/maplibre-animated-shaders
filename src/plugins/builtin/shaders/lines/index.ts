@@ -4,12 +4,7 @@
  */
 
 // Flow shader - Animated dashes
-export {
-  flowShader,
-  flowDefaultConfig,
-  flowConfigSchema,
-  flowFragmentShader,
-} from './flow';
+export { flowShader, flowDefaultConfig, flowConfigSchema, flowFragmentShader } from './flow';
 export type { FlowConfig } from './flow';
 
 // Gradient Travel shader - Moving gradient
@@ -49,19 +44,9 @@ export {
 export type { BreathingConfig } from './breathing';
 
 // Snake shader - Moving segment
-export {
-  snakeShader,
-  snakeDefaultConfig,
-  snakeConfigSchema,
-  snakeFragmentShader,
-} from './snake';
+export { snakeShader, snakeDefaultConfig, snakeConfigSchema, snakeFragmentShader } from './snake';
 export type { SnakeConfig } from './snake';
 
 // Neon shader - Neon glow with flicker
-export {
-  neonShader,
-  neonDefaultConfig,
-  neonConfigSchema,
-  neonFragmentShader,
-} from './neon';
+export { neonShader, neonDefaultConfig, neonConfigSchema, neonFragmentShader } from './neon';
 export type { NeonConfig } from './neon';

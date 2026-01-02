@@ -1,14 +1,14 @@
 # MapLibre Animated Shaders Library — Architecture
 
-## Vue d'ensemble
+## Overview
 
-**maplibre-animated-shaders** est une bibliothèque modulaire de shaders GLSL animés pour MapLibre GL JS. Elle permet d'ajouter des effets visuels dynamiques aux couches de carte avec une API déclarative et configurable.
+**maplibre-animated-shaders** is a modular library of animated GLSL shaders for MapLibre GL JS. It allows adding dynamic visual effects to map layers with a declarative and configurable API.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                      Application utilisateur                     │
+│                      User Application                            │
 ├─────────────────────────────────────────────────────────────────┤
-│                     maplibre-animated-shaders                          │
+│                     maplibre-animated-shaders                    │
 │  ┌───────────────┐  ┌───────────────┐  ┌───────────────────┐    │
 │  │ ShaderManager │  │ AnimationLoop │  │ ConfigResolver    │    │
 │  └───────┬───────┘  └───────┬───────┘  └─────────┬─────────┘    │
@@ -27,26 +27,26 @@
 
 ---
 
-## Modules principaux
+## Main Modules
 
 ### 1. ShaderManager
 
-Point d'entrée principal. Gère le cycle de vie des shaders sur une instance MapLibre.
+Main entry point. Manages the shader lifecycle on a MapLibre instance.
 
 ```typescript
 interface ShaderManager {
-  // Enregistrement
+  // Registration
   register(layerId: string, shaderName: string, config?: ShaderConfig): void;
   unregister(layerId: string): void;
-  
-  // Contrôle
+
+  // Control
   play(layerId?: string): void;
   pause(layerId?: string): void;
   setSpeed(layerId: string, speed: number): void;
-  
-  // Configuration runtime
+
+  // Runtime configuration
   updateConfig(layerId: string, config: Partial<ShaderConfig>): void;
-  
+
   // Lifecycle
   destroy(): void;
 }
@@ -54,7 +54,7 @@ interface ShaderManager {
 
 ### 2. AnimationLoop
 
-Gère la boucle d'animation globale avec `requestAnimationFrame`. Injecte le temps uniforme dans tous les shaders actifs.
+Manages the global animation loop with `requestAnimationFrame`. Injects uniform time into all active shaders.
 
 ```typescript
 interface AnimationLoop {
@@ -68,7 +68,7 @@ interface AnimationLoop {
 
 ### 3. ShaderRegistry
 
-Catalogue de tous les shaders disponibles, organisés par géométrie.
+Catalog of all available shaders, organized by geometry.
 
 ```typescript
 interface ShaderRegistry {
@@ -82,7 +82,7 @@ type GeometryType = 'point' | 'line' | 'polygon' | 'global';
 
 ### 4. ConfigResolver
 
-Fusionne la configuration utilisateur avec les valeurs par défaut du shader.
+Merges user configuration with shader default values.
 
 ```typescript
 interface ConfigResolver {
@@ -97,23 +97,23 @@ interface ConfigResolver {
 
 ### 5. ExpressionEvaluator (Data-Driven)
 
-Wrapper autour du système d'expressions MapLibre pour les propriétés data-driven.
+Wrapper around the MapLibre expression system for data-driven properties.
 
 ```typescript
 interface ExpressionEvaluator {
-  // Compile une expression MapLibre
+  // Compile a MapLibre expression
   compile(key: string, expression: unknown, expectedType: string): CompiledExpression | null;
 
-  // Compile toutes les expressions d'une config
+  // Compile all expressions from a config
   compileConfig(config: Record<string, unknown>, schema?: Record<string, { type: string }>): void;
 
-  // Évalue une expression pour un feature
+  // Evaluate an expression for a feature
   evaluateExpression(key: string, feature: GeoJSON.Feature, zoom: number): unknown;
 
-  // Évalue toutes les expressions pour un feature
+  // Evaluate all expressions for a feature
   evaluateForFeature(config: Record<string, unknown>, feature: GeoJSON.Feature, zoom: number): EvaluatedConfig;
 
-  // Vérifie si une config contient des expressions
+  // Check if a config contains expressions
   hasExpression(key: string): boolean;
   hasDataDrivenExpressions(): boolean;
 }
@@ -121,56 +121,56 @@ interface ExpressionEvaluator {
 
 ### 6. TimeOffsetCalculator (Animation Timing)
 
-Calcule les décalages temporels per-feature pour les animations.
+Calculates per-feature time offsets for animations.
 
 ```typescript
 interface TimeOffsetCalculator {
-  // Calcule les offsets pour tous les features
+  // Calculate offsets for all features
   calculateOffsets(features: GeoJSON.Feature[], config: AnimationTimingConfig): Float32Array;
 }
 
-// Modes de calcul supportés
+// Supported calculation modes
 type TimeOffsetValue =
-  | number                        // Décalage fixe
-  | 'random'                      // Aléatoire [0, period]
-  | ['get', string]               // Depuis propriété
-  | ['hash', string]              // Hash stable d'une propriété
-  | { min: number; max: number }; // Range aléatoire
+  | number                        // Fixed offset
+  | 'random'                      // Random [0, period]
+  | ['get', string]               // From property
+  | ['hash', string]              // Stable hash of a property
+  | { min: number; max: number }; // Random range
 ```
 
 ### 7. FeatureAnimationStateManager (Interactive Control)
 
-Gère l'état d'animation per-feature pour le contrôle interactif (play/pause/toggle/reset).
+Manages per-feature animation state for interactive control (play/pause/toggle/reset).
 
 ```typescript
 interface FeatureAnimationStateManager {
-  // Initialise l'état pour tous les features
+  // Initialize state for all features
   initializeFromFeatures(features: GeoJSON.Feature[]): void;
 
-  // Contrôle d'un feature individuel
+  // Individual feature control
   playFeature(featureId: string | number): void;
   pauseFeature(featureId: string | number): void;
   toggleFeature(featureId: string | number): void;
   resetFeature(featureId: string | number): void;
 
-  // Contrôle global
+  // Global control
   playAll(): void;
   pauseAll(): void;
   resetAll(): void;
 
-  // État
+  // State
   getState(featureId: string | number): FeatureAnimationState | undefined;
 
-  // Mise à jour par frame
+  // Per-frame update
   tick(globalTime: number, deltaTime: number): void;
 
-  // Génération des données GPU
+  // GPU buffer data generation
   generateBufferData(verticesPerFeature: number): {
-    isPlayingData: Float32Array;  // 0.0 ou 1.0 par vertex
-    localTimeData: Float32Array;  // Temps gelé quand en pause
+    isPlayingData: Float32Array;  // 0.0 or 1.0 per vertex
+    localTimeData: Float32Array;  // Frozen time when paused
   };
 
-  // Dirty tracking pour optimisation
+  // Dirty tracking for optimization
   isDirty(): boolean;
   clearDirty(): void;
 }
@@ -178,25 +178,25 @@ interface FeatureAnimationStateManager {
 interface FeatureAnimationState {
   featureId: string | number;
   isPlaying: boolean;       // true = animation active
-  localTime: number;        // Temps local (gelé quand en pause)
-  playCount: number;        // Nombre de lectures complètes
+  localTime: number;        // Local time (frozen when paused)
+  playCount: number;        // Number of complete plays
 }
 ```
 
 ### 8. FeatureInteractionHandler (Event Handling)
 
-Gère les événements MapLibre (click/hover) et les dispatch au state manager.
+Handles MapLibre events (click/hover) and dispatches to state manager.
 
 ```typescript
 interface FeatureInteractionHandler {
   constructor(
     map: MapLibreMap,
-    layerId: string,  // Layer ID pour les événements
+    layerId: string,  // Layer ID for events
     stateManager: FeatureAnimationStateManager,
     config: InteractivityConfig
   );
 
-  // Nettoie les event listeners
+  // Clean up event listeners
   dispose(): void;
 }
 
@@ -217,17 +217,17 @@ type InteractionHandler = (feature: GeoJSON.Feature, state: FeatureAnimationStat
 
 ---
 
-## Architecture Data-Driven
+## Data-Driven Architecture
 
-Le système data-driven permet de configurer les paramètres de shader (couleur, intensité, etc.) à partir des propriétés GeoJSON de chaque feature.
+The data-driven system allows configuring shader parameters (color, intensity, etc.) from GeoJSON properties of each feature.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                      Configuration Shader                        │
+│                      Shader Configuration                        │
 │  {                                                               │
 │    color: ['match', ['get', 'status'], 'high', '#f00', '#00f'], │
 │    intensity: ['get', 'priority'],                              │
-│    speed: 1.5  // valeur statique                               │
+│    speed: 1.5  // static value                                  │
 │  }                                                               │
 ├─────────────────────────────────────────────────────────────────┤
 │                    ExpressionEvaluator                           │
@@ -261,36 +261,36 @@ Le système data-driven permet de configurer les paramètres de shader (couleur,
 │                          ▼                                       │
 │  ┌─────────────────────────────────────────────────────────┐    │
 │  │                   Fragment Shader                        │    │
-│  │  // Utilise v_color et v_intensity si data-driven       │    │
+│  │  // Uses v_color and v_intensity if data-driven         │    │
 │  │  vec4 finalColor = mix(u_color, v_color, u_useDD);      │    │
 │  └─────────────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Flux de données
+### Data Flow
 
-1. **Configuration** — L'utilisateur fournit une config avec expressions ou valeurs statiques
-2. **Compilation** — `ExpressionEvaluator` compile les expressions via `@maplibre/maplibre-gl-style-spec`
-3. **Évaluation** — Pour chaque feature, les expressions sont évaluées
-4. **Buffer GPU** — Les valeurs sont écrites dans un buffer séparé (dataDrivenBuffer)
-5. **Rendu** — Le vertex shader lit les attributs per-vertex et les passe au fragment shader
+1. **Configuration** — User provides a config with expressions or static values
+2. **Compilation** — `ExpressionEvaluator` compiles expressions via `@maplibre/maplibre-gl-style-spec`
+3. **Evaluation** — For each feature, expressions are evaluated
+4. **GPU Buffer** — Values are written to a separate buffer (dataDrivenBuffer)
+5. **Rendering** — Vertex shader reads per-vertex attributes and passes them to fragment shader
 
-### Propriétés supportées
+### Supported Properties
 
-| Propriété | Type | Description |
-|-----------|------|-------------|
-| `color` | `color` | Couleur RGBA per-feature |
-| `intensity` | `number` | Intensité de l'effet (0-1) |
+| Property | Type | Description |
+|----------|------|-------------|
+| `color` | `color` | Per-feature RGBA color |
+| `intensity` | `number` | Effect intensity (0-1) |
 
 ---
 
-## Architecture Interactive Animation Control
+## Interactive Animation Control Architecture
 
-Le système de contrôle interactif permet de gérer l'état d'animation de chaque feature individuellement via des événements click/hover.
+The interactive control system allows managing each feature's animation state individually via click/hover events.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                      Configuration Shader                        │
+│                      Shader Configuration                        │
 │  {                                                               │
 │    perFeatureControl: true,                                      │
 │    initialState: 'paused',                                       │
@@ -332,12 +332,12 @@ Le système de contrôle interactif permet de gérer l'état d'animation de chaq
 │           ▼                      ▼                               │
 │  ┌─────────────────────────────────────────────────────────┐    │
 │  │                    Vertex Shader                         │    │
-│  │  attribute float a_isPlaying;   // 0.0 ou 1.0           │    │
-│  │  attribute float a_localTime;   // Temps gelé si pause  │    │
-│  │  attribute float a_timeOffset;  // Offset de timing     │    │
+│  │  attribute float a_isPlaying;   // 0.0 or 1.0           │    │
+│  │  attribute float a_localTime;   // Frozen time if paused │    │
+│  │  attribute float a_timeOffset;  // Timing offset        │    │
 │  │  varying float v_effectiveTime;                         │    │
 │  │                                                         │    │
-│  │  // Calcul du temps effectif                            │    │
+│  │  // Effective time calculation                          │    │
 │  │  float globalAnimTime = u_time + a_timeOffset;          │    │
 │  │  v_effectiveTime = mix(a_localTime, globalAnimTime,     │    │
 │  │                        a_isPlaying);                    │    │
@@ -346,178 +346,162 @@ Le système de contrôle interactif permet de gérer l'état d'animation de chaq
 │                          ▼                                       │
 │  ┌─────────────────────────────────────────────────────────┐    │
 │  │                   Fragment Shader                        │    │
-│  │  // Utilise v_effectiveTime pour l'animation            │    │
+│  │  // Uses v_effectiveTime for animation                  │    │
 │  │  float phase = fract(v_effectiveTime * u_speed);        │    │
 │  └─────────────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Flux d'interaction
+### Interaction Flow
 
-1. **Événement** — L'utilisateur clique ou survole un feature sur la carte
-2. **Dispatch** — `FeatureInteractionHandler` reçoit l'événement via MapLibre
-3. **Action** — L'action configurée (toggle/play/pause/reset) est exécutée
-4. **State Update** — `FeatureAnimationStateManager` met à jour l'état du feature
-5. **Dirty Flag** — Le buffer est marqué comme nécessitant une mise à jour
-6. **Buffer Update** — Lors du prochain frame, les données sont uploadées au GPU
-7. **Rendu** — Le shader utilise `v_effectiveTime` pour l'animation
+1. **Event** — User clicks or hovers over a feature on the map
+2. **Dispatch** — `FeatureInteractionHandler` receives event via MapLibre
+3. **Action** — Configured action (toggle/play/pause/reset) is executed
+4. **State Update** — `FeatureAnimationStateManager` updates feature state
+5. **Dirty Flag** — Buffer is marked as needing update
+6. **Buffer Update** — On next frame, data is uploaded to GPU
+7. **Rendering** — Shader uses `v_effectiveTime` for animation
 
-### Gestion du temps effectif
+### Effective Time Management
 
-Le temps effectif (`v_effectiveTime`) combine plusieurs composantes:
+Effective time (`v_effectiveTime`) combines multiple components:
 
-| État | Calcul |
-|------|--------|
-| **Playing** | `u_time + a_timeOffset` (temps global + offset) |
-| **Paused** | `a_localTime` (temps gelé au moment de la pause) |
+| State | Calculation |
+|-------|-------------|
+| **Playing** | `u_time + a_timeOffset` (global time + offset) |
+| **Paused** | `a_localTime` (frozen at pause time) |
 
-La formule GLSL: `mix(a_localTime, u_time + a_timeOffset, a_isPlaying)`
+GLSL formula: `mix(a_localTime, u_time + a_timeOffset, a_isPlaying)`
 
-### Optimisation avec dirty tracking
+### Optimization with Dirty Tracking
 
-Pour éviter les mises à jour GPU inutiles:
+To avoid unnecessary GPU updates:
 
-1. `FeatureAnimationStateManager` maintient un flag `dirty`
-2. Le flag devient `true` uniquement lors d'un changement d'état
-3. Le buffer n'est mis à jour que si `isDirty() === true`
-4. Après upload, `clearDirty()` est appelé
+1. `FeatureAnimationStateManager` maintains a `dirty` flag
+2. Flag becomes `true` only on state change
+3. Buffer is updated only if `isDirty() === true`
+4. After upload, `clearDirty()` is called
 
 ---
 
-## Structure d'un Shader
+## Shader Structure
 
-Chaque shader est défini comme un module autonome :
+Each shader is defined as a standalone module:
 
 ```typescript
 interface ShaderDefinition {
-  // Métadonnées
+  // Metadata
   name: string;
   displayName: string;
   description: string;
   geometry: GeometryType;
   tags: string[];
-  
-  // Code GLSL
-  vertexShader?: string;      // Override optionnel
-  fragmentShader: string;     // Requis
-  
+
+  // GLSL code
+  vertexShader?: string;      // Optional override
+  fragmentShader: string;     // Required
+
   // Configuration
   defaultConfig: ShaderConfig;
   configSchema: ConfigSchema;
-  
-  // Uniforms dynamiques
+
+  // Dynamic uniforms
   getUniforms(config: ShaderConfig, time: number): Record<string, any>;
-  
-  // Style MapLibre requis
+
+  // Required MapLibre style
   requiredPaint?: Record<string, any>;
   requiredLayout?: Record<string, any>;
 }
 ```
 
-### Configuration d'un shader
+### Shader Configuration
 
 ```typescript
 interface ShaderConfig {
-  // Communs à tous les shaders
-  speed?: number;           // Multiplicateur de vitesse (défaut: 1.0)
-  intensity?: number;       // Intensité de l'effet (défaut: 1.0)
-  enabled?: boolean;        // Activer/désactiver (défaut: true)
-  
-  // Spécifiques au shader (exemples)
+  // Common to all shaders
+  speed?: number;           // Speed multiplier (default: 1.0)
+  intensity?: number;       // Effect intensity (default: 1.0)
+  enabled?: boolean;        // Enable/disable (default: true)
+
+  // Shader-specific (examples)
   color?: string | [number, number, number, number];
   frequency?: number;
   amplitude?: number;
-  // ... autres paramètres selon le shader
+  // ... other parameters per shader
 }
 ```
 
 ---
 
-## Organisation des fichiers
+## File Organization
 
 ```
 maplibre-animated-shaders/
 ├── src/
-│   ├── index.ts                    # Export principal
+│   ├── index.ts                    # Main export
 │   ├── ShaderManager.ts
 │   ├── AnimationLoop.ts
 │   ├── ShaderRegistry.ts
 │   ├── ConfigResolver.ts
 │   │
-│   ├── expressions/                # Data-driven expressions (Phase 2)
-│   │   ├── index.ts                # Exports du module
-│   │   ├── ExpressionEvaluator.ts  # Wrapper MapLibre expressions
-│   │   └── FeatureDataBuffer.ts    # Buffer GPU per-feature
+│   ├── expressions/                # Data-driven expressions
+│   │   ├── index.ts                # Module exports
+│   │   ├── ExpressionEvaluator.ts  # MapLibre expression wrapper
+│   │   └── FeatureDataBuffer.ts    # Per-feature GPU buffer
 │   │
-│   ├── timing/                     # Animation timing (Phase 1)
-│   │   ├── index.ts                # Exports du module
-│   │   └── TimeOffsetCalculator.ts # Calcul des offsets
+│   ├── timing/                     # Animation timing
+│   │   ├── index.ts                # Module exports
+│   │   └── TimeOffsetCalculator.ts # Offset calculation
 │   │
-│   ├── interaction/                # Interactive control (Phase 3)
-│   │   ├── index.ts                # Exports du module
-│   │   ├── FeatureAnimationStateManager.ts  # État per-feature
-│   │   └── InteractionHandler.ts   # Gestion événements click/hover
+│   ├── interaction/                # Interactive control
+│   │   ├── index.ts                # Module exports
+│   │   ├── FeatureAnimationStateManager.ts  # Per-feature state
+│   │   └── InteractionHandler.ts   # Click/hover event handling
 │   │
 │   ├── layers/                     # WebGL Custom Layers
 │   │   ├── index.ts
-│   │   ├── PointShaderLayer.ts     # Points avec data-driven
-│   │   ├── LineShaderLayer.ts      # Lignes avec data-driven
-│   │   └── PolygonShaderLayer.ts   # Polygones avec data-driven
+│   │   ├── BaseShaderLayer.ts      # Abstract base class
+│   │   ├── PointShaderLayer.ts     # Points with data-driven
+│   │   ├── LineShaderLayer.ts      # Lines with data-driven
+│   │   └── PolygonShaderLayer.ts   # Polygons with data-driven
 │   │
-│   ├── shaders/
-│   │   ├── index.ts                # Export tous les shaders
-│   │   │
-│   │   ├── points/
-│   │   │   ├── pulse.ts
-│   │   │   ├── heartbeat.ts
-│   │   │   ├── radar.ts
-│   │   │   ├── particle-burst.ts
-│   │   │   ├── glow.ts
-│   │   │   └── morphing.ts
-│   │   │
-│   │   ├── lines/
-│   │   │   ├── flow.ts
-│   │   │   ├── gradient-travel.ts
-│   │   │   ├── electric.ts
-│   │   │   ├── trail-fade.ts
-│   │   │   ├── breathing.ts
-│   │   │   ├── snake.ts
-│   │   │   └── neon.ts
-│   │   │
-│   │   ├── polygons/
-│   │   │   ├── scan-lines.ts
-│   │   │   ├── ripple.ts
-│   │   │   ├── hatching.ts
-│   │   │   ├── fill-wave.ts
-│   │   │   ├── noise.ts
-│   │   │   ├── marching-ants.ts
-│   │   │   ├── gradient-rotation.ts
-│   │   │   └── dissolve.ts
-│   │   │
-│   │   └── global/
-│   │       ├── heat-shimmer.ts
-│   │       ├── day-night.ts
-│   │       ├── depth-fog.ts
-│   │       ├── weather.ts
-│   │       └── holographic.ts
+│   ├── plugins/                    # Plugin system
+│   │   ├── index.ts
+│   │   ├── PluginManager.ts
+│   │   ├── loaders.ts              # Lazy loading
+│   │   └── builtin/                # Built-in plugins
+│   │       ├── dataviz.ts
+│   │       ├── atmospheric.ts
+│   │       ├── scifi.ts
+│   │       ├── organic.ts
+│   │       └── core.ts
 │   │
 │   ├── glsl/
 │   │   ├── common/
-│   │   │   ├── noise.glsl          # Fonctions de bruit (simplex, perlin)
-│   │   │   ├── easing.glsl         # Fonctions d'easing
-│   │   │   ├── shapes.glsl         # SDF pour formes géométriques
-│   │   │   └── colors.glsl         # Manipulation de couleurs
+│   │   │   ├── noise.glsl          # Noise functions (simplex, perlin)
+│   │   │   ├── easing.glsl         # Easing functions
+│   │   │   ├── shapes.glsl         # SDF for geometric shapes
+│   │   │   └── colors.glsl         # Color manipulation
 │   │   │
 │   │   └── includes/
-│   │       └── ... (fragments réutilisables)
+│   │       └── ... (reusable fragments)
 │   │
 │   ├── utils/
-│   │   ├── color.ts                # Conversion couleurs
-│   │   ├── glsl-loader.ts          # Chargement/compilation GLSL
-│   │   └── maplibre-helpers.ts     # Utilitaires MapLibre
+│   │   ├── color.ts                # Color conversion
+│   │   ├── glsl-loader.ts          # GLSL loading/compilation
+│   │   ├── metrics-collector.ts    # Performance metrics
+│   │   ├── object-pool.ts          # Object pooling
+│   │   └── maplibre-helpers.ts     # MapLibre utilities
 │   │
 │   └── types/
-│       └── index.ts                # Types TypeScript
+│       ├── index.ts                # Type re-exports
+│       ├── core.ts                 # Core types
+│       ├── interfaces.ts           # Service interfaces
+│       ├── animation.ts            # Animation timing types
+│       ├── data-driven.ts          # Expression types
+│       ├── interaction.ts          # Interactive animation types
+│       ├── plugin.ts               # Plugin system types
+│       └── metrics.ts              # Observability types
 │
 ├── demo/
 │   ├── index.html
@@ -527,18 +511,27 @@ maplibre-animated-shaders/
 ├── tests/
 │   └── ...
 │
+├── e2e/
+│   ├── shader-rendering.spec.ts
+│   └── visual-regression.spec.ts
+│
+├── benchmarks/
+│   ├── core.bench.ts
+│   ├── layers.bench.ts
+│   └── data-processing.bench.ts
+│
 ├── package.json
 ├── tsconfig.json
 ├── vite.config.ts
 ├── ARCHITECTURE.md
-└── ROADMAP.md
+└── README.md
 ```
 
 ---
 
-## API publique
+## Public API
 
-L'API est conçue pour être **simple à intégrer** dans n'importe quel projet MapLibre existant. Aucune modification de code existant n'est nécessaire.
+The API is designed to be **easy to integrate** into any existing MapLibre project. No modification of existing code is needed.
 
 ### Installation
 
@@ -546,20 +539,20 @@ L'API est conçue pour être **simple à intégrer** dans n'importe quel projet 
 npm install maplibre-animated-shaders
 ```
 
-### Intégration en 3 lignes
+### Integration in 3 Lines
 
 ```typescript
 import { applyShader } from 'maplibre-animated-shaders';
 
 const map = new maplibregl.Map({ container: 'map', style: '...' });
 
-// Appliquer un shader à une couche existante
+// Apply a shader to an existing layer
 applyShader(map, 'my-layer', 'pulse');
 ```
 
-C'est tout ! Le shader est actif et animé.
+That's it! The shader is active and animated.
 
-### Usage avec configuration
+### Usage with Configuration
 
 ```typescript
 import { applyShader } from 'maplibre-animated-shaders';
@@ -572,85 +565,98 @@ applyShader(map, 'traffic-layer', 'flow', {
 });
 ```
 
-### Usage avancé avec contrôle
+### Advanced Usage with Control
 
 ```typescript
 import { createShaderManager } from 'maplibre-animated-shaders';
 
 const shaders = createShaderManager(map);
 
-// Enregistrer plusieurs shaders
+// Register multiple shaders
 shaders.register('alerts', 'pulse', { speed: 1.5, rings: 3 });
 shaders.register('roads', 'flow', { speed: 2.0 });
 shaders.register('zones', 'ripple');
 
-// Contrôle runtime
+// Runtime control
 shaders.pause('alerts');
 shaders.play('alerts');
 shaders.setSpeed('roads', 3.0);
 
-// Mise à jour de config
+// Config update
 shaders.updateConfig('alerts', { color: '#22c55e' });
 
-// Retirer un shader
+// Remove a shader
 shaders.unregister('zones');
 
-// Nettoyage complet
+// Complete cleanup
 shaders.destroy();
 ```
 
-### API fonctionnelle (one-liners)
+### Functional API (One-Liners)
 
 ```typescript
-import { applyShader, removeShader, listShaders } from 'maplibre-animated-shaders';
+import { applyShader, listShaders } from 'maplibre-animated-shaders';
 
-// Appliquer
+// Apply
 const controller = applyShader(map, 'layer', 'heartbeat', { speed: 1.2 });
 
-// Contrôler
+// Control
 controller.pause();
 controller.play();
 controller.update({ speed: 2.0 });
 
-// Retirer
+// Remove
 controller.remove();
-// ou
-removeShader(map, 'layer');
 
-// Lister les shaders disponibles
-console.log(listShaders());          // tous
-console.log(listShaders('point'));   // par géométrie
+// List available shaders
+console.log(listShaders());          // all
+console.log(listShaders('point'));   // by geometry
 ```
 
-### Avec React
+### With React
 
 ```tsx
 import { useShader } from 'maplibre-animated-shaders/react';
 
 function MapComponent() {
   const mapRef = useRef(null);
-  
+
   useShader(mapRef, 'my-layer', 'pulse', {
     speed: 1.5,
     color: '#3b82f6'
   });
-  
+
   return <Map ref={mapRef} />;
 }
 ```
 
-### Presets thématiques
+### Lazy Loading Plugins
+
+```typescript
+import { createShaderManager } from 'maplibre-animated-shaders';
+
+const shaders = createShaderManager(map);
+
+// Load plugins on demand (code splitting)
+await shaders.useAsync('dataviz');
+await shaders.useAsync('atmospheric');
+
+// Or load multiple in parallel
+await shaders.useAsyncAll(['dataviz', 'scifi', 'organic']);
+```
+
+### Thematic Presets
 
 ```typescript
 import { applyShader, presets } from 'maplibre-animated-shaders';
 
-// Presets prédéfinis pour cas d'usage courants
+// Predefined presets for common use cases
 applyShader(map, 'traffic', 'flow', presets.traffic.congestion);
 applyShader(map, 'alerts', 'pulse', presets.alerts.critical);
 applyShader(map, 'selection', 'ripple', presets.ui.selection);
 ```
 
-### Création de shader custom
+### Custom Shader Creation
 
 ```typescript
 import { defineShader, registerShader, applyShader } from 'maplibre-animated-shaders';
@@ -661,7 +667,7 @@ const myShader = defineShader({
   fragmentShader: `
     uniform float u_time;
     uniform float u_intensity;
-    
+
     void main() {
       // Custom GLSL...
     }
@@ -677,19 +683,40 @@ const myShader = defineShader({
 
 registerShader(myShader);
 
-// Utiliser comme n'importe quel autre shader
+// Use like any other shader
 applyShader(map, 'layer', 'my-custom-effect', { intensity: 0.8 });
+```
+
+### Performance Metrics
+
+```typescript
+const shaders = createShaderManager(map, {
+  enableMetrics: true
+});
+
+// Get current metrics
+const metrics = shaders.getMetrics();
+console.log(`FPS: ${metrics.currentFPS}`);
+console.log(`Dropped frames: ${metrics.droppedFrames}`);
+
+// Listen for performance warnings
+const unsubscribe = shaders.onPerformanceWarning((warning) => {
+  console.warn(`Performance issue: ${warning.message}`);
+  if (warning.type === 'low_fps') {
+    shaders.setGlobalSpeed(0.5); // Reduce complexity
+  }
+});
 ```
 
 ---
 
-## Intégration MapLibre
+## MapLibre Integration
 
-La bibliothèque s'intègre avec MapLibre via plusieurs mécanismes :
+The library integrates with MapLibre via several mechanisms:
 
-### 1. Custom Layers (effets globaux)
+### 1. Custom Layers (Global Effects)
 
-Pour les effets post-processing et overlays globaux.
+For post-processing effects and global overlays.
 
 ```typescript
 map.addLayer({
@@ -702,16 +729,16 @@ map.addLayer({
 
 ### 2. Paint Properties Animation
 
-Pour les propriétés animables des couches standard.
+For animatable properties of standard layers.
 
 ```typescript
-// Interpolation via setInterval/requestAnimationFrame
+// Interpolation via requestAnimationFrame
 map.setPaintProperty('layer', 'circle-radius', animatedValue);
 ```
 
-### 3. Expressions avec feature-state (avancé)
+### 3. Expressions with Feature-State (Advanced)
 
-Pour les animations par feature individuelle.
+For per-feature individual animations.
 
 ```typescript
 map.setFeatureState({ source: 'src', id: featureId }, { phase: 0.5 });
@@ -719,30 +746,32 @@ map.setFeatureState({ source: 'src', id: featureId }, { phase: 0.5 });
 
 ---
 
-## Considérations de performance
+## Performance Considerations
 
-1. **Batching des updates** — Les uniforms sont mis à jour une fois par frame, pas par shader
-2. **Shader compilation cache** — Les programmes WebGL sont compilés une seule fois et réutilisés
-3. **Lazy loading** — Les shaders sont chargés à la demande
-4. **LOD automatique** — Réduction de complexité à bas zoom levels
-5. **Throttling configurable** — Limite du FPS pour économiser les ressources
+1. **Update Batching** — Uniforms are updated once per frame, not per shader
+2. **Shader Compilation Cache** — WebGL programs are compiled once and reused
+3. **Lazy Loading** — Shaders are loaded on demand
+4. **Object Pooling** — Reduces GC pressure by 90% for 10k+ features
+5. **Configurable Throttling** — FPS limiting to save resources
+6. **Metrics Collection** — Runtime performance monitoring with warnings
 
 ---
 
-## Compatibilité
+## Compatibility
 
 - MapLibre GL JS >= 3.0
-- Navigateurs avec WebGL 2.0+
-- TypeScript >= 5.0 (types inclus)
-- ESM et CommonJS
+- Browsers with WebGL 2.0+
+- TypeScript >= 5.0 (types included)
+- ESM and CommonJS
 
 ---
 
-## Extensibilité
+## Extensibility
 
-La bibliothèque est conçue pour être étendue :
+The library is designed to be extended:
 
-- **Plugins** — Système de plugins pour ajouter des catégories de shaders
-- **Themes** — Presets de configuration thématiques
-- **Hooks** — Callbacks sur les événements d'animation
-- **Adapters** — Support futur pour deck.gl ou d'autres renderers
+- **Plugins** — Plugin system for adding shader categories
+- **Themes** — Thematic configuration presets
+- **Hooks** — Callbacks on animation events
+- **Adapters** — Future support for deck.gl or other renderers
+- **Lazy Loading** — Dynamic import for code splitting

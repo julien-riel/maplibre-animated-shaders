@@ -282,9 +282,7 @@ export const particleBurstShader: ShaderDefinition<ParticleBurstConfig> = {
   configSchema: particleBurstConfigSchema,
 
   getUniforms: (config: ParticleBurstConfig, time: number, _deltaTime: number) => {
-    const rgba = typeof config.color === 'string'
-      ? hexToRgba(config.color)
-      : config.color;
+    const rgba = typeof config.color === 'string' ? hexToRgba(config.color) : config.color;
 
     const colorRgba = `rgba(${Math.round(rgba[0] * 255)}, ${Math.round(rgba[1] * 255)}, ${Math.round(rgba[2] * 255)}, ${config.intensity ?? 1})`;
 

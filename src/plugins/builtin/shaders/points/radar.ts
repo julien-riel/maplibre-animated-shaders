@@ -256,7 +256,8 @@ void main() {
 export const radarShader: ShaderDefinition<RadarConfig> = {
   name: 'radar',
   displayName: 'Radar',
-  description: 'Rotating sweep arc around the point - perfect for coverage zones, scanning, and search',
+  description:
+    'Rotating sweep arc around the point - perfect for coverage zones, scanning, and search',
   geometry: 'point',
   tags: ['scan', 'sweep', 'coverage', 'search', 'detection', 'radar'],
 
@@ -266,13 +267,10 @@ export const radarShader: ShaderDefinition<RadarConfig> = {
   configSchema: radarConfigSchema,
 
   getUniforms: (config: RadarConfig, time: number, _deltaTime: number) => {
-    const rgba = typeof config.color === 'string'
-      ? hexToRgba(config.color)
-      : config.color;
+    const rgba = typeof config.color === 'string' ? hexToRgba(config.color) : config.color;
 
-    const gridRgba = typeof config.gridColor === 'string'
-      ? hexToRgba(config.gridColor)
-      : config.gridColor;
+    const gridRgba =
+      typeof config.gridColor === 'string' ? hexToRgba(config.gridColor) : config.gridColor;
 
     const colorRgba = `rgba(${Math.round(rgba[0] * 255)}, ${Math.round(rgba[1] * 255)}, ${Math.round(rgba[2] * 255)}, ${config.intensity ?? 1})`;
 

@@ -183,12 +183,10 @@ export const gradientTravelShader: ShaderDefinition<GradientTravelConfig> = {
   configSchema: gradientTravelConfigSchema,
 
   getUniforms: (config: GradientTravelConfig, time: number, _deltaTime: number) => {
-    const rgbaStart = typeof config.colorStart === 'string'
-      ? hexToRgba(config.colorStart)
-      : config.colorStart;
-    const rgbaEnd = typeof config.colorEnd === 'string'
-      ? hexToRgba(config.colorEnd)
-      : config.colorEnd;
+    const rgbaStart =
+      typeof config.colorStart === 'string' ? hexToRgba(config.colorStart) : config.colorStart;
+    const rgbaEnd =
+      typeof config.colorEnd === 'string' ? hexToRgba(config.colorEnd) : config.colorEnd;
 
     return {
       u_time: time * config.speed,

@@ -10,6 +10,9 @@ import type {
   ShaderManagerOptions,
   GeometryType,
   ShaderPlugin,
+  ShaderMetrics,
+  PerformanceWarningHandler,
+  MetricsConfig,
 } from './types';
 import { AnimationLoop } from './AnimationLoop';
 import { ConfigResolver } from './ConfigResolver';
@@ -20,7 +23,8 @@ import { PolygonShaderLayer } from './layers/PolygonShaderLayer';
 import { GlobalShaderLayer } from './layers/GlobalShaderLayer';
 import { FeatureAnimationStateManager } from './interaction';
 import { checkMinimumRequirements, logCapabilities } from './utils/webgl-capabilities';
-import { PluginManager } from './plugins';
+import { MetricsCollector } from './utils/metrics-collector';
+import { PluginManager, loadPlugin, type BuiltinPluginName } from './plugins';
 
 /**
  * Configuration for registering a shader by geometry type
@@ -96,10 +100,17 @@ export class ShaderManager implements IShaderManager {
   private configResolver: ConfigResolver;
   private registry: ShaderRegistry;
   private pluginManager: PluginManager;
+  private metricsCollector: MetricsCollector;
   private instances: Map<string, ShaderInstance> = new Map();
-  private customLayers: Map<string, PointShaderLayer | LineShaderLayer | PolygonShaderLayer | GlobalShaderLayer> = new Map();
-  private options: Required<ShaderManagerOptions>;
+  private customLayers: Map<
+    string,
+    PointShaderLayer | LineShaderLayer | PolygonShaderLayer | GlobalShaderLayer
+  > = new Map();
+  private options: Required<Omit<ShaderManagerOptions, 'metricsConfig'>> & {
+    metricsConfig?: MetricsConfig;
+  };
   private debug: boolean;
+  private totalFeaturesRendered: number = 0;
 
   constructor(map: MapLibreMapInstance, options: ShaderManagerOptions = {}) {
     this.map = map;
@@ -108,6 +119,8 @@ export class ShaderManager implements IShaderManager {
       autoStart: options.autoStart ?? true,
       debug: options.debug ?? false,
       checkCapabilities: options.checkCapabilities ?? true,
+      enableMetrics: options.enableMetrics ?? options.debug ?? false,
+      metricsConfig: options.metricsConfig,
     };
     this.debug = this.options.debug;
 
@@ -127,7 +140,7 @@ export class ShaderManager implements IShaderManager {
         if (!requirements.capabilities.supported) {
           throw new Error(
             '[ShaderManager] WebGL is not supported in this browser. ' +
-            'Animated shaders require WebGL to function.'
+              'Animated shaders require WebGL to function.'
           );
         }
       }
@@ -138,6 +151,12 @@ export class ShaderManager implements IShaderManager {
     this.registry = globalRegistry;
     this.pluginManager = new PluginManager(this.registry, { debug: this.debug });
     this.pluginManager.setManager(this);
+
+    // Initialize metrics collector
+    this.metricsCollector = new MetricsCollector({
+      enabled: this.options.enableMetrics,
+      ...this.options.metricsConfig,
+    });
 
     if (this.options.autoStart) {
       this.animationLoop.start();
@@ -155,6 +174,48 @@ export class ShaderManager implements IShaderManager {
   use(plugin: ShaderPlugin): void {
     this.pluginManager.use(plugin);
     this.log(`Plugin "${plugin.name}" v${plugin.version} registered`);
+  }
+
+  /**
+   * Lazy load and register a built-in plugin
+   *
+   * This method loads the plugin dynamically, reducing initial bundle size.
+   * Use this instead of importing plugins directly for better code splitting.
+   *
+   * @param pluginName - Name of the built-in plugin to load
+   * @returns Promise that resolves when the plugin is loaded and registered
+   *
+   * @example
+   * ```typescript
+   * // Load only the plugins you need
+   * await shaderManager.useAsync('dataviz');
+   * await shaderManager.useAsync('atmospheric');
+   *
+   * // Or load multiple in parallel
+   * await Promise.all([
+   *   shaderManager.useAsync('dataviz'),
+   *   shaderManager.useAsync('scifi'),
+   * ]);
+   * ```
+   */
+  async useAsync(pluginName: BuiltinPluginName): Promise<void> {
+    const plugin = await loadPlugin(pluginName);
+    this.use(plugin);
+  }
+
+  /**
+   * Lazy load and register multiple built-in plugins in parallel
+   *
+   * @param pluginNames - Array of plugin names to load
+   * @returns Promise that resolves when all plugins are loaded and registered
+   *
+   * @example
+   * ```typescript
+   * await shaderManager.useAsyncAll(['dataviz', 'atmospheric', 'scifi']);
+   * ```
+   */
+  async useAsyncAll(pluginNames: BuiltinPluginName[]): Promise<void> {
+    await Promise.all(pluginNames.map((name) => this.useAsync(name)));
   }
 
   /**
@@ -232,12 +293,19 @@ export class ShaderManager implements IShaderManager {
     }
 
     // Get geometry configuration
-    const geometryConfig = definition.geometry === 'global'
-      ? GLOBAL_SHADER_CONFIG
-      : GEOMETRY_CONFIGS[definition.geometry];
+    const geometryConfig =
+      definition.geometry === 'global'
+        ? GLOBAL_SHADER_CONFIG
+        : GEOMETRY_CONFIGS[definition.geometry];
 
     if (geometryConfig) {
-      this.registerWebGLShader(layerId, definition, resolvedConfig, geometryConfig, interactivityConfig);
+      this.registerWebGLShader(
+        layerId,
+        definition,
+        resolvedConfig,
+        geometryConfig,
+        interactivityConfig
+      );
       return;
     }
 
@@ -318,7 +386,9 @@ export class ShaderManager implements IShaderManager {
 
     this.instances.set(layerId, instance);
 
-    this.log(`Registered ${definition.geometry} shader "${definition.name}" on layer "${layerId}" (WebGL)`);
+    this.log(
+      `Registered ${definition.geometry} shader "${definition.name}" on layer "${layerId}" (WebGL)`
+    );
   }
 
   /**
@@ -371,9 +441,10 @@ export class ShaderManager implements IShaderManager {
     const customLayer = this.customLayers.get(layerId);
     if (customLayer) {
       // Determine the custom layer ID based on geometry type
-      const customLayerId = instance.definition.geometry === 'global'
-        ? `${layerId}-global-shader`
-        : `${layerId}-shader`;
+      const customLayerId =
+        instance.definition.geometry === 'global'
+          ? `${layerId}-global-shader`
+          : `${layerId}-shader`;
       if (this.map.getLayer(customLayerId)) {
         this.map.removeLayer(customLayerId);
       }
@@ -524,7 +595,9 @@ export class ShaderManager implements IShaderManager {
   /**
    * Get custom layer for a layer ID
    */
-  getCustomLayer(layerId: string): PointShaderLayer | LineShaderLayer | PolygonShaderLayer | GlobalShaderLayer | undefined {
+  getCustomLayer(
+    layerId: string
+  ): PointShaderLayer | LineShaderLayer | PolygonShaderLayer | GlobalShaderLayer | undefined {
     return this.customLayers.get(layerId);
   }
 
@@ -536,9 +609,10 @@ export class ShaderManager implements IShaderManager {
     for (const [layerId] of this.customLayers) {
       const instance = this.instances.get(layerId);
       // Determine the custom layer ID based on geometry type
-      const customLayerId = instance?.definition.geometry === 'global'
-        ? `${layerId}-global-shader`
-        : `${layerId}-shader`;
+      const customLayerId =
+        instance?.definition.geometry === 'global'
+          ? `${layerId}-global-shader`
+          : `${layerId}-shader`;
       if (this.map.getLayer(customLayerId)) {
         this.map.removeLayer(customLayerId);
       }
@@ -578,6 +652,96 @@ export class ShaderManager implements IShaderManager {
    */
   getTime(): number {
     return this.animationLoop.getTime();
+  }
+
+  // =========================================================================
+  // Metrics & Observability
+  // =========================================================================
+
+  /**
+   * Get current performance metrics
+   *
+   * Returns a snapshot of rendering performance including FPS, frame times,
+   * dropped frames, and resource usage.
+   *
+   * @example
+   * ```typescript
+   * const metrics = shaderManager.getMetrics();
+   * console.log(`Current FPS: ${metrics.currentFPS}`);
+   * console.log(`Dropped frames: ${metrics.droppedFrames}`);
+   * ```
+   */
+  getMetrics(): ShaderMetrics {
+    // Update metrics with current state
+    this.metricsCollector.setActiveShaders(this.instances.size);
+    this.metricsCollector.setFeaturesRendered(this.totalFeaturesRendered);
+    return this.metricsCollector.getMetrics();
+  }
+
+  /**
+   * Register a callback for performance warnings
+   *
+   * Warnings are emitted when performance degrades below configured thresholds.
+   * Returns an unsubscribe function.
+   *
+   * @example
+   * ```typescript
+   * const unsubscribe = shaderManager.onPerformanceWarning((warning) => {
+   *   console.warn(`Performance issue: ${warning.message}`);
+   *   if (warning.type === 'low_fps') {
+   *     // Reduce animation complexity
+   *     shaderManager.setGlobalSpeed(0.5);
+   *   }
+   * });
+   *
+   * // Later, to stop receiving warnings:
+   * unsubscribe();
+   * ```
+   */
+  onPerformanceWarning(handler: PerformanceWarningHandler): () => void {
+    return this.metricsCollector.onPerformanceWarning(handler);
+  }
+
+  /**
+   * Enable or disable metrics collection
+   *
+   * Disabling metrics can improve performance slightly by avoiding
+   * the overhead of metric collection.
+   */
+  setMetricsEnabled(enabled: boolean): void {
+    this.metricsCollector.setEnabled(enabled);
+  }
+
+  /**
+   * Check if metrics collection is enabled
+   */
+  isMetricsEnabled(): boolean {
+    return this.metricsCollector.isEnabled();
+  }
+
+  /**
+   * Reset metrics to initial state
+   *
+   * Useful for starting a new measurement session.
+   */
+  resetMetrics(): void {
+    this.metricsCollector.reset();
+  }
+
+  /**
+   * Record frame metrics (called internally by animation loop)
+   */
+  recordFrame(_frameTime: number): void {
+    this.metricsCollector.endFrame(1000 / this.options.targetFPS);
+  }
+
+  /**
+   * Update the total features rendered count
+   * Called by layers when feature data changes
+   */
+  updateFeaturesRendered(count: number): void {
+    this.totalFeaturesRendered = count;
+    this.metricsCollector.setFeaturesRendered(count);
   }
 
   /**
@@ -711,13 +875,15 @@ export function applyShader(
   config?: Partial<ShaderConfig & InteractivityConfig>
 ): ShaderController | InteractiveShaderController {
   // Extract interactivity config from combined config
-  const interactivityConfig: InteractivityConfig | undefined = config?.perFeatureControl ? {
-    perFeatureControl: config.perFeatureControl,
-    initialState: config.initialState,
-    onClick: config.onClick,
-    onHover: config.onHover,
-    featureIdProperty: config.featureIdProperty,
-  } : undefined;
+  const interactivityConfig: InteractivityConfig | undefined = config?.perFeatureControl
+    ? {
+        perFeatureControl: config.perFeatureControl,
+        initialState: config.initialState,
+        onClick: config.onClick,
+        onHover: config.onHover,
+        featureIdProperty: config.featureIdProperty,
+      }
+    : undefined;
 
   const manager = new ShaderManager(map, { autoStart: true });
   manager.register(layerId, shaderName, config, interactivityConfig);
@@ -736,7 +902,9 @@ export function applyShader(
   // Return InteractiveShaderController if perFeatureControl is enabled
   if (interactivityConfig?.perFeatureControl) {
     const customLayer = manager.getCustomLayer(layerId);
-    const stateManager = (customLayer as { getStateManager?: () => FeatureAnimationStateManager | null })?.getStateManager?.();
+    const stateManager = (
+      customLayer as { getStateManager?: () => FeatureAnimationStateManager | null }
+    )?.getStateManager?.();
 
     if (stateManager) {
       return {

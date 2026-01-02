@@ -12,22 +12,22 @@ import { hexToRgba } from '../../../../utils/color';
  * Easing function name mapping to GLSL integer
  */
 const EASING_MAP: Record<string, number> = {
-  'linear': 0,
-  'easeInQuad': 1,
-  'easeOutQuad': 2,
-  'easeInOutQuad': 3,
-  'easeInCubic': 4,
-  'easeOutCubic': 5,
-  'easeInOutCubic': 6,
-  'easeInSine': 7,
-  'easeOutSine': 8,
-  'easeInOutSine': 9,
-  'easeInElastic': 10,
-  'easeOutElastic': 11,
-  'easeInOutElastic': 12,
-  'easeInBounce': 13,
-  'easeOutBounce': 14,
-  'easeInOutBounce': 15,
+  linear: 0,
+  easeInQuad: 1,
+  easeOutQuad: 2,
+  easeInOutQuad: 3,
+  easeInCubic: 4,
+  easeOutCubic: 5,
+  easeInOutCubic: 6,
+  easeInSine: 7,
+  easeOutSine: 8,
+  easeInOutSine: 9,
+  easeInElastic: 10,
+  easeOutElastic: 11,
+  easeInOutElastic: 12,
+  easeInBounce: 13,
+  easeOutBounce: 14,
+  easeInOutBounce: 15,
 };
 
 /**
@@ -105,7 +105,21 @@ export const heartbeatConfigSchema: ConfigSchema = {
   easing: {
     type: 'select',
     default: 'easeInOutQuad',
-    options: ['linear', 'easeInQuad', 'easeOutQuad', 'easeInOutQuad', 'easeInCubic', 'easeOutCubic', 'easeInOutCubic', 'easeInSine', 'easeOutSine', 'easeInOutSine', 'easeInElastic', 'easeOutElastic', 'easeInOutBounce'],
+    options: [
+      'linear',
+      'easeInQuad',
+      'easeOutQuad',
+      'easeInOutQuad',
+      'easeInCubic',
+      'easeOutCubic',
+      'easeInOutCubic',
+      'easeInSine',
+      'easeOutSine',
+      'easeInOutSine',
+      'easeInElastic',
+      'easeOutElastic',
+      'easeInOutBounce',
+    ],
     label: 'Easing',
     description: 'Easing function for the animation',
   },
@@ -263,7 +277,8 @@ void main() {
 export const heartbeatShader: ShaderDefinition<HeartbeatConfig> = {
   name: 'heartbeat',
   displayName: 'Heartbeat',
-  description: 'Rhythmic size pulsation with ease-in-out - perfect for real-time data, sensors, and live status',
+  description:
+    'Rhythmic size pulsation with ease-in-out - perfect for real-time data, sensors, and live status',
   geometry: 'point',
   tags: ['pulse', 'realtime', 'sensor', 'live', 'status', 'beat'],
 
@@ -273,9 +288,7 @@ export const heartbeatShader: ShaderDefinition<HeartbeatConfig> = {
   configSchema: heartbeatConfigSchema,
 
   getUniforms: (config: HeartbeatConfig, time: number, _deltaTime: number) => {
-    const rgba = typeof config.color === 'string'
-      ? hexToRgba(config.color)
-      : config.color;
+    const rgba = typeof config.color === 'string' ? hexToRgba(config.color) : config.color;
 
     // Calculate animated scale for paint property mode
     const cycle = (time * config.speed) % 1;

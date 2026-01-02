@@ -75,11 +75,7 @@ export class FeatureDataBuffer {
    * @param components - Number of components (1 for float, 4 for vec4)
    * @param type - Attribute type
    */
-  registerAttribute(
-    name: string,
-    components: number,
-    type: AttributeType = 'float'
-  ): void {
+  registerAttribute(name: string, components: number, type: AttributeType = 'float'): void {
     if (this.attributes.has(name)) {
       return; // Already registered
     }
@@ -111,11 +107,7 @@ export class FeatureDataBuffer {
    * @param data - Data array (one value per feature for scalar, N*components for vectors)
    * @param expandForQuads - Whether to expand data for quad vertices (4x)
    */
-  setAttributeData(
-    name: string,
-    data: Float32Array,
-    expandForQuads: boolean = false
-  ): void {
+  setAttributeData(name: string, data: Float32Array, expandForQuads: boolean = false): void {
     const attr = this.attributes.get(name);
     if (!attr) {
       console.warn(`[FeatureDataBuffer] Attribute "${name}" not registered`);
@@ -157,11 +149,7 @@ export class FeatureDataBuffer {
    * @param data - Array of numbers
    * @param expandForQuads - Whether to expand data for quad vertices
    */
-  setAttributeDataFromArray(
-    name: string,
-    data: number[],
-    expandForQuads: boolean = false
-  ): void {
+  setAttributeDataFromArray(name: string, data: number[], expandForQuads: boolean = false): void {
     this.setAttributeData(name, new Float32Array(data), expandForQuads);
   }
 
@@ -203,12 +191,7 @@ export class FeatureDataBuffer {
    * @param stride - Vertex stride in bytes (0 for tightly packed)
    * @param offset - Offset in bytes from start of vertex
    */
-  bind(
-    name: string,
-    location: number,
-    stride: number = 0,
-    offset: number = 0
-  ): boolean {
+  bind(name: string, location: number, stride: number = 0, offset: number = 0): boolean {
     if (!this.gl || location < 0) return false;
 
     const attr = this.attributes.get(name);
@@ -216,14 +199,7 @@ export class FeatureDataBuffer {
 
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, attr.buffer);
     this.gl.enableVertexAttribArray(location);
-    this.gl.vertexAttribPointer(
-      location,
-      attr.components,
-      this.gl.FLOAT,
-      false,
-      stride,
-      offset
-    );
+    this.gl.vertexAttribPointer(location, attr.components, this.gl.FLOAT, false, stride, offset);
 
     return true;
   }

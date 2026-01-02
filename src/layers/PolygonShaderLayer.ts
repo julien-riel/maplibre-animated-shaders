@@ -127,36 +127,61 @@ export class PolygonShaderLayer extends BaseShaderLayer {
 
     // Common uniforms
     const commonUniforms = [
-      'u_matrix', 'u_resolution', 'u_time',
-      'u_color', 'u_intensity', 'u_opacity',
+      'u_matrix',
+      'u_resolution',
+      'u_time',
+      'u_color',
+      'u_intensity',
+      'u_opacity',
       // Data-driven flags
-      'u_useDataDrivenColor', 'u_useDataDrivenIntensity'
+      'u_useDataDrivenColor',
+      'u_useDataDrivenIntensity',
     ];
 
     // Get uniform names from config schema
-    const schemaUniforms = Object.keys(this.definition.configSchema).map(
-      key => `u_${key}`
-    );
+    const schemaUniforms = Object.keys(this.definition.configSchema).map((key) => `u_${key}`);
 
     // Polygon-specific uniforms
     const polygonUniforms = [
       // Scan Lines
-      'u_direction', 'u_lineWidth', 'u_spacing', 'u_fade',
+      'u_direction',
+      'u_lineWidth',
+      'u_spacing',
+      'u_fade',
       // Ripple
-      'u_waves', 'u_decay', 'u_origin',
+      'u_waves',
+      'u_decay',
+      'u_origin',
       // Hatching
-      'u_angle', 'u_thickness', 'u_crossHatch',
+      'u_angle',
+      'u_thickness',
+      'u_crossHatch',
       // Fill Wave
-      'u_level', 'u_waveHeight', 'u_waveFrequency',
+      'u_level',
+      'u_waveHeight',
+      'u_waveFrequency',
       // Noise
-      'u_scale', 'u_octaves', 'u_noiseType',
+      'u_scale',
+      'u_octaves',
+      'u_noiseType',
       // Marching Ants
-      'u_dashLength', 'u_gapLength', 'u_width', 'u_alternateColor',
+      'u_dashLength',
+      'u_gapLength',
+      'u_width',
+      'u_alternateColor',
       // Gradient Rotation
-      'u_colors', 'u_gradientType', 'u_center',
-      'u_color0', 'u_color1', 'u_color2', 'u_color3',
+      'u_colors',
+      'u_gradientType',
+      'u_center',
+      'u_color0',
+      'u_color1',
+      'u_color2',
+      'u_color3',
       // Dissolve
-      'u_progress', 'u_noiseScale', 'u_edgeColor', 'u_edgeWidth'
+      'u_progress',
+      'u_noiseScale',
+      'u_edgeColor',
+      'u_edgeWidth',
     ];
 
     const allUniforms = new Set([...commonUniforms, ...schemaUniforms, ...polygonUniforms]);
@@ -217,10 +242,7 @@ export class PolygonShaderLayer extends BaseShaderLayer {
 
     for (const feature of features) {
       if (feature.geometry.type === 'Polygon') {
-        this.processPolygon(
-          (feature.geometry as GeoJSON.Polygon).coordinates,
-          polygonIndex++
-        );
+        this.processPolygon((feature.geometry as GeoJSON.Polygon).coordinates, polygonIndex++);
       } else if (feature.geometry.type === 'MultiPolygon') {
         for (const polygon of (feature.geometry as GeoJSON.MultiPolygon).coordinates) {
           this.processPolygon(polygon, polygonIndex++);
@@ -244,11 +266,16 @@ export class PolygonShaderLayer extends BaseShaderLayer {
     const polygon = this.poolManager.polygonPool.acquire();
 
     // Reset bounds to initial values
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    let centroidX = 0, centroidY = 0;
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity;
+    let centroidX = 0,
+      centroidY = 0;
 
     // Convert to Mercator and calculate bounds/centroid
-    for (let i = 0; i < outerRing.length - 1; i++) { // Skip last point (duplicate of first)
+    for (let i = 0; i < outerRing.length - 1; i++) {
+      // Skip last point (duplicate of first)
       const [lng, lat] = outerRing[i];
       const [mx, my] = this.lngLatToMercator(lng, lat);
       polygon.vertices.push([mx, my]);
@@ -325,12 +352,10 @@ export class PolygonShaderLayer extends BaseShaderLayer {
         vertexData[vOffset + 1] = y;
 
         // UV (normalized to polygon bounds)
-        const u = bounds.maxX !== bounds.minX
-          ? (x - bounds.minX) / (bounds.maxX - bounds.minX)
-          : 0.5;
-        const v = bounds.maxY !== bounds.minY
-          ? (y - bounds.minY) / (bounds.maxY - bounds.minY)
-          : 0.5;
+        const u =
+          bounds.maxX !== bounds.minX ? (x - bounds.minX) / (bounds.maxX - bounds.minX) : 0.5;
+        const v =
+          bounds.maxY !== bounds.minY ? (y - bounds.minY) / (bounds.maxY - bounds.minY) : 0.5;
         vertexData[vOffset + 2] = u;
         vertexData[vOffset + 3] = v;
 

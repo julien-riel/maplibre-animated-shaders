@@ -21,10 +21,18 @@ export type { FillWaveConfig } from './fillWave';
 export { noiseShader, noiseDefaultConfig, noiseConfigSchema } from './noise';
 export type { NoiseConfig } from './noise';
 
-export { marchingAntsShader, marchingAntsDefaultConfig, marchingAntsConfigSchema } from './marchingAnts';
+export {
+  marchingAntsShader,
+  marchingAntsDefaultConfig,
+  marchingAntsConfigSchema,
+} from './marchingAnts';
 export type { MarchingAntsConfig } from './marchingAnts';
 
-export { gradientRotationShader, gradientRotationDefaultConfig, gradientRotationConfigSchema } from './gradientRotation';
+export {
+  gradientRotationShader,
+  gradientRotationDefaultConfig,
+  gradientRotationConfigSchema,
+} from './gradientRotation';
 export type { GradientRotationConfig } from './gradientRotation';
 
 export { dissolveShader, dissolveDefaultConfig, dissolveConfigSchema } from './dissolve';

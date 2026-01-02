@@ -98,7 +98,7 @@ export class AnimationLoop implements IAnimationLoop {
     if (elapsed < this.frameInterval) return;
 
     // Calculate delta time in seconds
-    const deltaTime = ((elapsed * this.globalSpeed) / 1000);
+    const deltaTime = (elapsed * this.globalSpeed) / 1000;
     this.currentTime += deltaTime;
     this.lastFrameTime = now - (elapsed % this.frameInterval);
 

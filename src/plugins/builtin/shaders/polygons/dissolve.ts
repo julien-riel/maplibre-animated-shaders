@@ -228,14 +228,12 @@ export const dissolveShader: ShaderDefinition<DissolveConfig> = {
   configSchema: dissolveConfigSchema,
 
   getUniforms: (config: DissolveConfig, time: number, _deltaTime: number) => {
-    const rgba = typeof config.color === 'string'
-      ? hexToRgba(config.color)
-      : config.color;
+    const rgba = typeof config.color === 'string' ? hexToRgba(config.color) : config.color;
 
     const edgeRgba = config.edgeColor
-      ? (typeof config.edgeColor === 'string'
+      ? typeof config.edgeColor === 'string'
         ? hexToRgba(config.edgeColor)
-        : config.edgeColor)
+        : config.edgeColor
       : [1, 1, 1, 1];
 
     return {

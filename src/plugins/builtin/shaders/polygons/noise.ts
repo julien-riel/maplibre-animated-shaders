@@ -239,9 +239,7 @@ export const noiseShader: ShaderDefinition<NoiseConfig> = {
   configSchema: noiseConfigSchema,
 
   getUniforms: (config: NoiseConfig, time: number, _deltaTime: number) => {
-    const rgba = typeof config.color === 'string'
-      ? hexToRgba(config.color)
-      : config.color;
+    const rgba = typeof config.color === 'string' ? hexToRgba(config.color) : config.color;
 
     const noiseTypeMap: Record<string, number> = {
       static: 0.0,

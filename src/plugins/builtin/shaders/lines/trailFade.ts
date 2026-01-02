@@ -209,9 +209,7 @@ export const trailFadeShader: ShaderDefinition<TrailFadeConfig> = {
   configSchema: trailFadeConfigSchema,
 
   getUniforms: (config: TrailFadeConfig, time: number, _deltaTime: number) => {
-    const rgba = typeof config.color === 'string'
-      ? hexToRgba(config.color)
-      : config.color;
+    const rgba = typeof config.color === 'string' ? hexToRgba(config.color) : config.color;
 
     return {
       u_time: time * config.speed,

@@ -69,7 +69,7 @@ export const datavizPlugin: ShaderPlugin = {
       config: { color: '#00cc00', speed: 0.3, waveHeight: 0.05 },
     },
     // Selection preset
-    'selection': {
+    selection: {
       shader: 'marchingAnts',
       config: { color: '#000000', speed: 1.0, dashSize: 4, gapSize: 4 },
     },

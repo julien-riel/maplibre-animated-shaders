@@ -91,11 +91,7 @@ export function getConfigBoolean(
  * @param defaultValue - Default value if property is not found
  * @returns The found value or the default
  */
-export function getConfigValue<T>(
-  config: ShaderConfig,
-  propertyName: string,
-  defaultValue: T
-): T {
+export function getConfigValue<T>(config: ShaderConfig, propertyName: string, defaultValue: T): T {
   const value = config[propertyName];
   if (value !== undefined && value !== null) {
     return value as T;

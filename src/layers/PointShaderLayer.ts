@@ -131,26 +131,58 @@ export class PointShaderLayer extends BaseShaderLayer {
 
     // Common uniforms
     const commonUniforms = [
-      'u_matrix', 'u_resolution', 'u_size', 'u_time',
-      'u_color', 'u_intensity', 'u_opacity',
+      'u_matrix',
+      'u_resolution',
+      'u_size',
+      'u_time',
+      'u_color',
+      'u_intensity',
+      'u_opacity',
       // Data-driven flags
-      'u_useDataDrivenColor', 'u_useDataDrivenIntensity'
+      'u_useDataDrivenColor',
+      'u_useDataDrivenIntensity',
     ];
 
     // Get uniform names from config schema
-    const schemaUniforms = Object.keys(this.definition.configSchema).map(
-      key => `u_${key}`
-    );
+    const schemaUniforms = Object.keys(this.definition.configSchema).map((key) => `u_${key}`);
 
     // Point-specific uniforms
     const pointUniforms = [
-      'u_rings', 'u_maxRadius', 'u_fadeOut', 'u_thickness',
-      'u_minScale', 'u_maxScale', 'u_easing', 'u_restDuration', 'u_baseSize',
-      'u_arcAngle', 'u_radius', 'u_trail', 'u_gridLines', 'u_showGrid', 'u_gridColor',
-      'u_particleCount', 'u_spread', 'u_particleSize', 'u_lifetime', 'u_gravity', 'u_continuous',
-      'u_softness', 'u_pulseMin', 'u_pulseMax', 'u_coreSize',
-      'u_holdDuration', 'u_rotate', 'u_strokeOnly', 'u_strokeWidth',
-      'u_shapeCount', 'u_shape0', 'u_shape1', 'u_shape2', 'u_shape3', 'u_shape4'
+      'u_rings',
+      'u_maxRadius',
+      'u_fadeOut',
+      'u_thickness',
+      'u_minScale',
+      'u_maxScale',
+      'u_easing',
+      'u_restDuration',
+      'u_baseSize',
+      'u_arcAngle',
+      'u_radius',
+      'u_trail',
+      'u_gridLines',
+      'u_showGrid',
+      'u_gridColor',
+      'u_particleCount',
+      'u_spread',
+      'u_particleSize',
+      'u_lifetime',
+      'u_gravity',
+      'u_continuous',
+      'u_softness',
+      'u_pulseMin',
+      'u_pulseMax',
+      'u_coreSize',
+      'u_holdDuration',
+      'u_rotate',
+      'u_strokeOnly',
+      'u_strokeWidth',
+      'u_shapeCount',
+      'u_shape0',
+      'u_shape1',
+      'u_shape2',
+      'u_shape3',
+      'u_shape4',
     ];
 
     const allUniforms = new Set([...commonUniforms, ...schemaUniforms, ...pointUniforms]);
@@ -254,7 +286,7 @@ export class PointShaderLayer extends BaseShaderLayer {
     for (let i = 0; i < this.points.length; i++) {
       const point = this.points[i];
       const vi = i * 4 * 6; // Vertex data index
-      const ii = i * 6;     // Index data index
+      const ii = i * 6; // Index data index
       const baseVertex = i * 4;
       const timeOffset = timeOffsets[point.index] ?? 0;
 

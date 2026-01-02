@@ -42,16 +42,16 @@ export const scifiPlugin: ShaderPlugin = {
       shader: 'holographicGrid',
       config: { color: '#00ff00', speed: 0.3, gridSize: 30, pulseIntensity: 0.3 },
     },
-    'matrix': {
+    matrix: {
       shader: 'holographicGrid',
       config: { color: '#00ff00', speed: 1.0, gridSize: 20, pulseIntensity: 0.8 },
     },
     // Electric presets
-    'plasma': {
+    plasma: {
       shader: 'electric',
       config: { color: '#ff00ff', speed: 2.0, amplitude: 0.1, frequency: 5.0 },
     },
-    'lightning': {
+    lightning: {
       shader: 'electric',
       config: { color: '#ffffff', speed: 3.0, amplitude: 0.15, frequency: 8.0 },
     },
@@ -68,7 +68,7 @@ export const scifiPlugin: ShaderPlugin = {
       shader: 'neon',
       config: { color: '#00ffff', glowSize: 4.0, flickerSpeed: 0.3, flickerIntensity: 0.1 },
     },
-    'cyberpunk': {
+    cyberpunk: {
       shader: 'neon',
       config: { color: '#ff0066', glowSize: 5.0, flickerSpeed: 0.8, flickerIntensity: 0.4 },
     },
@@ -77,11 +77,11 @@ export const scifiPlugin: ShaderPlugin = {
       shader: 'radar',
       config: { color: '#00ff00', speed: 1.0, arcWidth: 0.3, trailLength: 0.5 },
     },
-    'sonar': {
+    sonar: {
       shader: 'radar',
       config: { color: '#00ffff', speed: 0.5, arcWidth: 0.1, trailLength: 0.8 },
     },
-    'detection': {
+    detection: {
       shader: 'radar',
       config: { color: '#ff0000', speed: 2.0, arcWidth: 0.2, trailLength: 0.3 },
     },
@@ -94,7 +94,7 @@ export const scifiPlugin: ShaderPlugin = {
       shader: 'glow',
       config: { color: '#ffff00', intensity: 1.0, radius: 20, pulseSpeed: 0.5 },
     },
-    'hazard': {
+    hazard: {
       shader: 'glow',
       config: { color: '#ff0000', intensity: 2.0, radius: 25, pulseSpeed: 2.0 },
     },

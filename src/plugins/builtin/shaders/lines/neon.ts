@@ -215,9 +215,7 @@ export const neonShader: ShaderDefinition<NeonConfig> = {
   configSchema: neonConfigSchema,
 
   getUniforms: (config: NeonConfig, time: number, _deltaTime: number) => {
-    const rgba = typeof config.color === 'string'
-      ? hexToRgba(config.color)
-      : config.color;
+    const rgba = typeof config.color === 'string' ? hexToRgba(config.color) : config.color;
 
     return {
       u_time: time * config.speed,

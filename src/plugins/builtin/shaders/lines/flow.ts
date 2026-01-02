@@ -189,7 +189,8 @@ void main() {
 export const flowShader: ShaderDefinition<FlowConfig> = {
   name: 'flow',
   displayName: 'Flow',
-  description: 'Animated dashes flowing along lines - perfect for traffic, pipelines, and data flow',
+  description:
+    'Animated dashes flowing along lines - perfect for traffic, pipelines, and data flow',
   geometry: 'line',
   tags: ['traffic', 'direction', 'pipeline', 'animation', 'dashes'],
 
@@ -199,9 +200,7 @@ export const flowShader: ShaderDefinition<FlowConfig> = {
   configSchema: flowConfigSchema,
 
   getUniforms: (config: FlowConfig, time: number, _deltaTime: number) => {
-    const rgba = typeof config.color === 'string'
-      ? hexToRgba(config.color)
-      : config.color;
+    const rgba = typeof config.color === 'string' ? hexToRgba(config.color) : config.color;
 
     return {
       u_time: time * config.speed,
