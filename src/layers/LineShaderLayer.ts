@@ -368,18 +368,16 @@ export class LineShaderLayer implements CustomLayerInterface {
     };
     map.on('sourcedata', onSourceData);
 
-    // Also update when map becomes idle
-    const onIdle = () => {
+    // Initial data load - check if source is already loaded, otherwise wait for idle
+    if (map.isSourceLoaded(this.sourceId)) {
       this.safeUpdateLineData(gl);
       map.triggerRepaint();
-    };
-    map.once('idle', onIdle);
-
-    // Initial data load
-    setTimeout(() => {
-      this.safeUpdateLineData(gl);
-      map.triggerRepaint();
-    }, 100);
+    } else {
+      map.once('idle', () => {
+        this.safeUpdateLineData(gl);
+        map.triggerRepaint();
+      });
+    }
 
     this.lastFrameTime = performance.now();
 

@@ -168,6 +168,8 @@ export interface ShaderManagerOptions {
   autoStart?: boolean;
   /** Enable debug logging (default: false) */
   debug?: boolean;
+  /** Check WebGL capabilities on initialization (default: true) */
+  checkCapabilities?: boolean;
 }
 
 /**

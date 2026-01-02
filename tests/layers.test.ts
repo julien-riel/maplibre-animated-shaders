@@ -36,6 +36,7 @@ function createMockWebGLContext(): WebGLRenderingContext {
     FRAGMENT_SHADER: 35632,
     COMPILE_STATUS: 35713,
     LINK_STATUS: 35714,
+    VALIDATE_STATUS: 35715,
     ARRAY_BUFFER: 34962,
     ELEMENT_ARRAY_BUFFER: 34963,
     STATIC_DRAW: 35044,
@@ -66,6 +67,7 @@ function createMockWebGLContext(): WebGLRenderingContext {
     linkProgram: vi.fn(),
     getProgramParameter: vi.fn((program, param) => {
       if (param === 35714) return true; // LINK_STATUS
+      if (param === 35715) return true; // VALIDATE_STATUS
       return null;
     }),
     getProgramInfoLog: vi.fn(() => ''),
@@ -145,6 +147,7 @@ function createMockMap(): MapLibreMap {
   return {
     getCanvas: vi.fn(() => canvas),
     getSource: vi.fn(() => ({ type: 'geojson' })),
+    isSourceLoaded: vi.fn(() => false),
     querySourceFeatures: vi.fn(() => []),
     getCenter: vi.fn(() => ({ lng: 0, lat: 0 })),
     getZoom: vi.fn(() => 10),
@@ -274,8 +277,8 @@ describe('PointShaderLayer', () => {
       expect(gl.drawElements).not.toHaveBeenCalled();
     });
 
-    it('should set up blending and depth test in render', async () => {
-      // Mock map to return point features
+    it('should set up blending and depth test in render', () => {
+      // Mock map to return point features and source as loaded
       vi.mocked(map.querySourceFeatures).mockReturnValue([
         {
           type: 'Feature',
@@ -283,11 +286,9 @@ describe('PointShaderLayer', () => {
           properties: {},
         },
       ] as unknown as maplibregl.MapGeoJSONFeature[]);
+      vi.mocked(map.isSourceLoaded).mockReturnValue(true);
 
       layer.onAdd(map, gl);
-
-      // Wait for the setTimeout in onAdd
-      await new Promise(resolve => setTimeout(resolve, 150));
 
       const matrix = new Float32Array(16);
       layer.render(gl, matrix as unknown as import('gl-matrix').mat4);

@@ -17,6 +17,7 @@ import { LineShaderLayer } from './layers/LineShaderLayer';
 import { PolygonShaderLayer } from './layers/PolygonShaderLayer';
 import { GlobalShaderLayer } from './layers/GlobalShaderLayer';
 import { FeatureAnimationStateManager } from './interaction';
+import { checkMinimumRequirements, logCapabilities } from './utils/webgl-capabilities';
 
 /**
  * Main entry point for managing animated shaders on a MapLibre map.
@@ -38,8 +39,31 @@ export class ShaderManager implements IShaderManager {
       targetFPS: options.targetFPS ?? 60,
       autoStart: options.autoStart ?? true,
       debug: options.debug ?? false,
+      checkCapabilities: options.checkCapabilities ?? true,
     };
     this.debug = this.options.debug;
+
+    // Check WebGL capabilities if enabled
+    if (this.options.checkCapabilities && typeof document !== 'undefined') {
+      const requirements = checkMinimumRequirements();
+
+      if (this.debug) {
+        logCapabilities(requirements.capabilities);
+      }
+
+      if (!requirements.ok) {
+        const errorMsg = requirements.errors.join('\n');
+        console.warn(`[ShaderManager] WebGL capability warnings:\n${errorMsg}`);
+
+        // If WebGL is completely unsupported, throw an error
+        if (!requirements.capabilities.supported) {
+          throw new Error(
+            '[ShaderManager] WebGL is not supported in this browser. ' +
+            'Animated shaders require WebGL to function.'
+          );
+        }
+      }
+    }
 
     this.animationLoop = new AnimationLoop(this.options.targetFPS);
     this.configResolver = new ConfigResolver();

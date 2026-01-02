@@ -340,18 +340,16 @@ export class PointShaderLayer implements CustomLayerInterface {
     };
     map.on('sourcedata', onSourceData);
 
-    // Also update when map becomes idle (tiles loaded)
-    const onIdle = () => {
+    // Initial data load - check if source is already loaded, otherwise wait for idle
+    if (map.isSourceLoaded(this.sourceId)) {
       this.safeUpdatePointData(gl);
       map.triggerRepaint();
-    };
-    map.once('idle', onIdle);
-
-    // Initial data load (after a small delay to let source load)
-    setTimeout(() => {
-      this.safeUpdatePointData(gl);
-      map.triggerRepaint();
-    }, 100);
+    } else {
+      map.once('idle', () => {
+        this.safeUpdatePointData(gl);
+        map.triggerRepaint();
+      });
+    }
 
     this.lastFrameTime = performance.now();
 

@@ -332,16 +332,16 @@ export class PolygonShaderLayer implements CustomLayerInterface {
     };
     map.on('sourcedata', onSourceData);
 
-    const onIdle = () => {
+    // Initial data load - check if source is already loaded, otherwise wait for idle
+    if (map.isSourceLoaded(this.sourceId)) {
       this.safeUpdatePolygonData(gl);
       map.triggerRepaint();
-    };
-    map.once('idle', onIdle);
-
-    setTimeout(() => {
-      this.safeUpdatePolygonData(gl);
-      map.triggerRepaint();
-    }, 100);
+    } else {
+      map.once('idle', () => {
+        this.safeUpdatePolygonData(gl);
+        map.triggerRepaint();
+      });
+    }
 
     this.lastFrameTime = performance.now();
 
