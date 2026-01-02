@@ -124,6 +124,12 @@ varying vec2 v_uv;
 varying float v_timeOffset;
 varying float v_effectiveTime;
 
+// Data-driven properties from vertex shader
+varying vec4 v_color;
+varying float v_intensity;
+varying float v_useDataDrivenColor;
+varying float v_useDataDrivenIntensity;
+
 // Simplex noise functions
 vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
 vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
@@ -186,12 +192,16 @@ void main() {
   float edge = 1.0 - smoothstep(0.0, u_edgeWidth, edgeDist);
   edge *= step(noise, dissolveThreshold + u_edgeWidth); // Only show edge near visible area
 
+  // Use data-driven color/intensity if available, otherwise use uniform
+  vec4 effectColor = mix(u_color, v_color, v_useDataDrivenColor);
+  float finalIntensity = mix(u_intensity, v_intensity, v_useDataDrivenIntensity);
+
   // Mix colors
-  vec4 baseColor = u_color * visible;
+  vec4 baseColor = effectColor * visible;
   vec4 glowColor = u_edgeColor * edge * (1.0 - visible * 0.5);
 
   vec4 finalColor = baseColor + glowColor;
-  finalColor.a *= u_intensity;
+  finalColor.a *= finalIntensity;
 
   // Discard fully transparent pixels
   if (finalColor.a < 0.01) {

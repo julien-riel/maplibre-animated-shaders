@@ -89,6 +89,12 @@ varying vec2 v_uv;
 varying float v_timeOffset;
 varying float v_effectiveTime;
 
+// Data-driven properties from vertex shader
+varying vec4 v_color;
+varying float v_intensity;
+varying float v_useDataDrivenColor;
+varying float v_useDataDrivenIntensity;
+
 const float PI = 3.14159265359;
 const float TWO_PI = 6.28318530718;
 
@@ -147,7 +153,11 @@ void main() {
 
   vec4 gradientColor = getGradientColor(t);
 
-  gl_FragColor = vec4(gradientColor.rgb, gradientColor.a * u_intensity);
+  // Use data-driven color/intensity if available (overrides gradient colors)
+  vec4 finalColor = mix(gradientColor, v_color, v_useDataDrivenColor);
+  float finalIntensity = mix(u_intensity, v_intensity, v_useDataDrivenIntensity);
+
+  gl_FragColor = vec4(finalColor.rgb, finalColor.a * finalIntensity);
 }
 `;
 

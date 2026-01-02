@@ -125,6 +125,12 @@ varying vec2 v_screen_pos;
 varying float v_timeOffset;
 varying float v_effectiveTime;
 
+// Data-driven properties from vertex shader
+varying vec4 v_color;
+varying float v_intensity;
+varying float v_useDataDrivenColor;
+varying float v_useDataDrivenIntensity;
+
 void main() {
   // Flip Y for direction (up = 1, down = 0)
   float y = u_direction > 0.5 ? v_uv.y : 1.0 - v_uv.y;
@@ -154,13 +160,17 @@ void main() {
   float surfaceDist = abs(y - fillLine);
   float surfaceHighlight = exp(-surfaceDist * 30.0) * 0.5;
 
-  float alpha = fill * gradient * u_intensity + surfaceHighlight * fill;
+  // Use data-driven color/intensity if available, otherwise use uniform
+  vec4 effectColor = mix(u_color, v_color, v_useDataDrivenColor);
+  float finalIntensity = mix(u_intensity, v_intensity, v_useDataDrivenIntensity);
+
+  float alpha = fill * gradient * finalIntensity + surfaceHighlight * fill;
   alpha = clamp(alpha, 0.0, 1.0);
 
   // Slight color variation for depth
-  vec3 fillColor = u_color.rgb * (0.8 + 0.2 * gradient);
+  vec3 fillColor = effectColor.rgb * (0.8 + 0.2 * gradient);
 
-  gl_FragColor = vec4(fillColor, u_color.a * alpha);
+  gl_FragColor = vec4(fillColor, effectColor.a * alpha);
 }
 `;
 

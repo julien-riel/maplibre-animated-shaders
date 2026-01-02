@@ -112,6 +112,12 @@ varying vec2 v_uv;
 varying float v_timeOffset;
 varying float v_effectiveTime;
 
+// Data-driven properties from vertex shader
+varying vec4 v_color;
+varying float v_intensity;
+varying float v_useDataDrivenColor;
+varying float v_useDataDrivenIntensity;
+
 // Simplex noise helper functions
 vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
 vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
@@ -203,13 +209,17 @@ void main() {
   // Generate noise
   float noise = fbm(noiseCoord, u_octaves, u_noiseType);
 
+  // Use data-driven color/intensity if available, otherwise use uniform
+  vec4 effectColor = mix(u_color, v_color, v_useDataDrivenColor);
+  float finalIntensity = mix(u_intensity, v_intensity, v_useDataDrivenIntensity);
+
   // Apply intensity
-  float alpha = mix(0.3, 1.0, noise) * u_intensity;
+  float alpha = mix(0.3, 1.0, noise) * finalIntensity;
 
   // Add slight color variation based on noise
-  vec3 variedColor = u_color.rgb * (0.8 + 0.4 * noise);
+  vec3 variedColor = effectColor.rgb * (0.8 + 0.4 * noise);
 
-  gl_FragColor = vec4(variedColor, u_color.a * alpha);
+  gl_FragColor = vec4(variedColor, effectColor.a * alpha);
 }
 `;
 

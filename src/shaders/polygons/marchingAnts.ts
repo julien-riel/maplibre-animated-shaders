@@ -124,6 +124,12 @@ varying vec2 v_screen_pos;
 varying float v_timeOffset;
 varying float v_effectiveTime;
 
+// Data-driven properties from vertex shader
+varying vec4 v_color;
+varying float v_intensity;
+varying float v_useDataDrivenColor;
+varying float v_useDataDrivenIntensity;
+
 void main() {
   // Calculate distance from edges (using UV coordinates)
   float edgeDistX = min(v_uv.x, 1.0 - v_uv.x);
@@ -167,14 +173,18 @@ void main() {
   // Determine if we're in a dash or gap
   float isDash = step(pattern, u_dashLength);
 
+  // Use data-driven color/intensity if available, otherwise use uniform
+  vec4 effectColor = mix(u_color, v_color, v_useDataDrivenColor);
+  float finalIntensity = mix(u_intensity, v_intensity, v_useDataDrivenIntensity);
+
   // Choose color based on dash/gap
-  vec4 dashColor = u_color;
+  vec4 dashColor = effectColor;
   vec4 gapColor = u_alternateColor;
 
   vec4 finalColor = mix(gapColor, dashColor, isDash);
 
   // Apply border mask and intensity
-  float alpha = inBorder * u_intensity;
+  float alpha = inBorder * finalIntensity;
 
   gl_FragColor = vec4(finalColor.rgb, finalColor.a * alpha);
 }
