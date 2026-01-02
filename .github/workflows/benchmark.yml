@@ -47,7 +47,7 @@ jobs:
           alert-comment-cc-users: '@${{ github.actor }}'
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: benchmark-results
           path: benchmark-results.json
@@ -104,7 +104,7 @@ jobs:
           fi
 
       - name: Upload comparison artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: benchmark-comparison
           path: |
