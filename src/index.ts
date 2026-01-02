@@ -85,6 +85,15 @@ export type {
   IPluginManager,
 } from './types';
 
+// Built-in thematic plugins
+export {
+  datavizPlugin,
+  atmosphericPlugin,
+  scifiPlugin,
+  organicPlugin,
+  corePlugin,
+} from './plugins';
+
 // Utilities
 export * from './utils';
 

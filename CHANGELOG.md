@@ -46,6 +46,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **validatePlugin()** - Standalone validation function for plugin definitions
 - **NAMESPACE_SEPARATOR** - Exported constant (`:`) for plugin shader naming
 
+#### Built-in Thematic Plugins
+- **datavizPlugin** (7 shaders) - Data visualization, progress indicators, status displays
+  - pulse, flow, gradientTravel, snake, scan-lines, fill-wave, marching-ants
+  - Presets: `alert-critical`, `alert-warning`, `traffic-flow`, `loading-wave`, `selection`
+- **atmosphericPlugin** (6 shaders) - Weather effects and environmental phenomena
+  - heatShimmer, weather, depthFog, dayNightCycle, ripple, noise
+  - Presets: `rain-light`, `rain-heavy`, `snow-gentle`, `morning-mist`, `calm-water`
+- **scifiPlugin** (5 shaders) - Futuristic, technological, cyberpunk aesthetics
+  - holographicGrid, electric, neon, radar, glow
+  - Presets: `holo-blue`, `matrix`, `plasma`, `cyberpunk`, `radar-scan`
+- **organicPlugin** (8 shaders) - Natural, living, and organic visual effects
+  - heartbeat, breathing, particle-burst, morphing-shapes, dissolve, trailFade, hatching, gradient-rotation
+  - Presets: `heartbeat-slow`, `celebration`, `firework`, `rainbow-spin`
+- **corePlugin** (26 shaders) - All built-in shaders bundled for backwards compatibility
+
 ### Changed
 
 #### Performance Improvements
