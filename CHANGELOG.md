@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### Testing
+- **E2E Testing with Playwright** - Comprehensive end-to-end testing infrastructure
+  - Test application with sample geometries (points, lines, polygons)
+  - Shader rendering tests for all geometry types
+  - Shader lifecycle tests (apply, remove, switch)
+  - Animation control tests
+  - Visual regression tests with baseline snapshots
+  - Error handling tests for invalid shaders and layers
+  - WebGL software rendering support for CI environments
+
 #### Developer Experience
 - **WebGL Capability Detection** - `detectWebGLCapabilities()` and `checkMinimumRequirements()` functions to detect browser WebGL support before initialization
 - **GLSL Uniform Extractor** - `extractUniforms()` and `validateUniforms()` functions to parse GLSL code and extract uniform declarations
