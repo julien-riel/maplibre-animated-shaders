@@ -72,6 +72,19 @@ export { TimeOffsetCalculator, defaultTimeOffsetCalculator } from './timing';
 // Interaction utilities (Phase 3)
 export { FeatureAnimationStateManager, FeatureInteractionHandler } from './interaction';
 
+// Plugin system
+export { PluginManager, validatePlugin, NAMESPACE_SEPARATOR } from './plugins';
+export type {
+  ShaderPlugin,
+  PluginMetadata,
+  PluginHooks,
+  PluginState,
+  PluginValidationResult,
+  PluginValidationError,
+  PluginValidationWarning,
+  IPluginManager,
+} from './types';
+
 // Utilities
 export * from './utils';
 

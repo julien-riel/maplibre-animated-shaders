@@ -9,6 +9,7 @@ import type {
   ShaderInstance,
   ShaderManagerOptions,
   GeometryType,
+  ShaderPlugin,
 } from './types';
 import { AnimationLoop } from './AnimationLoop';
 import { ConfigResolver } from './ConfigResolver';
@@ -19,6 +20,7 @@ import { PolygonShaderLayer } from './layers/PolygonShaderLayer';
 import { GlobalShaderLayer } from './layers/GlobalShaderLayer';
 import { FeatureAnimationStateManager } from './interaction';
 import { checkMinimumRequirements, logCapabilities } from './utils/webgl-capabilities';
+import { PluginManager } from './plugins';
 
 /**
  * Configuration for registering a shader by geometry type
@@ -93,6 +95,7 @@ export class ShaderManager implements IShaderManager {
   private animationLoop: AnimationLoop;
   private configResolver: ConfigResolver;
   private registry: ShaderRegistry;
+  private pluginManager: PluginManager;
   private instances: Map<string, ShaderInstance> = new Map();
   private customLayers: Map<string, PointShaderLayer | LineShaderLayer | PolygonShaderLayer | GlobalShaderLayer> = new Map();
   private options: Required<ShaderManagerOptions>;
@@ -133,6 +136,8 @@ export class ShaderManager implements IShaderManager {
     this.animationLoop = new AnimationLoop(this.options.targetFPS);
     this.configResolver = new ConfigResolver();
     this.registry = globalRegistry;
+    this.pluginManager = new PluginManager(this.registry, { debug: this.debug });
+    this.pluginManager.setManager(this);
 
     if (this.options.autoStart) {
       this.animationLoop.start();
@@ -142,7 +147,55 @@ export class ShaderManager implements IShaderManager {
   }
 
   /**
+   * Register a plugin with the shader manager
+   *
+   * Plugins provide named shaders with namespace support.
+   * Example: use(myPlugin) makes shaders available as "pluginName:shaderName"
+   */
+  use(plugin: ShaderPlugin): void {
+    this.pluginManager.use(plugin);
+    this.log(`Plugin "${plugin.name}" v${plugin.version} registered`);
+  }
+
+  /**
+   * Unregister a plugin from the shader manager
+   *
+   * @returns true if the plugin was found and removed, false otherwise
+   */
+  unuse(pluginName: string): boolean {
+    const result = this.pluginManager.unuse(pluginName);
+    if (result) {
+      this.log(`Plugin "${pluginName}" unregistered`);
+    }
+    return result;
+  }
+
+  /**
+   * Get a registered plugin by name
+   */
+  getPlugin(name: string): ShaderPlugin | undefined {
+    return this.pluginManager.getPlugin(name);
+  }
+
+  /**
+   * Check if a plugin is registered
+   */
+  hasPlugin(name: string): boolean {
+    return this.pluginManager.hasPlugin(name);
+  }
+
+  /**
+   * List all registered plugin names
+   */
+  listPlugins(): string[] {
+    return this.pluginManager.listPlugins();
+  }
+
+  /**
    * Register a shader on a layer
+   *
+   * Supports both direct shader names and plugin-namespaced names (pluginName:shaderName).
+   * Short names are resolved if unambiguous.
    */
   register(
     layerId: string,
@@ -150,8 +203,11 @@ export class ShaderManager implements IShaderManager {
     config?: Partial<ShaderConfig>,
     interactivityConfig?: InteractivityConfig
   ): void {
+    // Try to resolve shader name via plugin manager first
+    const resolvedName = this.pluginManager.resolveShaderName(shaderName) ?? shaderName;
+
     // Get shader definition
-    const definition = this.registry.get(shaderName);
+    const definition = this.registry.get(resolvedName);
     if (!definition) {
       throw new Error(
         `[ShaderManager] Shader "${shaderName}" not found. Available: ${this.registry.list().join(', ')}`
@@ -501,6 +557,9 @@ export class ShaderManager implements IShaderManager {
       }
     }
     this.customLayers.clear();
+
+    // Clear all plugins
+    this.pluginManager.clear();
 
     this.animationLoop.destroy();
     this.instances.clear();

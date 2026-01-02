@@ -26,6 +26,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Throttle/Debounce Utilities** - `throttle()` and `debounce()` functions for rate limiting
 - New `checkCapabilities` option in `ShaderManagerOptions` to enable/disable WebGL capability checks
 
+#### Plugin System (Priority 4.3)
+- **PluginManager** - Central manager for shader plugin lifecycle
+  - Plugin validation with semver version support
+  - Namespace support (`pluginName:shaderName`) to avoid naming conflicts
+  - Plugin lifecycle hooks (`onRegister`, `onUnregister`, `onBeforeApply`, `onAfterApply`)
+  - Preset support for quick configuration shortcuts
+  - Short name resolution for unambiguous shader names
+- **ShaderPlugin interface** - Comprehensive type definition for plugins
+  - `name`, `version`, `author`, `description` metadata
+  - `shaders[]` - Array of shader definitions
+  - `presets{}` - Optional configuration presets
+  - `useNamespace` - Optional flag to disable namespacing
+- **ShaderManager integration**
+  - `use(plugin)` - Register a plugin
+  - `unuse(pluginName)` - Unregister a plugin
+  - `getPlugin(name)`, `hasPlugin(name)`, `listPlugins()` - Plugin introspection
+  - Automatic shader name resolution via plugin manager
+- **validatePlugin()** - Standalone validation function for plugin definitions
+- **NAMESPACE_SEPARATOR** - Exported constant (`:`) for plugin shader naming
+
 ### Changed
 
 #### Performance Improvements
