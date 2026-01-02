@@ -32,7 +32,7 @@
 
   <script type="module">
     import maplibregl from 'maplibre-gl';
-    import { createShaderManager, registerAllShaders } from '@/index.ts';
+    import { createShaderManager, corePlugin, globalRegistry, PluginManager } from '@/index.ts';
 
     // Expose for testing
     window.maplibregl = maplibregl;
@@ -50,9 +50,10 @@
       console.log('[E2E Test]', message);
     }
 
-    // Register all shaders
-    registerAllShaders();
-    updateStatus('Shaders registered');
+    // Register all shaders via core plugin
+    const pluginManager = new PluginManager(globalRegistry);
+    pluginManager.use(corePlugin);
+    updateStatus('Shaders registered via corePlugin');
 
     // Create map
     const map = new maplibregl.Map({
