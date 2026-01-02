@@ -5,7 +5,7 @@
  */
 
 // Core classes
-export { ShaderManager, createShaderManager, applyShader, removeShader } from './ShaderManager';
+export { ShaderManager, createShaderManager, applyShader } from './ShaderManager';
 export { AnimationLoop } from './AnimationLoop';
 export { ShaderRegistry, globalRegistry } from './ShaderRegistry';
 export { ConfigResolver } from './ConfigResolver';

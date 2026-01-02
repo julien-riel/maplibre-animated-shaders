@@ -777,13 +777,3 @@ export function applyShader(
 
   return baseController;
 }
-
-/**
- * Remove a shader from a layer
- * @deprecated Use the controller returned by applyShader instead
- */
-export function removeShader(_map: MapLibreMapInstance, _layerId: string): void {
-  console.warn(
-    '[removeShader] This function is deprecated. Use the controller returned by applyShader instead.'
-  );
-}

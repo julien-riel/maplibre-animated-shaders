@@ -226,8 +226,8 @@ describe('PointShaderLayer', () => {
     it('should create vertex and index buffers', () => {
       layer.onAdd(map, gl);
 
-      // Should create 2 buffers (vertex + index)
-      expect(gl.createBuffer).toHaveBeenCalledTimes(2);
+      // Should create 3 buffers (vertex + index + dataDriven)
+      expect(gl.createBuffer).toHaveBeenCalledTimes(3);
     });
 
     it('should cache uniform locations', () => {
@@ -249,7 +249,8 @@ describe('PointShaderLayer', () => {
       layer.onRemove(map, gl);
 
       expect(gl.deleteProgram).toHaveBeenCalled();
-      expect(gl.deleteBuffer).toHaveBeenCalledTimes(2);
+      // Should delete 3 buffers (vertex + index + dataDriven)
+      expect(gl.deleteBuffer).toHaveBeenCalledTimes(3);
     });
   });
 

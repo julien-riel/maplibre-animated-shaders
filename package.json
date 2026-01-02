@@ -53,8 +53,12 @@
     "gis",
     "visualization"
   ],
-  "author": "",
+  "author": "Julien Riel",
   "license": "MIT",
+  "homepage": "https://github.com/julien-riel/maplibre-animated-shaders#readme",
+  "bugs": {
+    "url": "https://github.com/julien-riel/maplibre-animated-shaders/issues"
+  },
   "peerDependencies": {
     "maplibre-gl": ">=3.0.0"
   },
