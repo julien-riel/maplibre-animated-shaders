@@ -93,7 +93,7 @@
     "vite": "^5.0.10",
     "vite-plugin-dts": "^3.7.0",
     "vite-plugin-glsl": "^1.2.0",
-    "vitest": "^1.1.0"
+    "vitest": "^4.0.16"
   },
   "repository": {
     "type": "git",
