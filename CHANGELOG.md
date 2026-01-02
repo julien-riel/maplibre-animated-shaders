@@ -9,6 +9,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### Developer Experience
+- **WebGL Capability Detection** - `detectWebGLCapabilities()` and `checkMinimumRequirements()` functions to detect browser WebGL support before initialization
+- **GLSL Uniform Extractor** - `extractUniforms()` and `validateUniforms()` functions to parse GLSL code and extract uniform declarations
+- **Configuration Helpers** - Type-safe `getConfigNumber()`, `getConfigString()`, `getConfigBoolean()` utilities for accessing shader config values
+- **Throttle/Debounce Utilities** - `throttle()` and `debounce()` functions for rate limiting
+- New `checkCapabilities` option in `ShaderManagerOptions` to enable/disable WebGL capability checks
+
+### Changed
+
+#### Performance Improvements
+- Throttled `sourcedata` event handlers in PointShaderLayer, LineShaderLayer, and PolygonShaderLayer (max 10 updates/second)
+- Replaced `setTimeout` delays with proper MapLibre event handling (`isSourceLoaded()` + `idle` event)
+
+#### Code Quality
+- Refactored ShaderManager: consolidated 4 duplicate register methods into single generic `registerWebGLShader()` method (~88 lines removed)
+- Replaced unsafe `Record<string, unknown>` casts with type-safe config helper functions
+- Added geometry configuration map for cleaner shader registration logic
+
+### Fixed
+- Fixed 2 failing tests in `layers.test.ts` (buffer count expectations updated from 2 to 3 for dataDriven buffer)
+- Fixed WebGL validation warnings in tests by adding `VALIDATE_STATUS` constant to mock context
+- Completed package.json metadata (author, homepage, bugs URL)
+- Removed deprecated `removeShader()` function from public API
+
+### Added
+
 #### Interactive Animation Control (Phase 3)
 - **FeatureAnimationStateManager** - Per-feature animation state management with dirty tracking
 - **FeatureInteractionHandler** - MapLibre click/hover event handling for animation control
