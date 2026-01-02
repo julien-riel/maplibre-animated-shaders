@@ -27,6 +27,7 @@ import {
 } from '../utils/webgl-error-handler';
 import { getConfigNumber } from '../utils/config-helpers';
 import { throttle, DEFAULT_UPDATE_THROTTLE_MS } from '../utils/throttle';
+import { PoolManager, type PointData as PooledPointData } from '../utils/object-pool';
 
 /**
  * Vertex shader for point rendering
@@ -100,11 +101,7 @@ const POINT_VERTEX_SHADER = `
   }
 `;
 
-interface PointData {
-  mercatorX: number;
-  mercatorY: number;
-  index: number;
-}
+// PointData interface is imported from object-pool as PooledPointData
 
 /**
  * Per-feature evaluated data for data-driven properties
@@ -162,9 +159,10 @@ export class PointShaderLayer implements CustomLayerInterface {
   // Uniform locations
   private uniforms: Map<string, WebGLUniformLocation | null> = new Map();
 
-  // Point data
-  private points: PointData[] = [];
+  // Point data (using object pool for reduced GC pressure)
+  private points: PooledPointData[] = [];
   private vertexCount: number = 0;
+  private poolManager: PoolManager = PoolManager.getInstance();
 
   // Error handling state
   private initializationError: Error | null = null;
@@ -392,6 +390,10 @@ export class PointShaderLayer implements CustomLayerInterface {
       this.interactionHandler.dispose();
       this.interactionHandler = null;
     }
+
+    // Release pooled objects back to the pool
+    this.releasePooledPoints();
+    this.featureData = [];
 
     // Use safe cleanup to handle any errors during resource disposal
     safeCleanup(gl, {
@@ -761,10 +763,23 @@ export class PointShaderLayer implements CustomLayerInterface {
   }
 
   /**
+   * Release pooled point objects back to the pool
+   */
+  private releasePooledPoints(): void {
+    if (this.points.length > 0) {
+      this.poolManager.pointPool.releaseAll(this.points);
+      this.points = [];
+    }
+  }
+
+  /**
    * Process GeoJSON features into vertex data
+   * Uses object pooling to reduce GC pressure on large datasets
    */
   private processFeatures(features: GeoJSON.Feature[] | maplibregl.MapGeoJSONFeature[], gl: WebGLRenderingContext): void {
-    this.points = [];
+    // Release existing points back to the pool before reprocessing
+    this.releasePooledPoints();
+
     this.features = features as GeoJSON.Feature[];
 
     for (let i = 0; i < features.length; i++) {
@@ -774,11 +789,12 @@ export class PointShaderLayer implements CustomLayerInterface {
       const coords = (feature.geometry as GeoJSON.Point).coordinates;
       const mercator = this.lngLatToMercator(coords[0], coords[1]);
 
-      this.points.push({
-        mercatorX: mercator[0],
-        mercatorY: mercator[1],
-        index: i,
-      });
+      // Acquire point from pool instead of creating new object
+      const point = this.poolManager.pointPool.acquire();
+      point.mercatorX = mercator[0];
+      point.mercatorY = mercator[1];
+      point.index = i;
+      this.points.push(point);
     }
 
     this.buildBuffers(gl);

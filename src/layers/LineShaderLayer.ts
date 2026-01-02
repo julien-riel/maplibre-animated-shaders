@@ -26,6 +26,7 @@ import {
 } from '../utils/webgl-error-handler';
 import { getConfigNumber } from '../utils/config-helpers';
 import { throttle, DEFAULT_UPDATE_THROTTLE_MS } from '../utils/throttle';
+import { PoolManager, type SegmentData } from '../utils/object-pool';
 
 /**
  * Vertex shader for line rendering
@@ -120,14 +121,7 @@ const LINE_VERTEX_SHADER = `
   }
 `;
 
-interface LineSegment {
-  startX: number;
-  startY: number;
-  endX: number;
-  endY: number;
-  progress: number;
-  lineIndex: number;
-}
+// LineSegment is imported from object-pool as SegmentData
 
 /**
  * Per-feature evaluated data for data-driven properties
@@ -187,10 +181,11 @@ export class LineShaderLayer implements CustomLayerInterface {
   // Uniform locations
   private uniforms: Map<string, WebGLUniformLocation | null> = new Map();
 
-  // Line data
-  private segments: LineSegment[] = [];
+  // Line data (using object pool for reduced GC pressure)
+  private segments: SegmentData[] = [];
   private vertexCount: number = 0;
   private totalLength: number = 0;
+  private poolManager: PoolManager = PoolManager.getInstance();
 
   // Error handling state
   private initializationError: Error | null = null;
@@ -420,6 +415,10 @@ export class LineShaderLayer implements CustomLayerInterface {
       this.interactionHandler.dispose();
       this.interactionHandler = null;
     }
+
+    // Release pooled objects back to the pool
+    this.releasePooledSegments();
+    this.featureData = [];
 
     safeCleanup(gl, {
       program: this.program,
@@ -810,13 +809,25 @@ export class LineShaderLayer implements CustomLayerInterface {
   }
 
   /**
+   * Release pooled segment objects back to the pool
+   */
+  private releasePooledSegments(): void {
+    if (this.segments.length > 0) {
+      this.poolManager.segmentPool.releaseAll(this.segments);
+      this.segments = [];
+    }
+  }
+
+  /**
    * Process GeoJSON features into vertex data
+   * Uses object pooling to reduce GC pressure on large datasets
    */
   private processFeatures(
     features: GeoJSON.Feature[] | maplibregl.MapGeoJSONFeature[],
     gl: WebGLRenderingContext
   ): void {
-    this.segments = [];
+    // Release existing segments back to the pool before reprocessing
+    this.releasePooledSegments();
     this.totalLength = 0;
     this.features = features as GeoJSON.Feature[];
 
@@ -870,14 +881,15 @@ export class LineShaderLayer implements CustomLayerInterface {
 
       const progress = lineLength > 0 ? accumulatedLength / lineLength : 0;
 
-      this.segments.push({
-        startX: startMerc[0],
-        startY: startMerc[1],
-        endX: endMerc[0],
-        endY: endMerc[1],
-        progress,
-        lineIndex,
-      });
+      // Acquire segment from pool instead of creating new object
+      const segment = this.poolManager.segmentPool.acquire();
+      segment.startX = startMerc[0];
+      segment.startY = startMerc[1];
+      segment.endX = endMerc[0];
+      segment.endY = endMerc[1];
+      segment.progress = progress;
+      segment.lineIndex = lineIndex;
+      this.segments.push(segment);
 
       accumulatedLength += segmentLengths[i];
     }

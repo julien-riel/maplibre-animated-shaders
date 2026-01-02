@@ -29,6 +29,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 #### Performance Improvements
+- **Object Pooling** - Implemented object pooling to reduce GC pressure on large datasets (10k+ features)
+  - `ObjectPool<T>` - Generic object pool with configurable size, growth factor, and statistics
+  - `ArrayPool<T>` - Specialized pool for reusable arrays
+  - `PoolManager` - Singleton manager for shared pools across layers
+  - Pre-configured pools for points, segments, polygons, and feature data
+  - PointShaderLayer, LineShaderLayer, and PolygonShaderLayer now use pooled objects
 - Throttled `sourcedata` event handlers in PointShaderLayer, LineShaderLayer, and PolygonShaderLayer (max 10 updates/second)
 - Replaced `setTimeout` delays with proper MapLibre event handling (`isSourceLoaded()` + `idle` event)
 

@@ -25,6 +25,7 @@ import {
   isContextLost,
 } from '../utils/webgl-error-handler';
 import { throttle, DEFAULT_UPDATE_THROTTLE_MS } from '../utils/throttle';
+import { PoolManager, type PolygonData as PooledPolygonData } from '../utils/object-pool';
 
 /**
  * Vertex shader for polygon rendering
@@ -93,12 +94,7 @@ const POLYGON_VERTEX_SHADER = `
   }
 `;
 
-interface PolygonData {
-  vertices: number[][];
-  centroid: [number, number];
-  bounds: { minX: number; minY: number; maxX: number; maxY: number };
-  index: number;
-}
+// PolygonData is imported from object-pool as PooledPolygonData
 
 /**
  * Per-feature evaluated data for data-driven properties
@@ -157,10 +153,11 @@ export class PolygonShaderLayer implements CustomLayerInterface {
   // Uniform locations
   private uniforms: Map<string, WebGLUniformLocation | null> = new Map();
 
-  // Polygon data
-  private polygons: PolygonData[] = [];
+  // Polygon data (using object pool for reduced GC pressure)
+  private polygons: PooledPolygonData[] = [];
   private vertexCount: number = 0;
   private totalVertices: number = 0;
+  private poolManager: PoolManager = PoolManager.getInstance();
 
   // Error handling state
   private initializationError: Error | null = null;
@@ -381,6 +378,10 @@ export class PolygonShaderLayer implements CustomLayerInterface {
       this.interactionHandler.dispose();
       this.interactionHandler = null;
     }
+
+    // Release pooled objects back to the pool
+    this.releasePooledPolygons();
+    this.featureData = [];
 
     safeCleanup(gl, {
       program: this.program,
@@ -767,13 +768,25 @@ export class PolygonShaderLayer implements CustomLayerInterface {
   }
 
   /**
+   * Release pooled polygon objects back to the pool
+   */
+  private releasePooledPolygons(): void {
+    if (this.polygons.length > 0) {
+      this.poolManager.polygonPool.releaseAll(this.polygons);
+      this.polygons = [];
+    }
+  }
+
+  /**
    * Process GeoJSON features into vertex data
+   * Uses object pooling to reduce GC pressure on large datasets
    */
   private processFeatures(
     features: GeoJSON.Feature[] | maplibregl.MapGeoJSONFeature[],
     gl: WebGLRenderingContext
   ): void {
-    this.polygons = [];
+    // Release existing polygons back to the pool before reprocessing
+    this.releasePooledPolygons();
     this.features = features as GeoJSON.Feature[];
 
     let polygonIndex = 0;
@@ -796,21 +809,26 @@ export class PolygonShaderLayer implements CustomLayerInterface {
 
   /**
    * Process a single Polygon into triangulated data
+   * Uses object pooling for reduced GC pressure
    */
   private processPolygon(coordinates: number[][][], polygonIndex: number): void {
     // Get outer ring (first ring)
     const outerRing = coordinates[0];
     if (outerRing.length < 3) return;
 
-    // Convert to Mercator and calculate bounds/centroid
-    const vertices: number[][] = [];
+    // Acquire polygon object from pool
+    const polygon = this.poolManager.polygonPool.acquire();
+
+    // Reset bounds to initial values
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     let centroidX = 0, centroidY = 0;
 
+    // Convert to Mercator and calculate bounds/centroid
+    // Reuse the vertices array from the pool (already cleared by resetter)
     for (let i = 0; i < outerRing.length - 1; i++) { // Skip last point (duplicate of first)
       const [lng, lat] = outerRing[i];
       const [mx, my] = this.lngLatToMercator(lng, lat);
-      vertices.push([mx, my]);
+      polygon.vertices.push([mx, my]);
 
       minX = Math.min(minX, mx);
       minY = Math.min(minY, my);
@@ -821,15 +839,22 @@ export class PolygonShaderLayer implements CustomLayerInterface {
       centroidY += my;
     }
 
-    centroidX /= vertices.length;
-    centroidY /= vertices.length;
+    const vertexCount = polygon.vertices.length;
+    if (vertexCount > 0) {
+      centroidX /= vertexCount;
+      centroidY /= vertexCount;
+    }
 
-    this.polygons.push({
-      vertices,
-      centroid: [centroidX, centroidY],
-      bounds: { minX, minY, maxX, maxY },
-      index: polygonIndex,
-    });
+    // Set polygon properties
+    polygon.centroid[0] = centroidX;
+    polygon.centroid[1] = centroidY;
+    polygon.bounds.minX = minX;
+    polygon.bounds.minY = minY;
+    polygon.bounds.maxX = maxX;
+    polygon.bounds.maxY = maxY;
+    polygon.index = polygonIndex;
+
+    this.polygons.push(polygon);
   }
 
   /**
