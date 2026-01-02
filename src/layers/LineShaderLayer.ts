@@ -24,6 +24,8 @@ import {
   safeCleanup,
   isContextLost,
 } from '../utils/webgl-error-handler';
+import { getConfigNumber } from '../utils/config-helpers';
+import { throttle, DEFAULT_UPDATE_THROTTLE_MS } from '../utils/throttle';
 
 /**
  * Vertex shader for line rendering
@@ -359,11 +361,15 @@ export class LineShaderLayer implements CustomLayerInterface {
       return;
     }
 
-    // Listen for source data changes
+    // Listen for source data changes (throttled to avoid excessive updates)
+    const throttledUpdate = throttle(() => {
+      this.safeUpdateLineData(gl);
+      map.triggerRepaint();
+    }, DEFAULT_UPDATE_THROTTLE_MS);
+
     const onSourceData = (e: { sourceId: string; isSourceLoaded?: boolean }) => {
       if (e.sourceId === this.sourceId && e.isSourceLoaded) {
-        this.safeUpdateLineData(gl);
-        map.triggerRepaint();
+        throttledUpdate();
       }
     };
     map.on('sourcedata', onSourceData);
@@ -514,9 +520,8 @@ export class LineShaderLayer implements CustomLayerInterface {
     if (uResolution) gl.uniform2fv(uResolution, resolution);
 
     // Get width from config
-    const width = (this.config as Record<string, unknown>).width ??
-                  (this.config as Record<string, unknown>).lineWidth ?? 4;
-    if (uWidth) gl.uniform1f(uWidth, width as number);
+    const width = getConfigNumber(this.config, ['width', 'lineWidth'], 4);
+    if (uWidth) gl.uniform1f(uWidth, width);
     if (uTime) gl.uniform1f(uTime, this.time);
     if (uTotalLength) gl.uniform1f(uTotalLength, this.totalLength);
 

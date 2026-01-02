@@ -24,6 +24,7 @@ import {
   safeCleanup,
   isContextLost,
 } from '../utils/webgl-error-handler';
+import { throttle, DEFAULT_UPDATE_THROTTLE_MS } from '../utils/throttle';
 
 /**
  * Vertex shader for polygon rendering
@@ -324,10 +325,15 @@ export class PolygonShaderLayer implements CustomLayerInterface {
       return;
     }
 
+    // Listen for source data changes (throttled to avoid excessive updates)
+    const throttledUpdate = throttle(() => {
+      this.safeUpdatePolygonData(gl);
+      map.triggerRepaint();
+    }, DEFAULT_UPDATE_THROTTLE_MS);
+
     const onSourceData = (e: { sourceId: string; isSourceLoaded?: boolean }) => {
       if (e.sourceId === this.sourceId && e.isSourceLoaded) {
-        this.safeUpdatePolygonData(gl);
-        map.triggerRepaint();
+        throttledUpdate();
       }
     };
     map.on('sourcedata', onSourceData);

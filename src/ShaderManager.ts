@@ -8,6 +8,7 @@ import type {
   ShaderDefinition,
   ShaderInstance,
   ShaderManagerOptions,
+  GeometryType,
 } from './types';
 import { AnimationLoop } from './AnimationLoop';
 import { ConfigResolver } from './ConfigResolver';
@@ -18,6 +19,70 @@ import { PolygonShaderLayer } from './layers/PolygonShaderLayer';
 import { GlobalShaderLayer } from './layers/GlobalShaderLayer';
 import { FeatureAnimationStateManager } from './interaction';
 import { checkMinimumRequirements, logCapabilities } from './utils/webgl-capabilities';
+
+/**
+ * Configuration for registering a shader by geometry type
+ */
+interface GeometryShaderConfig {
+  /** Suffix for the custom layer ID */
+  layerIdSuffix: string;
+  /** Paint properties to hide the original layer */
+  hideProperties: string[];
+  /** Whether this geometry type requires a source */
+  requiresSource: boolean;
+  /** Whether this geometry type supports interactivity */
+  supportsInteractivity: boolean;
+  /** Factory function to create the custom layer */
+  createLayer: (
+    layerId: string,
+    sourceId: string | undefined,
+    definition: ShaderDefinition,
+    config: ShaderConfig,
+    interactivityConfig?: InteractivityConfig
+  ) => PointShaderLayer | LineShaderLayer | PolygonShaderLayer | GlobalShaderLayer;
+}
+
+/**
+ * Configuration map for each geometry type
+ */
+const GEOMETRY_CONFIGS: Record<Exclude<GeometryType, 'global'>, GeometryShaderConfig> = {
+  point: {
+    layerIdSuffix: '-shader',
+    hideProperties: ['circle-opacity', 'circle-stroke-opacity'],
+    requiresSource: true,
+    supportsInteractivity: true,
+    createLayer: (layerId, sourceId, definition, config, interactivityConfig) =>
+      new PointShaderLayer(layerId, sourceId!, definition, config, interactivityConfig),
+  },
+  line: {
+    layerIdSuffix: '-shader',
+    hideProperties: ['line-opacity'],
+    requiresSource: true,
+    supportsInteractivity: true,
+    createLayer: (layerId, sourceId, definition, config, interactivityConfig) =>
+      new LineShaderLayer(layerId, sourceId!, definition, config, interactivityConfig),
+  },
+  polygon: {
+    layerIdSuffix: '-shader',
+    hideProperties: ['fill-opacity'],
+    requiresSource: true,
+    supportsInteractivity: true,
+    createLayer: (layerId, sourceId, definition, config, interactivityConfig) =>
+      new PolygonShaderLayer(layerId, sourceId!, definition, config, interactivityConfig),
+  },
+};
+
+/**
+ * Configuration for global shaders (special case)
+ */
+const GLOBAL_SHADER_CONFIG: GeometryShaderConfig = {
+  layerIdSuffix: '-global-shader',
+  hideProperties: [],
+  requiresSource: false,
+  supportsInteractivity: false,
+  createLayer: (layerId, _sourceId, definition, config) =>
+    new GlobalShaderLayer(layerId, definition, config),
+};
 
 /**
  * Main entry point for managing animated shaders on a MapLibre map.
@@ -110,27 +175,13 @@ export class ShaderManager implements IShaderManager {
       );
     }
 
-    // For point shaders, use WebGL custom layer
-    if (definition.geometry === 'point') {
-      this.registerPointShader(layerId, definition, resolvedConfig, interactivityConfig);
-      return;
-    }
+    // Get geometry configuration
+    const geometryConfig = definition.geometry === 'global'
+      ? GLOBAL_SHADER_CONFIG
+      : GEOMETRY_CONFIGS[definition.geometry];
 
-    // For line shaders, use WebGL custom layer
-    if (definition.geometry === 'line') {
-      this.registerLineShader(layerId, definition, resolvedConfig, interactivityConfig);
-      return;
-    }
-
-    // For polygon shaders, use WebGL custom layer
-    if (definition.geometry === 'polygon') {
-      this.registerPolygonShader(layerId, definition, resolvedConfig, interactivityConfig);
-      return;
-    }
-
-    // For global shaders, use full-screen WebGL custom layer
-    if (definition.geometry === 'global') {
-      this.registerGlobalShader(layerId, definition, resolvedConfig);
+    if (geometryConfig) {
+      this.registerWebGLShader(layerId, definition, resolvedConfig, geometryConfig, interactivityConfig);
       return;
     }
 
@@ -139,50 +190,62 @@ export class ShaderManager implements IShaderManager {
   }
 
   /**
-   * Register a point shader using WebGL custom layer
+   * Register a WebGL shader using the geometry-specific configuration
    */
-  private registerPointShader(
+  private registerWebGLShader(
     layerId: string,
     definition: ShaderDefinition,
     config: ShaderConfig,
+    geometryConfig: GeometryShaderConfig,
     interactivityConfig?: InteractivityConfig
   ): void {
-    // Get the source ID from the existing layer
-    const existingLayer = this.map.getLayer(layerId);
-    if (!existingLayer) {
-      throw new Error(`[ShaderManager] Layer "${layerId}" not found on map`);
-    }
+    let sourceId: string | undefined;
 
-    // Get source ID from the layer
-    const sourceId = (existingLayer as { source?: string }).source;
-    if (!sourceId) {
-      throw new Error(`[ShaderManager] Layer "${layerId}" has no source`);
+    // For geometry types that require a source, get it from the existing layer
+    if (geometryConfig.requiresSource) {
+      const existingLayer = this.map.getLayer(layerId);
+      if (!existingLayer) {
+        throw new Error(`[ShaderManager] Layer "${layerId}" not found on map`);
+      }
+
+      sourceId = (existingLayer as { source?: string }).source;
+      if (!sourceId) {
+        throw new Error(`[ShaderManager] Layer "${layerId}" has no source`);
+      }
     }
 
     // Create custom layer ID
-    const customLayerId = `${layerId}-shader`;
+    const customLayerId = `${layerId}${geometryConfig.layerIdSuffix}`;
 
     // Remove existing custom layer if present
     if (this.map.getLayer(customLayerId)) {
       this.map.removeLayer(customLayerId);
     }
 
-    // Make original layer invisible but keep it in the render tree
-    // This ensures the source data is loaded
-    this.map.setPaintProperty(layerId, 'circle-opacity', 0);
-    this.map.setPaintProperty(layerId, 'circle-stroke-opacity', 0);
+    // Hide original layer by setting opacity properties to 0
+    for (const property of geometryConfig.hideProperties) {
+      this.map.setPaintProperty(layerId, property, 0);
+    }
 
-    // Create the custom layer
-    const customLayer = new PointShaderLayer(
+    // Create the custom layer using the geometry-specific factory
+    const effectiveInteractivity = geometryConfig.supportsInteractivity
+      ? interactivityConfig
+      : undefined;
+    const customLayer = geometryConfig.createLayer(
       customLayerId,
       sourceId,
       definition,
       config,
-      interactivityConfig
+      effectiveInteractivity
     );
 
     // Add the custom layer to the map
-    this.map.addLayer(customLayer, layerId);
+    // For source-based layers, add before the original layer; for global, add on top
+    if (geometryConfig.requiresSource) {
+      this.map.addLayer(customLayer, layerId);
+    } else {
+      this.map.addLayer(customLayer);
+    }
 
     // Store the custom layer
     this.customLayers.set(layerId, customLayer);
@@ -199,175 +262,7 @@ export class ShaderManager implements IShaderManager {
 
     this.instances.set(layerId, instance);
 
-    this.log(`Registered point shader "${definition.name}" on layer "${layerId}" (WebGL)`);
-  }
-
-  /**
-   * Register a line shader using WebGL custom layer
-   */
-  private registerLineShader(
-    layerId: string,
-    definition: ShaderDefinition,
-    config: ShaderConfig,
-    interactivityConfig?: InteractivityConfig
-  ): void {
-    // Get the source ID from the existing layer
-    const existingLayer = this.map.getLayer(layerId);
-    if (!existingLayer) {
-      throw new Error(`[ShaderManager] Layer "${layerId}" not found on map`);
-    }
-
-    // Get source ID from the layer
-    const sourceId = (existingLayer as { source?: string }).source;
-    if (!sourceId) {
-      throw new Error(`[ShaderManager] Layer "${layerId}" has no source`);
-    }
-
-    // Create custom layer ID
-    const customLayerId = `${layerId}-shader`;
-
-    // Remove existing custom layer if present
-    if (this.map.getLayer(customLayerId)) {
-      this.map.removeLayer(customLayerId);
-    }
-
-    // Make original layer invisible but keep it in the render tree
-    this.map.setPaintProperty(layerId, 'line-opacity', 0);
-
-    // Create the custom layer
-    const customLayer = new LineShaderLayer(
-      customLayerId,
-      sourceId,
-      definition,
-      config,
-      interactivityConfig
-    );
-
-    // Add the custom layer to the map
-    this.map.addLayer(customLayer, layerId);
-
-    // Store the custom layer
-    this.customLayers.set(layerId, customLayer);
-
-    // Create shader instance for tracking
-    const instance: ShaderInstance = {
-      layerId,
-      definition,
-      config,
-      isPlaying: true,
-      speed: config.speed ?? 1.0,
-      localTime: 0,
-    };
-
-    this.instances.set(layerId, instance);
-
-    this.log(`Registered line shader "${definition.name}" on layer "${layerId}" (WebGL)`);
-  }
-
-  /**
-   * Register a polygon shader using WebGL custom layer
-   */
-  private registerPolygonShader(
-    layerId: string,
-    definition: ShaderDefinition,
-    config: ShaderConfig,
-    interactivityConfig?: InteractivityConfig
-  ): void {
-    // Get the source ID from the existing layer
-    const existingLayer = this.map.getLayer(layerId);
-    if (!existingLayer) {
-      throw new Error(`[ShaderManager] Layer "${layerId}" not found on map`);
-    }
-
-    // Get source ID from the layer
-    const sourceId = (existingLayer as { source?: string }).source;
-    if (!sourceId) {
-      throw new Error(`[ShaderManager] Layer "${layerId}" has no source`);
-    }
-
-    // Create custom layer ID
-    const customLayerId = `${layerId}-shader`;
-
-    // Remove existing custom layer if present
-    if (this.map.getLayer(customLayerId)) {
-      this.map.removeLayer(customLayerId);
-    }
-
-    // Make original layer invisible but keep it in the render tree
-    this.map.setPaintProperty(layerId, 'fill-opacity', 0);
-
-    // Create the custom layer
-    const customLayer = new PolygonShaderLayer(
-      customLayerId,
-      sourceId,
-      definition,
-      config,
-      interactivityConfig
-    );
-
-    // Add the custom layer to the map
-    this.map.addLayer(customLayer, layerId);
-
-    // Store the custom layer
-    this.customLayers.set(layerId, customLayer);
-
-    // Create shader instance for tracking
-    const instance: ShaderInstance = {
-      layerId,
-      definition,
-      config,
-      isPlaying: true,
-      speed: config.speed ?? 1.0,
-      localTime: 0,
-    };
-
-    this.instances.set(layerId, instance);
-
-    this.log(`Registered polygon shader "${definition.name}" on layer "${layerId}" (WebGL)`);
-  }
-
-  /**
-   * Register a global shader using full-screen WebGL custom layer
-   */
-  private registerGlobalShader(
-    layerId: string,
-    definition: ShaderDefinition,
-    config: ShaderConfig
-  ): void {
-    // Create custom layer ID
-    const customLayerId = `${layerId}-global-shader`;
-
-    // Remove existing custom layer if present
-    if (this.map.getLayer(customLayerId)) {
-      this.map.removeLayer(customLayerId);
-    }
-
-    // Create the custom layer (no source needed for global effects)
-    const customLayer = new GlobalShaderLayer(
-      customLayerId,
-      definition,
-      config
-    );
-
-    // Add the custom layer to the map on top of all other layers
-    this.map.addLayer(customLayer);
-
-    // Store the custom layer
-    this.customLayers.set(layerId, customLayer);
-
-    // Create shader instance for tracking
-    const instance: ShaderInstance = {
-      layerId,
-      definition,
-      config,
-      isPlaying: true,
-      speed: config.speed ?? 1.0,
-      localTime: 0,
-    };
-
-    this.instances.set(layerId, instance);
-
-    this.log(`Registered global shader "${definition.name}" on layer "${layerId}" (WebGL)`);
+    this.log(`Registered ${definition.geometry} shader "${definition.name}" on layer "${layerId}" (WebGL)`);
   }
 
   /**

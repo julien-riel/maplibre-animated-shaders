@@ -25,6 +25,8 @@ import {
   safeCleanup,
   isContextLost,
 } from '../utils/webgl-error-handler';
+import { getConfigNumber } from '../utils/config-helpers';
+import { throttle, DEFAULT_UPDATE_THROTTLE_MS } from '../utils/throttle';
 
 /**
  * Vertex shader for point rendering
@@ -331,11 +333,15 @@ export class PointShaderLayer implements CustomLayerInterface {
       return;
     }
 
-    // Listen for source data changes
+    // Listen for source data changes (throttled to avoid excessive updates)
+    const throttledUpdate = throttle(() => {
+      this.safeUpdatePointData(gl);
+      map.triggerRepaint();
+    }, DEFAULT_UPDATE_THROTTLE_MS);
+
     const onSourceData = (e: { sourceId: string; isSourceLoaded?: boolean }) => {
       if (e.sourceId === this.sourceId && e.isSourceLoaded) {
-        this.safeUpdatePointData(gl);
-        map.triggerRepaint();
+        throttledUpdate();
       }
     };
     map.on('sourcedata', onSourceData);
@@ -470,11 +476,8 @@ export class PointShaderLayer implements CustomLayerInterface {
     if (uResolution) gl.uniform2fv(uResolution, resolution);
 
     // Get size from config (maxRadius, radius, size, or baseSize)
-    const size = (this.config as Record<string, unknown>).maxRadius ??
-                 (this.config as Record<string, unknown>).radius ??
-                 (this.config as Record<string, unknown>).size ??
-                 (this.config as Record<string, unknown>).baseSize ?? 50;
-    if (uSize) gl.uniform1f(uSize, size as number);
+    const size = getConfigNumber(this.config, ['maxRadius', 'radius', 'size', 'baseSize'], 50);
+    if (uSize) gl.uniform1f(uSize, size);
     if (uTime) gl.uniform1f(uTime, this.time);
 
     // Set data-driven flags
