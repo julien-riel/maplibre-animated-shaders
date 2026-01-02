@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shader E2E Test</title>
+  <link href="/node_modules/maplibre-gl/dist/maplibre-gl.css" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; }
+    #map { width: 800px; height: 600px; }
+    #status { padding: 10px; background: #f0f0f0; }
+    .controls { padding: 10px; display: flex; gap: 10px; flex-wrap: wrap; }
+    button { padding: 8px 16px; cursor: pointer; }
+    .shader-btn { background: #3b82f6; color: white; border: none; border-radius: 4px; }
+    .shader-btn:hover { background: #2563eb; }
+    .shader-btn.active { background: #1d4ed8; }
+  </style>
+</head>
+<body>
+  <div id="status">Loading...</div>
+  <div class="controls">
+    <button class="shader-btn" data-shader="pulse" data-geometry="point">Pulse</button>
+    <button class="shader-btn" data-shader="glow" data-geometry="point">Glow</button>
+    <button class="shader-btn" data-shader="radar" data-geometry="point">Radar</button>
+    <button class="shader-btn" data-shader="flow" data-geometry="line">Flow</button>
+    <button class="shader-btn" data-shader="neon" data-geometry="line">Neon</button>
+    <button class="shader-btn" data-shader="ripple" data-geometry="polygon">Ripple</button>
+    <button class="shader-btn" data-shader="scan-lines" data-geometry="polygon">Scan Lines</button>
+  </div>
+  <div id="map"></div>
+
+  <script type="module">
+    import maplibregl from 'maplibre-gl';
+    import { createShaderManager, registerAllShaders } from '@/index.ts';
+
+    // Expose for testing
+    window.maplibregl = maplibregl;
+    window.testState = {
+      mapLoaded: false,
+      shaderApplied: null,
+      error: null,
+      frameCount: 0,
+    };
+
+    const statusEl = document.getElementById('status');
+
+    function updateStatus(message) {
+      statusEl.textContent = message;
+      console.log('[E2E Test]', message);
+    }
+
+    // Register all shaders
+    registerAllShaders();
+    updateStatus('Shaders registered');
+
+    // Create map
+    const map = new maplibregl.Map({
+      container: 'map',
+      style: {
+        version: 8,
+        sources: {
+          'test-points': {
+            type: 'geojson',
+            data: {
+              type: 'FeatureCollection',
+              features: [
+                { type: 'Feature', geometry: { type: 'Point', coordinates: [0, 0] }, properties: { id: 1 } },
+                { type: 'Feature', geometry: { type: 'Point', coordinates: [1, 1] }, properties: { id: 2 } },
+                { type: 'Feature', geometry: { type: 'Point', coordinates: [-1, 1] }, properties: { id: 3 } },
+              ]
+            }
+          },
+          'test-lines': {
+            type: 'geojson',
+            data: {
+              type: 'FeatureCollection',
+              features: [
+                {
+                  type: 'Feature',
+                  geometry: {
+                    type: 'LineString',
+                    coordinates: [[-2, -1], [0, 0], [2, -1]]
+                  },
+                  properties: { id: 1 }
+                },
+              ]
+            }
+          },
+          'test-polygons': {
+            type: 'geojson',
+            data: {
+              type: 'FeatureCollection',
+              features: [
+                {
+                  type: 'Feature',
+                  geometry: {
+                    type: 'Polygon',
+                    coordinates: [[[-1, -2], [1, -2], [1, -1], [-1, -1], [-1, -2]]]
+                  },
+                  properties: { id: 1 }
+                },
+              ]
+            }
+          }
+        },
+        layers: [
+          {
+            id: 'background',
+            type: 'background',
+            paint: { 'background-color': '#1a1a2e' }
+          },
+          {
+            id: 'test-polygons-layer',
+            type: 'fill',
+            source: 'test-polygons',
+            paint: { 'fill-color': '#4a90d9', 'fill-opacity': 0.8 }
+          },
+          {
+            id: 'test-lines-layer',
+            type: 'line',
+            source: 'test-lines',
+            paint: { 'line-color': '#00ff88', 'line-width': 4 }
+          },
+          {
+            id: 'test-points-layer',
+            type: 'circle',
+            source: 'test-points',
+            paint: { 'circle-radius': 20, 'circle-color': '#ff6b6b' }
+          }
+        ]
+      },
+      center: [0, 0],
+      zoom: 5,
+      attributionControl: false,
+    });
+
+    // Expose map for testing
+    window.map = map;
+
+    let shaderManager = null;
+    let currentController = null;
+
+    map.on('load', () => {
+      updateStatus('Map loaded');
+      window.testState.mapLoaded = true;
+
+      // Create shader manager
+      shaderManager = createShaderManager(map, { debug: true });
+      window.shaderManager = shaderManager;
+
+      // Count frames for animation testing
+      map.on('render', () => {
+        window.testState.frameCount++;
+      });
+
+      updateStatus('Ready - Click a shader button to test');
+    });
+
+    map.on('error', (e) => {
+      console.error('Map error:', e);
+      window.testState.error = e.error?.message || 'Unknown error';
+      updateStatus('Error: ' + window.testState.error);
+    });
+
+    // Shader button handlers
+    document.querySelectorAll('.shader-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const shaderName = btn.dataset.shader;
+        const geometry = btn.dataset.geometry;
+
+        // Remove current shader
+        if (currentController) {
+          currentController.remove();
+          currentController = null;
+        }
+
+        // Get layer ID based on geometry
+        const layerId = `test-${geometry}s-layer`;
+
+        try {
+          // Apply shader
+          shaderManager.register(layerId, shaderName, {
+            color: '#ff6b6b',
+            speed: 1.5,
+            intensity: 1.0,
+          });
+
+          // Update UI
+          document.querySelectorAll('.shader-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+
+          window.testState.shaderApplied = shaderName;
+          updateStatus(`Shader applied: ${shaderName}`);
+        } catch (error) {
+          console.error('Shader error:', error);
+          window.testState.error = error.message;
+          updateStatus('Error: ' + error.message);
+        }
+      });
+    });
+
+    // Expose test utilities
+    window.applyShader = (layerId, shaderName, config = {}) => {
+      try {
+        shaderManager.register(layerId, shaderName, config);
+        window.testState.shaderApplied = shaderName;
+        window.testState.error = null;
+        return true;
+      } catch (error) {
+        window.testState.error = error.message;
+        return false;
+      }
+    };
+
+    window.removeShader = (layerId) => {
+      try {
+        shaderManager.unregister(layerId);
+        window.testState.shaderApplied = null;
+        return true;
+      } catch (error) {
+        window.testState.error = error.message;
+        return false;
+      }
+    };
+
+    window.getFrameCount = () => window.testState.frameCount;
+    window.resetFrameCount = () => { window.testState.frameCount = 0; };
+  </script>
+</body>
+</html>

@@ -37,6 +37,11 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug",
+    "dev:e2e": "vite --config e2e/test-app/vite.config.ts",
     "validate:glsl": "npx tsx scripts/validate-glsl.ts",
     "docs": "typedoc",
     "docs:watch": "typedoc --watch",
@@ -66,6 +71,7 @@
     "@maplibre/maplibre-gl-style-spec": "^24.4.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
     "@types/node": "^20.10.0",
     "@typescript-eslint/eslint-plugin": "^6.15.0",
     "@typescript-eslint/parser": "^6.15.0",
@@ -73,6 +79,7 @@
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "maplibre-gl": "^4.0.0",
+    "playwright": "^1.57.0",
     "prettier": "^3.2.0",
     "tsx": "^4.7.0",
     "typedoc": "^0.28.15",
