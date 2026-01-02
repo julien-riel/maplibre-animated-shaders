@@ -6,9 +6,9 @@
  */
 
 import type { ShaderPlugin, ShaderDefinition } from '../../types';
-import { radarShader, glowShader } from '../../shaders/points';
-import { electricShader, neonShader } from '../../shaders/lines';
-import { holographicGridShader } from '../../shaders/global';
+import { radarShader, glowShader } from './shaders/points';
+import { electricShader, neonShader } from './shaders/lines';
+import { holographicGridShader } from './shaders/global';
 
 /**
  * Sci-Fi Plugin

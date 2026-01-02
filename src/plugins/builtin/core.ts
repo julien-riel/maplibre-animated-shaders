@@ -19,7 +19,7 @@ import {
   particleBurstShader,
   glowShader,
   morphingShapesShader,
-} from '../../shaders/points';
+} from './shaders/points';
 import {
   flowShader,
   gradientTravelShader,
@@ -28,7 +28,7 @@ import {
   breathingShader,
   snakeShader,
   neonShader,
-} from '../../shaders/lines';
+} from './shaders/lines';
 import {
   scanLinesShader,
   rippleShader,
@@ -38,14 +38,14 @@ import {
   marchingAntsShader,
   gradientRotationShader,
   dissolveShader,
-} from '../../shaders/polygons';
+} from './shaders/polygons';
 import {
   heatShimmerShader,
   dayNightCycleShader,
   depthFogShader,
   weatherShader,
   holographicGridShader,
-} from '../../shaders/global';
+} from './shaders/global';
 
 // Import presets from thematic plugins
 import { datavizPlugin } from './dataviz';

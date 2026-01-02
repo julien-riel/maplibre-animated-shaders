@@ -6,9 +6,9 @@
  */
 
 import type { ShaderPlugin, ShaderDefinition } from '../../types';
-import { pulseShader } from '../../shaders/points';
-import { flowShader, gradientTravelShader, snakeShader } from '../../shaders/lines';
-import { scanLinesShader, fillWaveShader, marchingAntsShader } from '../../shaders/polygons';
+import { pulseShader } from './shaders/points';
+import { flowShader, gradientTravelShader, snakeShader } from './shaders/lines';
+import { scanLinesShader, fillWaveShader, marchingAntsShader } from './shaders/polygons';
 
 /**
  * Data Visualization Plugin

@@ -6,13 +6,13 @@
  */
 
 import type { ShaderPlugin, ShaderDefinition } from '../../types';
-import { rippleShader, noiseShader } from '../../shaders/polygons';
+import { rippleShader, noiseShader } from './shaders/polygons';
 import {
   heatShimmerShader,
   dayNightCycleShader,
   depthFogShader,
   weatherShader,
-} from '../../shaders/global';
+} from './shaders/global';
 
 /**
  * Atmospheric Plugin

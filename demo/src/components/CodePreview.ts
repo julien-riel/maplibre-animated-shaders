@@ -55,11 +55,8 @@ export class CodePreview {
   private generateCode(): string {
     const configStr = this.formatConfig(this.currentConfig);
 
-    return `import { createShaderManager, registerAllShaders } from 'maplibre-animated-shaders';
+    return `import { createShaderManager, corePlugin } from 'maplibre-animated-shaders';
 import maplibregl from 'maplibre-gl';
-
-// Register all built-in shaders
-registerAllShaders();
 
 // Create your map
 const map = new maplibregl.Map({
@@ -87,9 +84,12 @@ map.on('load', () => {
     }
   });
 
-  // Apply the shader
+  // Create shader manager and register the core plugin
   const manager = createShaderManager(map);
-  manager.register('my-layer', '${this.currentShader}', ${configStr});
+  manager.use(corePlugin);
+
+  // Apply the shader (prefix with 'core:' for namespaced access)
+  manager.register('my-layer', 'core:${this.currentShader}', ${configStr});
 });`;
   }
 

@@ -18,7 +18,7 @@ import {
   particleBurstShader,
   glowShader,
   morphingShapesShader,
-} from '../src/shaders/points';
+} from '../src/plugins/builtin/shaders/points';
 
 // Import all line shaders
 import {
@@ -29,7 +29,7 @@ import {
   breathingShader,
   snakeShader,
   neonShader,
-} from '../src/shaders/lines';
+} from '../src/plugins/builtin/shaders/lines';
 
 // Import all polygon shaders
 import {
@@ -41,7 +41,7 @@ import {
   marchingAntsShader,
   gradientRotationShader,
   dissolveShader,
-} from '../src/shaders/polygons';
+} from '../src/plugins/builtin/shaders/polygons';
 
 // Import all global shaders
 import {
@@ -50,7 +50,7 @@ import {
   depthFogShader,
   weatherShader,
   holographicGridShader,
-} from '../src/shaders/global';
+} from '../src/plugins/builtin/shaders/global';
 
 import type { ShaderDefinition, GeometryType } from '../src/types';
 

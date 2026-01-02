@@ -6,9 +6,9 @@
  */
 
 import type { ShaderPlugin, ShaderDefinition } from '../../types';
-import { heartbeatShader, particleBurstShader, morphingShapesShader } from '../../shaders/points';
-import { breathingShader, trailFadeShader } from '../../shaders/lines';
-import { dissolveShader, hatchingShader, gradientRotationShader } from '../../shaders/polygons';
+import { heartbeatShader, particleBurstShader, morphingShapesShader } from './shaders/points';
+import { breathingShader, trailFadeShader } from './shaders/lines';
+import { dissolveShader, hatchingShader, gradientRotationShader } from './shaders/polygons';
 
 /**
  * Organic Plugin

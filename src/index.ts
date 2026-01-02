@@ -103,9 +103,6 @@ export { glsl, noiseGLSL, easingGLSL, shapesGLSL, colorsGLSL } from './glsl';
 // Custom WebGL layers
 export { PointShaderLayer } from './layers';
 
-// Shaders (will be populated as they are implemented)
-export { registerAllShaders } from './shaders';
-
 // Re-import for use in helper functions
 import { globalRegistry as registry } from './ShaderRegistry';
 import type { GeometryType, ShaderConfig, ShaderDefinition } from './types';
@@ -121,6 +118,7 @@ export function defineShader<T extends ShaderConfig>(
 
 /**
  * Register a custom shader to the global registry
+ * @deprecated Use manager.use(plugin) instead
  */
 export function registerShader(definition: ShaderDefinition): void {
   registry.register(definition);

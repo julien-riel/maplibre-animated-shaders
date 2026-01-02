@@ -61,6 +61,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Presets: `heartbeat-slow`, `celebration`, `firework`, `rainbow-spin`
 - **corePlugin** (26 shaders) - All built-in shaders bundled for backwards compatibility
 
+### Breaking Changes
+
+- **Removed `registerAllShaders()`** - Use `manager.use(corePlugin)` instead
+  ```typescript
+  // Before
+  import { registerAllShaders } from 'maplibre-animated-shaders';
+  registerAllShaders();
+  manager.register('layer', 'pulse', config);
+
+  // After
+  import { corePlugin } from 'maplibre-animated-shaders';
+  manager.use(corePlugin);
+  manager.register('layer', 'core:pulse', config);
+  ```
+- **Shaders moved to plugins** - Individual shader imports are no longer public API
+  - Shaders are now internal to `src/plugins/builtin/shaders/`
+  - Use thematic plugins (`datavizPlugin`, `scifiPlugin`, etc.) for smaller bundles
+  - Use `corePlugin` for all 26 shaders
+- **Namespaced shader names** - Shaders are now prefixed with plugin name (e.g., `core:pulse`, `dataviz:flow`)
+
 ### Changed
 
 #### Performance Improvements
