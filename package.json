@@ -81,7 +81,7 @@
     "@vitest/coverage-v8": "^1.6.1",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
-    "maplibre-gl": "^4.0.0",
+    "maplibre-gl": "^5.15.0",
     "playwright": "^1.57.0",
     "prettier": "^3.2.0",
     "tsx": "^4.7.0",
