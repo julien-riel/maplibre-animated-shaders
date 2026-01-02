@@ -43,6 +43,9 @@
     "test:e2e:debug": "playwright test --debug",
     "dev:e2e": "vite --config e2e/test-app/vite.config.ts",
     "validate:glsl": "npx tsx scripts/validate-glsl.ts",
+    "bench": "vitest bench",
+    "bench:run": "vitest bench --run",
+    "bench:ci": "vitest bench --run --reporter=json --outputFile=benchmark-results.json",
     "docs": "typedoc",
     "docs:watch": "typedoc --watch",
     "prepublishOnly": "npm run build:lib"

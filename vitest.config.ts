@@ -25,6 +25,13 @@ export default defineConfig({
         statements: 80,
       },
     },
+    // Benchmark configuration
+    benchmark: {
+      include: ['benchmarks/**/*.bench.ts'],
+      exclude: ['node_modules', 'dist'],
+      reporters: ['default'],
+      outputJson: 'benchmark-results.json',
+    },
   },
   resolve: {
     alias: {
