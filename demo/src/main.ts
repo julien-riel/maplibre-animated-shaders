@@ -232,6 +232,29 @@ function init(): void {
     }
   });
 
+  // Handle data-driven expression presets
+  configPanel.onExpressionPreset((effectId, expressions) => {
+    const effect = findEffect(state.effectStack, effectId);
+    if (effect) {
+      // Merge expressions into the effect config
+      // Expressions replace static values for the same keys
+      for (const [key, value] of Object.entries(expressions)) {
+        effect.config[key] = value;
+      }
+
+      // If expressions is empty, we need to restore default values
+      // for keys that were previously set to expressions
+      const shader = globalRegistry.get(effect.shaderName);
+      if (shader && Object.keys(expressions).length === 0) {
+        // Reset to default config
+        effect.config = { ...shader.defaultConfig };
+      }
+
+      // Update effect on the map (requires re-registering for data-driven changes)
+      mapView.updateEffectAdvancedConfig(effect);
+    }
+  });
+
   // Connect performance monitor to map
   mapView.onReady(() => {
     perfMonitor.start();

@@ -673,12 +673,43 @@ export class PolygonShaderLayer implements CustomLayerInterface {
   }
 
   /**
+   * Get a sanitized config that replaces expressions with default values
+   * This is needed because getUniforms expects static values, not MapLibre expressions
+   * Data-driven properties are handled via vertex attributes, not uniforms
+   */
+  private getSanitizedConfigForUniforms(): ShaderConfig {
+    const sanitized: ShaderConfig = { ...this.config };
+    const defaults = this.definition.defaultConfig;
+
+    // Replace expressions with defaults for data-driven properties
+    if (this.hasDataDrivenColor && defaults.color !== undefined) {
+      sanitized.color = defaults.color;
+    }
+    if (this.hasDataDrivenIntensity && defaults.intensity !== undefined) {
+      sanitized.intensity = defaults.intensity;
+    }
+
+    // Also check and sanitize any other expression-type values
+    for (const [key, value] of Object.entries(sanitized)) {
+      if (isExpression(value) && defaults[key] !== undefined) {
+        sanitized[key] = defaults[key];
+      }
+    }
+
+    return sanitized;
+  }
+
+  /**
    * Set shader-specific uniforms from config
    */
   private setShaderUniforms(gl: WebGLRenderingContext): void {
+    // Create a sanitized config that replaces expressions with default values
+    // Data-driven properties are handled via attributes, not uniforms
+    const sanitizedConfig = this.getSanitizedConfigForUniforms();
+
     // Get uniforms from the shader's getUniforms function
     const uniforms = this.definition.getUniforms(
-      this.config,
+      sanitizedConfig,
       this.time,
       0
     );

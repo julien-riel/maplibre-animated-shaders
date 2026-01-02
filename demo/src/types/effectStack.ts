@@ -115,6 +115,8 @@ export function createDefaultAdvancedConfig(): AdvancedEffectConfig {
     interactivity: {
       perFeatureControl: false,
       initialState: 'playing',
+      // Use 'id' property from feature properties for identification
+      featureIdProperty: 'id',
     },
   };
 }

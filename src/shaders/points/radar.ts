@@ -147,6 +147,12 @@ varying vec2 v_pos;
 varying float v_timeOffset;
 varying float v_effectiveTime;
 
+// Data-driven properties from vertex shader
+varying vec4 v_color;
+varying float v_intensity;
+varying float v_useDataDrivenColor;
+varying float v_useDataDrivenIntensity;
+
 float sdRing(vec2 p, float r, float w) {
   float d = length(p) - r;
   return abs(d) - w * 0.5;
@@ -231,12 +237,16 @@ void main() {
   float centerDist = length(pos);
   float centerAlpha = 1.0 - smoothstep(2.0, 4.0, centerDist);
 
+  // Use data-driven color/intensity if available, otherwise use uniform
+  vec4 effectColor = mix(u_color, v_color, v_useDataDrivenColor);
+  float effectIntensity = mix(u_intensity, v_intensity, v_useDataDrivenIntensity);
+
   // Combine sweep and grid
-  vec3 finalColor = u_color.rgb * sweepAlpha + u_gridColor.rgb * gridAlpha * 0.5;
+  vec3 finalColor = effectColor.rgb * sweepAlpha + u_gridColor.rgb * gridAlpha * 0.5;
   float finalAlpha = max(sweepAlpha, gridAlpha * 0.5);
   finalAlpha = max(finalAlpha, centerAlpha * 0.8);
 
-  gl_FragColor = vec4(finalColor, finalAlpha * u_intensity * u_color.a);
+  gl_FragColor = vec4(finalColor, finalAlpha * effectIntensity * effectColor.a);
 }
 `;
 

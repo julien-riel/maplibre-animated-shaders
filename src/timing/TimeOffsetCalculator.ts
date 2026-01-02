@@ -101,23 +101,36 @@ export class TimeOffsetCalculator {
 
   /**
    * Generate a stable hash from a string (normalized to [0, 1])
+   * Uses MurmurHash3-like mixing for better distribution
    */
   private hashString(str: string): number {
-    let hash = 0;
+    let h = 0x811c9dc5; // FNV offset basis
     for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash |= 0; // Convert to 32-bit integer
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 0x01000193); // FNV prime
     }
-    return (hash >>> 0) / 0xFFFFFFFF;
+    // Additional mixing for better distribution
+    h ^= h >>> 16;
+    h = Math.imul(h, 0x85ebca6b);
+    h ^= h >>> 13;
+    h = Math.imul(h, 0xc2b2ae35);
+    h ^= h >>> 16;
+    return (h >>> 0) / 0xFFFFFFFF;
   }
 
   /**
    * Generate a seeded random number (normalized to [0, 1])
+   * Uses a combination of seed and index for reproducible randomness
    */
   private seededRandom(seed: number, index: number): number {
-    // Use a simple but effective hash combination
-    return this.hashString(`${seed}-${index}`);
+    // Mix seed and index together for better distribution
+    let h = seed ^ (index * 0x9e3779b9);
+    h ^= h >>> 16;
+    h = Math.imul(h, 0x85ebca6b);
+    h ^= h >>> 13;
+    h = Math.imul(h, 0xc2b2ae35);
+    h ^= h >>> 16;
+    return (h >>> 0) / 0xFFFFFFFF;
   }
 
   /**

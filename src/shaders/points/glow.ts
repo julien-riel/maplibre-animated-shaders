@@ -141,6 +141,12 @@ varying vec2 v_pos;
 varying float v_timeOffset;
 varying float v_effectiveTime;
 
+// Data-driven properties from vertex shader
+varying vec4 v_color;
+varying float v_intensity;
+varying float v_useDataDrivenColor;
+varying float v_useDataDrivenIntensity;
+
 void main() {
   vec2 pos = v_pos * u_radius;
   float dist = length(pos);
@@ -186,12 +192,16 @@ void main() {
   // Apply pulse intensity
   alpha *= pulseIntensity;
 
+  // Use data-driven color/intensity if available, otherwise use uniform
+  vec4 finalColor = mix(u_color, v_color, v_useDataDrivenColor);
+  float finalIntensity = mix(u_intensity, v_intensity, v_useDataDrivenIntensity);
+
   // Color intensity boost based on proximity to center
-  vec3 color = u_color.rgb;
+  vec3 color = finalColor.rgb;
   float colorBoost = 1.0 + (1.0 - normalizedDist) * 0.3;
   color = min(color * colorBoost, vec3(1.0));
 
-  gl_FragColor = vec4(color, u_color.a * alpha * u_intensity);
+  gl_FragColor = vec4(color, finalColor.a * alpha * finalIntensity);
 }
 `;
 

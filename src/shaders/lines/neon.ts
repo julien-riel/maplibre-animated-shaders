@@ -140,6 +140,12 @@ varying float v_width;
 varying float v_timeOffset;
 varying float v_effectiveTime;
 
+// Data-driven properties from vertex shader
+varying vec4 v_color;
+varying float v_intensity;
+varying float v_useDataDrivenColor;
+varying float v_useDataDrivenIntensity;
+
 // Pseudo-random for flicker
 float random(float x) {
   return fract(sin(x * 12.9898) * 43758.5453);
@@ -178,14 +184,18 @@ void main() {
     glowAlpha += layerAlpha * 0.3;
   }
 
+  // Use data-driven color/intensity if available, otherwise use uniform
+  vec4 effectColor = mix(u_color, v_color, v_useDataDrivenColor);
+  float finalIntensity = mix(u_intensity, v_intensity, v_useDataDrivenIntensity);
+
   // Combine core and glow
-  float totalAlpha = (coreAlpha + glowAlpha) * flicker * u_intensity;
+  float totalAlpha = (coreAlpha + glowAlpha) * flicker * finalIntensity;
 
   // Core is brighter white, glow is colored
-  vec3 coreColor = mix(u_color.rgb, vec3(1.0), 0.7);
-  vec3 finalColor = mix(u_color.rgb, coreColor, coreAlpha);
+  vec3 coreColor = mix(effectColor.rgb, vec3(1.0), 0.7);
+  vec3 finalColor = mix(effectColor.rgb, coreColor, coreAlpha);
 
-  gl_FragColor = vec4(finalColor, u_color.a * totalAlpha);
+  gl_FragColor = vec4(finalColor, effectColor.a * totalAlpha);
 }
 `;
 

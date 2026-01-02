@@ -118,6 +118,12 @@ varying float v_width;
 varying float v_timeOffset;
 varying float v_effectiveTime;
 
+// Data-driven properties from vertex shader
+varying vec4 v_color;
+varying float v_intensity;
+varying float v_useDataDrivenColor;
+varying float v_useDataDrivenIntensity;
+
 // Easing functions
 float easeLinear(float t) {
   return t;
@@ -169,10 +175,14 @@ void main() {
   float aa = 1.5 / currentWidth;
   float lineAlpha = 1.0 - smoothstep(1.0 - aa, 1.0, adjustedDist);
 
-  // Final alpha
-  float alpha = lineAlpha * u_intensity;
+  // Use data-driven color/intensity if available, otherwise use uniform
+  vec4 finalColor = mix(u_color, v_color, v_useDataDrivenColor);
+  float finalIntensity = mix(u_intensity, v_intensity, v_useDataDrivenIntensity);
 
-  gl_FragColor = vec4(u_color.rgb, u_color.a * alpha);
+  // Final alpha
+  float alpha = lineAlpha * finalIntensity;
+
+  gl_FragColor = vec4(finalColor.rgb, finalColor.a * alpha);
 }
 `;
 

@@ -124,6 +124,12 @@ varying float v_width;
 varying float v_timeOffset;
 varying float v_effectiveTime;
 
+// Data-driven properties from vertex shader
+varying vec4 v_color;
+varying float v_intensity;
+varying float v_useDataDrivenColor;
+varying float v_useDataDrivenIntensity;
+
 void main() {
   // Calculate perpendicular distance from line center
   float dist = abs(v_pos.y);
@@ -150,10 +156,14 @@ void main() {
   // Interpolate between colors
   vec4 color = mix(u_colorStart, u_colorEnd, gradientPos);
 
-  // Final alpha
-  float alpha = lineAlpha * u_intensity;
+  // Use data-driven color/intensity if available (overrides gradient colors)
+  vec4 finalColor = mix(color, v_color, v_useDataDrivenColor);
+  float finalIntensity = mix(u_intensity, v_intensity, v_useDataDrivenIntensity);
 
-  gl_FragColor = vec4(color.rgb, color.a * alpha);
+  // Final alpha
+  float alpha = lineAlpha * finalIntensity;
+
+  gl_FragColor = vec4(finalColor.rgb, finalColor.a * alpha);
 }
 `;
 

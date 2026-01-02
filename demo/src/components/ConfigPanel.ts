@@ -10,9 +10,153 @@ import type { StackedEffect, EffectId, AdvancedEffectConfig, TimeOffsetMode } fr
 import { createDefaultAdvancedConfig } from '../types/effectStack';
 import { CodePreview } from './CodePreview';
 
+/**
+ * Data-driven expression presets for demonstration
+ */
+interface ExpressionPreset {
+  id: string;
+  name: string;
+  description: string;
+  /** Which config keys this preset modifies */
+  configKeys: string[];
+  /** The expression values to apply */
+  expressions: Record<string, unknown>;
+  /** Geometry type this preset applies to */
+  geometry?: 'point' | 'line' | 'polygon' | 'all';
+}
+
+/**
+ * Predefined expression presets to demonstrate data-driven capabilities
+ */
+const EXPRESSION_PRESETS: ExpressionPreset[] = [
+  {
+    id: 'color-from-property',
+    name: 'Color from Property',
+    description: 'Use the "color" property from each feature',
+    configKeys: ['color'],
+    expressions: {
+      color: ['get', 'color'],
+    },
+    geometry: 'all',
+  },
+  {
+    id: 'speed-from-property',
+    name: 'Speed from Property',
+    description: 'Use the "speed" property from each feature',
+    configKeys: ['speed'],
+    expressions: {
+      speed: ['get', 'speed'],
+    },
+    geometry: 'all',
+  },
+  {
+    id: 'intensity-from-property',
+    name: 'Intensity from Property',
+    description: 'Use the "intensity" property from each feature',
+    configKeys: ['intensity'],
+    expressions: {
+      intensity: ['get', 'intensity'],
+    },
+    geometry: 'all',
+  },
+  {
+    id: 'color-by-category',
+    name: 'Color by Category',
+    description: 'Different colors based on category (landmark, museum, etc.)',
+    configKeys: ['color'],
+    expressions: {
+      color: ['match', ['get', 'category'],
+        'landmark', '#f59e0b',
+        'museum', '#8b5cf6',
+        'park', '#22c55e',
+        'transport', '#3b82f6',
+        'shopping', '#ec4899',
+        'culture', '#ef4444',
+        'restaurant', '#f97316',
+        '#888888'
+      ],
+    },
+    geometry: 'point',
+  },
+  {
+    id: 'intensity-by-priority',
+    name: 'Intensity by Priority',
+    description: 'High priority = bright, low priority = dim',
+    configKeys: ['intensity'],
+    expressions: {
+      intensity: ['match', ['get', 'priority'],
+        'high', 1.0,
+        'medium', 0.6,
+        'low', 0.3,
+        0.5
+      ],
+    },
+    geometry: 'all',
+  },
+  {
+    id: 'speed-interpolated',
+    name: 'Speed Interpolated',
+    description: 'Smooth interpolation of speed based on feature speed property',
+    configKeys: ['speed'],
+    expressions: {
+      speed: ['interpolate', ['linear'], ['get', 'speed'],
+        0.3, 0.5,
+        1.0, 1.0,
+        2.0, 2.5
+      ],
+    },
+    geometry: 'all',
+  },
+  {
+    id: 'full-data-driven',
+    name: 'Full Data-Driven',
+    description: 'Use all properties: color, speed, intensity from features',
+    configKeys: ['color', 'speed', 'intensity'],
+    expressions: {
+      color: ['get', 'color'],
+      speed: ['get', 'speed'],
+      intensity: ['get', 'intensity'],
+    },
+    geometry: 'all',
+  },
+  {
+    id: 'color-by-line-type',
+    name: 'Color by Line Type',
+    description: 'Different colors for routes, metro, bus lines',
+    configKeys: ['color'],
+    expressions: {
+      color: ['match', ['get', 'type'],
+        'route', '#3b82f6',
+        'metro', '#ef4444',
+        'bus', '#22c55e',
+        'cycling', '#f59e0b',
+        'walking', '#8b5cf6',
+        '#888888'
+      ],
+    },
+    geometry: 'line',
+  },
+  {
+    id: 'color-by-polygon-type',
+    name: 'Color by Zone Type',
+    description: 'Different colors for arrondissements and zones',
+    configKeys: ['color'],
+    expressions: {
+      color: ['match', ['get', 'type'],
+        'arrondissement', '#8b5cf6',
+        'commercial', '#ec4899',
+        'park', '#22c55e',
+        '#888888'
+      ],
+    },
+    geometry: 'polygon',
+  },
+];
+
 type ChangeCallback = (effectId: EffectId, key: string, value: unknown) => void;
 type PlayPauseCallback = (effectId: EffectId, playing: boolean) => void;
 type AdvancedChangeCallback = (effectId: EffectId, advancedConfig: AdvancedEffectConfig) => void;
+type ExpressionPresetCallback = (effectId: EffectId, expressions: Record<string, unknown>) => void;
 
 /**
  * ConfigPanel component
@@ -22,6 +166,7 @@ export class ConfigPanel {
   private changeCallbacks: ChangeCallback[] = [];
   private playPauseCallbacks: PlayPauseCallback[] = [];
   private advancedChangeCallbacks: AdvancedChangeCallback[] = [];
+  private expressionPresetCallbacks: ExpressionPresetCallback[] = [];
   private currentShader: ShaderDefinition | null = null;
   private currentEffect: StackedEffect | null = null;
   private currentConfig: Record<string, unknown> = {};
@@ -30,6 +175,8 @@ export class ConfigPanel {
   private codePreview: CodePreview | null = null;
   private activeTab: 'config' | 'code' = 'config';
   private advancedExpanded: boolean = false;
+  private expressionsExpanded: boolean = false;
+  private activeExpressions: Map<string, unknown> = new Map();
 
   constructor(containerId: string) {
     const el = document.getElementById(containerId);
@@ -44,6 +191,13 @@ export class ConfigPanel {
    * Set the current effect and its shader definition
    */
   setEffect(effect: StackedEffect, shader: ShaderDefinition): void {
+    // Reset active expressions when changing effects
+    // but keep them if it's the same effect (to preserve state during re-renders)
+    const previousEffectId = this.currentEffect?.id;
+    if (previousEffectId !== effect.id) {
+      this.activeExpressions.clear();
+    }
+
     this.currentEffect = effect;
     this.currentShader = shader;
     this.currentConfig = { ...effect.config };
@@ -51,6 +205,7 @@ export class ConfigPanel {
       ? { ...effect.advancedConfig }
       : createDefaultAdvancedConfig();
     this.isPlaying = effect.isPlaying;
+
     this.render();
   }
 
@@ -96,6 +251,13 @@ export class ConfigPanel {
   }
 
   /**
+   * Register a callback for expression preset application
+   */
+  onExpressionPreset(callback: ExpressionPresetCallback): void {
+    this.expressionPresetCallbacks.push(callback);
+  }
+
+  /**
    * Render empty state
    */
   private renderEmpty(): void {
@@ -135,7 +297,7 @@ export class ConfigPanel {
         <button class="panel-tab${this.activeTab === 'code' ? ' active' : ''}" data-tab="code">Code</button>
       </div>
       <div class="panel-content" id="panel-content">
-        ${this.activeTab === 'config' ? this.renderConfigControls() + this.renderAdvancedSection() : ''}
+        ${this.activeTab === 'config' ? this.renderConfigControls() + this.renderDataDrivenSection() + this.renderAdvancedSection() : ''}
       </div>
       <div class="playback-controls">
         <button class="playback-btn${this.isPlaying ? '' : ' primary'}" id="btn-pause">
@@ -173,6 +335,134 @@ export class ConfigPanel {
     }
 
     return html;
+  }
+
+  /**
+   * Render data-driven expressions section
+   */
+  private renderDataDrivenSection(): string {
+    if (!this.currentShader) return '';
+
+    // Get the geometry type from the current shader
+    const geometry = this.currentShader.geometry;
+
+    // Filter presets by geometry
+    const applicablePresets = EXPRESSION_PRESETS.filter(preset => {
+      return preset.geometry === 'all' || preset.geometry === geometry;
+    });
+
+    // Get available config keys from the schema
+    const availableKeys = Object.keys(this.currentShader.configSchema);
+
+    // Further filter presets by available config keys
+    const validPresets = applicablePresets.filter(preset => {
+      return preset.configKeys.some(key => availableKeys.includes(key));
+    });
+
+    if (validPresets.length === 0) {
+      return ''; // No applicable presets for this shader
+    }
+
+    return `
+      <div class="expressions-section${this.expressionsExpanded ? ' expanded' : ''}" id="expressions-section">
+        <div class="expressions-section-header" id="expressions-toggle">
+          <div class="expressions-section-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+            Data-Driven Expressions
+          </div>
+          <div class="expressions-section-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 9l6 6 6-6"/>
+            </svg>
+          </div>
+        </div>
+        <div class="expressions-section-content">
+          <div class="expressions-description">
+            Use MapLibre expressions to configure shader properties from feature data.
+            ${this.activeExpressions.size > 0 ? `<span class="expressions-active-count">${this.activeExpressions.size} active</span>` : ''}
+          </div>
+
+          ${this.renderActiveExpressions()}
+
+          <div class="expressions-presets">
+            <div class="expressions-presets-title">Presets</div>
+            <div class="expressions-preset-list">
+              ${validPresets.map(preset => this.renderPresetButton(preset)).join('')}
+            </div>
+          </div>
+
+          <div class="expressions-info">
+            <div class="expressions-info-title">Available Feature Properties</div>
+            <div class="expressions-properties">
+              <span class="expression-property" title="Feature color (hex)">color</span>
+              <span class="expression-property" title="Animation speed (0.3-2.0)">speed</span>
+              <span class="expression-property" title="Effect intensity (0.3-1.0)">intensity</span>
+              <span class="expression-property" title="Feature priority">priority</span>
+              <span class="expression-property" title="Feature category">category</span>
+              <span class="expression-property" title="Animation delay">delay</span>
+              <span class="expression-property" title="Feature ID">id</span>
+              <span class="expression-property" title="Feature name">name</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Render active expressions display
+   */
+  private renderActiveExpressions(): string {
+    if (this.activeExpressions.size === 0) {
+      return '';
+    }
+
+    const items = Array.from(this.activeExpressions.entries()).map(([key, expr]) => {
+      const exprStr = JSON.stringify(expr);
+      return `
+        <div class="active-expression-item">
+          <span class="active-expression-key">${key}</span>
+          <code class="active-expression-value" title="${exprStr}">${exprStr}</code>
+          <button class="active-expression-remove" data-key="${key}" title="Remove expression">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      `;
+    });
+
+    return `
+      <div class="active-expressions">
+        <div class="active-expressions-title">Active Expressions</div>
+        ${items.join('')}
+        <button class="active-expressions-clear" id="clear-all-expressions">Clear All</button>
+      </div>
+    `;
+  }
+
+  /**
+   * Render a single preset button
+   */
+  private renderPresetButton(preset: ExpressionPreset): string {
+    // Check if any of this preset's expressions are currently active
+    const isActive = preset.configKeys.some(key => this.activeExpressions.has(key));
+
+    return `
+      <button class="expression-preset-btn${isActive ? ' active' : ''}"
+              data-preset-id="${preset.id}"
+              title="${preset.description}">
+        <span class="preset-name">${preset.name}</span>
+        <span class="preset-keys">${preset.configKeys.join(', ')}</span>
+      </button>
+    `;
   }
 
   /**
@@ -564,6 +854,9 @@ export class ConfigPanel {
 
     // Attach advanced section listeners
     this.attachAdvancedEventListeners();
+
+    // Attach expressions section listeners
+    this.attachExpressionsEventListeners();
   }
 
   /**
@@ -690,6 +983,71 @@ export class ConfigPanel {
   }
 
   /**
+   * Attach event listeners for expressions section
+   */
+  private attachExpressionsEventListeners(): void {
+    // Toggle section
+    const expressionsToggle = this.container.querySelector('#expressions-toggle');
+    expressionsToggle?.addEventListener('click', () => {
+      this.expressionsExpanded = !this.expressionsExpanded;
+      const section = this.container.querySelector('#expressions-section');
+      section?.classList.toggle('expanded', this.expressionsExpanded);
+    });
+
+    // Preset buttons
+    const presetBtns = this.container.querySelectorAll('.expression-preset-btn');
+    presetBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const presetId = btn.getAttribute('data-preset-id');
+        const preset = EXPRESSION_PRESETS.find(p => p.id === presetId);
+
+        if (preset) {
+          // Check if this preset is already active - if so, remove its expressions
+          const isCurrentlyActive = preset.configKeys.some(key => this.activeExpressions.has(key));
+
+          if (isCurrentlyActive) {
+            // Remove expressions for this preset
+            for (const key of preset.configKeys) {
+              this.activeExpressions.delete(key);
+            }
+          } else {
+            // Add expressions for this preset
+            for (const [key, expr] of Object.entries(preset.expressions)) {
+              this.activeExpressions.set(key, expr);
+            }
+          }
+
+          // Notify and re-render
+          this.notifyExpressionPreset();
+          this.render();
+        }
+      });
+    });
+
+    // Remove individual expression buttons
+    const removeBtns = this.container.querySelectorAll('.active-expression-remove');
+    removeBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const key = btn.getAttribute('data-key');
+        if (key) {
+          this.activeExpressions.delete(key);
+          this.notifyExpressionPreset();
+          this.render();
+        }
+      });
+    });
+
+    // Clear all expressions button
+    const clearAllBtn = this.container.querySelector('#clear-all-expressions');
+    clearAllBtn?.addEventListener('click', () => {
+      this.activeExpressions.clear();
+      this.notifyExpressionPreset();
+      this.render();
+    });
+  }
+
+  /**
    * Notify config change callbacks
    */
   private notifyChange(key: string, value: unknown): void {
@@ -714,6 +1072,22 @@ export class ConfigPanel {
     if (this.currentEffect) {
       this.advancedChangeCallbacks.forEach(cb =>
         cb(this.currentEffect!.id, { ...this.currentAdvancedConfig })
+      );
+    }
+  }
+
+  /**
+   * Notify expression preset callbacks
+   */
+  private notifyExpressionPreset(): void {
+    if (this.currentEffect) {
+      // Build expressions object from active expressions
+      const expressions: Record<string, unknown> = {};
+      for (const [key, value] of this.activeExpressions.entries()) {
+        expressions[key] = value;
+      }
+      this.expressionPresetCallbacks.forEach(cb =>
+        cb(this.currentEffect!.id, expressions)
       );
     }
   }

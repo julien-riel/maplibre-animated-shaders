@@ -6,6 +6,7 @@ import type {
   ValidationError,
   ValidationResult,
 } from './types';
+import { isExpression } from './expressions';
 
 /**
  * Resolves and validates shader configurations.
@@ -68,6 +69,12 @@ export class ConfigResolver implements IConfigResolver {
     value: unknown,
     schema: ConfigParamSchema
   ): ValidationError | null {
+    // Skip validation for MapLibre expressions - they are valid data-driven values
+    // that will be evaluated per-feature at render time
+    if (isExpression(value)) {
+      return null;
+    }
+
     switch (schema.type) {
       case 'number':
         return this.validateNumber(field, value, schema);

@@ -139,6 +139,12 @@ varying float v_width;
 varying float v_timeOffset;
 varying float v_effectiveTime;
 
+// Data-driven properties from vertex shader
+varying vec4 v_color;
+varying float v_intensity;
+varying float v_useDataDrivenColor;
+varying float v_useDataDrivenIntensity;
+
 // Simple pseudo-random function
 float random(float x) {
   return fract(sin(x * 12.9898) * 43758.5453);
@@ -187,9 +193,14 @@ void main() {
 
   // Add some brightness variation
   float brightness = 0.8 + noise(pos * 0.1 + localTime * 10.0) * 0.4;
-  vec3 finalColor = u_color.rgb * brightness;
 
-  gl_FragColor = vec4(finalColor, u_color.a * alpha);
+  // Use data-driven color/intensity if available, otherwise use uniform
+  vec4 effectColor = mix(u_color, v_color, v_useDataDrivenColor);
+  float finalIntensity = mix(u_intensity, v_intensity, v_useDataDrivenIntensity);
+
+  vec3 finalColor = effectColor.rgb * brightness;
+
+  gl_FragColor = vec4(finalColor, effectColor.a * alpha * finalIntensity / u_intensity);
 }
 `;
 

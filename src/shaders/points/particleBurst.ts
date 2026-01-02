@@ -163,6 +163,12 @@ varying vec2 v_pos;
 varying float v_timeOffset;
 varying float v_effectiveTime;
 
+// Data-driven properties from vertex shader
+varying vec4 v_color;
+varying float v_intensity;
+varying float v_useDataDrivenColor;
+varying float v_useDataDrivenIntensity;
+
 // Pseudo-random function
 float hash(float n) {
   return fract(sin(n) * 43758.5453123);
@@ -252,7 +258,11 @@ void main() {
   float centerGlow = exp(-length(pos) * 0.15) * 0.3;
   alpha = max(alpha, centerGlow);
 
-  gl_FragColor = vec4(u_color.rgb, u_color.a * alpha * u_intensity);
+  // Use data-driven color/intensity if available, otherwise use uniform
+  vec4 finalColor = mix(u_color, v_color, v_useDataDrivenColor);
+  float finalIntensity = mix(u_intensity, v_intensity, v_useDataDrivenIntensity);
+
+  gl_FragColor = vec4(finalColor.rgb, finalColor.a * alpha * finalIntensity);
 }
 `;
 
