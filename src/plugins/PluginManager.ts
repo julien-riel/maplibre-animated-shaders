@@ -213,6 +213,7 @@ export class PluginManager implements IPluginManager {
       registeredShaders.push(namespacedName);
 
       if (this.debug) {
+        // eslint-disable-next-line no-console
         console.log(
           `[PluginManager] Registered shader "${namespacedName}" from plugin "${plugin.name}"`
         );
@@ -242,6 +243,7 @@ export class PluginManager implements IPluginManager {
     }
 
     if (this.debug) {
+      // eslint-disable-next-line no-console
       console.log(
         `[PluginManager] Plugin "${plugin.name}" v${plugin.version} registered with ${registeredShaders.length} shaders`
       );
@@ -286,6 +288,7 @@ export class PluginManager implements IPluginManager {
     this.plugins.delete(pluginName);
 
     if (this.debug) {
+      // eslint-disable-next-line no-console
       console.log(`[PluginManager] Plugin "${pluginName}" unregistered`);
     }
 

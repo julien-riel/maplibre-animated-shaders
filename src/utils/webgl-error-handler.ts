@@ -289,11 +289,13 @@ export function setupContextLossHandler(
 ): () => void {
   const handleLost = (event: Event) => {
     event.preventDefault();
+    // eslint-disable-next-line no-console
     console.warn('[WebGL] Context lost');
     onContextLost();
   };
 
   const handleRestored = () => {
+    // eslint-disable-next-line no-console
     console.info('[WebGL] Context restored');
     onContextRestored();
   };
@@ -313,6 +315,7 @@ export function setupContextLossHandler(
  */
 export function logWebGLCapabilities(gl: WebGLRenderingContext): void {
   const caps = getWebGLCapabilities(gl);
+  // eslint-disable-next-line no-console
   console.info('[WebGL] Capabilities:', caps);
 }
 

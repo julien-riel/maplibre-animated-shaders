@@ -150,6 +150,7 @@ export function checkMinimumRequirements(): RequirementsCheckResult {
  * @param capabilities - The capabilities to log
  */
 export function logCapabilities(capabilities: BrowserWebGLCapabilities): void {
+  /* eslint-disable no-console */
   console.group('[WebGL Capabilities]');
   console.log('Supported:', capabilities.supported);
   console.log('Version:', capabilities.version ? `WebGL ${capabilities.version}` : 'N/A');
@@ -159,4 +160,5 @@ export function logCapabilities(capabilities: BrowserWebGLCapabilities): void {
   console.log('High Precision Floats:', capabilities.highPrecisionSupported);
   console.log('Extensions:', capabilities.extensions);
   console.groupEnd();
+  /* eslint-enable no-console */
 }
