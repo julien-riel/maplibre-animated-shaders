@@ -5,10 +5,10 @@
  * Perfect for dashboards, gaming maps, and tech-themed applications.
  */
 
-import type { ShaderPlugin, ShaderDefinition } from '../../types';
-import { radarShader, glowShader } from './shaders/points';
-import { electricShader, neonShader } from './shaders/lines';
-import { holographicGridShader } from './shaders/global';
+import type { ShaderPlugin, ShaderDefinition } from '../../../types';
+import { radarShader, glowShader } from './shaders';
+import { electricShader, neonShader } from './shaders';
+import { holographicGridShader } from './shaders';
 
 /**
  * Sci-Fi Plugin
@@ -102,3 +102,6 @@ export const scifiPlugin: ShaderPlugin = {
 };
 
 export default scifiPlugin;
+
+// Re-export shader types and configs
+export * from './shaders';

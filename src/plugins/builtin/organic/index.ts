@@ -5,10 +5,10 @@
  * Includes breathing animations, particle effects, and smooth transitions.
  */
 
-import type { ShaderPlugin, ShaderDefinition } from '../../types';
-import { heartbeatShader, particleBurstShader, morphingShapesShader } from './shaders/points';
-import { breathingShader, trailFadeShader } from './shaders/lines';
-import { dissolveShader, hatchingShader, gradientRotationShader } from './shaders/polygons';
+import type { ShaderPlugin, ShaderDefinition } from '../../../types';
+import { heartbeatShader, particleBurstShader, morphingShapesShader } from './shaders';
+import { breathingShader, trailFadeShader } from './shaders';
+import { dissolveShader, hatchingShader, gradientRotationShader } from './shaders';
 
 /**
  * Organic Plugin
@@ -135,3 +135,6 @@ export const organicPlugin: ShaderPlugin = {
 };
 
 export default organicPlugin;
+
+// Re-export shader types and configs
+export * from './shaders';

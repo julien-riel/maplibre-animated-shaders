@@ -5,14 +5,15 @@
  * and natural atmospheric conditions.
  */
 
-import type { ShaderPlugin, ShaderDefinition } from '../../types';
-import { rippleShader, noiseShader } from './shaders/polygons';
+import type { ShaderPlugin, ShaderDefinition } from '../../../types';
 import {
   heatShimmerShader,
   dayNightCycleShader,
   depthFogShader,
   weatherShader,
-} from './shaders/global';
+  rippleShader,
+  noiseShader,
+} from './shaders';
 
 /**
  * Atmospheric Plugin
@@ -96,3 +97,6 @@ export const atmosphericPlugin: ShaderPlugin = {
 };
 
 export default atmosphericPlugin;
+
+// Re-export shader types and configs
+export * from './shaders';

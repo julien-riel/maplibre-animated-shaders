@@ -5,10 +5,10 @@
  * status displays, and analytical overlays.
  */
 
-import type { ShaderPlugin, ShaderDefinition } from '../../types';
-import { pulseShader } from './shaders/points';
-import { flowShader, gradientTravelShader, snakeShader } from './shaders/lines';
-import { scanLinesShader, fillWaveShader, marchingAntsShader } from './shaders/polygons';
+import type { ShaderPlugin, ShaderDefinition } from '../../../types';
+import { pulseShader } from './shaders';
+import { flowShader, gradientTravelShader, snakeShader } from './shaders';
+import { scanLinesShader, fillWaveShader, marchingAntsShader } from './shaders';
 
 /**
  * Data Visualization Plugin
@@ -77,3 +77,14 @@ export const datavizPlugin: ShaderPlugin = {
 };
 
 export default datavizPlugin;
+
+// Re-export shaders for direct access
+export {
+  pulseShader,
+  flowShader,
+  gradientTravelShader,
+  snakeShader,
+  scanLinesShader,
+  fillWaveShader,
+  marchingAntsShader,
+};

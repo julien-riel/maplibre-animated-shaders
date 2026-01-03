@@ -10,38 +10,36 @@
 
 import { describe, it, expect } from 'vitest';
 
-// Import all point shaders
+// Import shaders from new plugin structure
+import { pulseShader } from '../src/plugins/builtin/dataviz/shaders';
 import {
-  pulseShader,
   heartbeatShader,
-  radarShader,
   particleBurstShader,
-  glowShader,
   morphingShapesShader,
-} from '../src/plugins/builtin/shaders/points';
+} from '../src/plugins/builtin/organic/shaders';
+import { radarShader, glowShader } from '../src/plugins/builtin/scifi/shaders';
 
 // Import all line shaders
 import {
   flowShader,
   gradientTravelShader,
-  electricShader,
-  trailFadeShader,
-  breathingShader,
   snakeShader,
-  neonShader,
-} from '../src/plugins/builtin/shaders/lines';
+} from '../src/plugins/builtin/dataviz/shaders';
+import { electricShader, neonShader } from '../src/plugins/builtin/scifi/shaders';
+import { trailFadeShader, breathingShader } from '../src/plugins/builtin/organic/shaders';
 
 // Import all polygon shaders
 import {
   scanLinesShader,
-  rippleShader,
-  hatchingShader,
   fillWaveShader,
-  noiseShader,
   marchingAntsShader,
+} from '../src/plugins/builtin/dataviz/shaders';
+import { rippleShader, noiseShader } from '../src/plugins/builtin/atmospheric/shaders';
+import {
+  hatchingShader,
   gradientRotationShader,
   dissolveShader,
-} from '../src/plugins/builtin/shaders/polygons';
+} from '../src/plugins/builtin/organic/shaders';
 
 // Import all global shaders
 import {
@@ -49,8 +47,8 @@ import {
   dayNightCycleShader,
   depthFogShader,
   weatherShader,
-  holographicGridShader,
-} from '../src/plugins/builtin/shaders/global';
+} from '../src/plugins/builtin/atmospheric/shaders';
+import { holographicGridShader } from '../src/plugins/builtin/scifi/shaders';
 
 import type { ShaderDefinition, GeometryType } from '../src/types';
 
