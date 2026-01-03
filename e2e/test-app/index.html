@@ -20,19 +20,16 @@
 <body>
   <div id="status">Loading...</div>
   <div class="controls">
-    <button class="shader-btn" data-shader="pulse" data-geometry="point">Pulse</button>
-    <button class="shader-btn" data-shader="glow" data-geometry="point">Glow</button>
-    <button class="shader-btn" data-shader="radar" data-geometry="point">Radar</button>
-    <button class="shader-btn" data-shader="flow" data-geometry="line">Flow</button>
-    <button class="shader-btn" data-shader="neon" data-geometry="line">Neon</button>
-    <button class="shader-btn" data-shader="ripple" data-geometry="polygon">Ripple</button>
-    <button class="shader-btn" data-shader="scan-lines" data-geometry="polygon">Scan Lines</button>
+    <button class="shader-btn" data-shader="point" data-geometry="point">Point (Pulse)</button>
+    <button class="shader-btn" data-shader="line" data-geometry="line">Line (Flow)</button>
+    <button class="shader-btn" data-shader="polygon" data-geometry="polygon">Polygon (Wave)</button>
+    <button class="shader-btn" data-shader="global" data-geometry="global">Global (Grid)</button>
   </div>
   <div id="map"></div>
 
   <script type="module">
     import maplibregl from 'maplibre-gl';
-    import { createShaderManager, corePlugin, globalRegistry, PluginManager } from '@/index.ts';
+    import { createShaderManager, examplePlugin, globalRegistry, PluginManager } from '@/index.ts';
 
     // Expose for testing
     window.maplibregl = maplibregl;
@@ -50,10 +47,10 @@
       console.log('[E2E Test]', message);
     }
 
-    // Register all shaders via core plugin
+    // Register all shaders via example plugin
     const pluginManager = new PluginManager(globalRegistry);
-    pluginManager.use(corePlugin);
-    updateStatus('Shaders registered via corePlugin');
+    pluginManager.use(examplePlugin);
+    updateStatus('Shaders registered via examplePlugin');
 
     // Create map
     const map = new maplibregl.Map({

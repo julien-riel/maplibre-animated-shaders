@@ -1,14 +1,14 @@
 /**
  * Built-in Plugins
  *
- * Pre-packaged shader collections organized by theme.
+ * The example plugin demonstrates all features of the MapLibre Animated Shaders system.
+ * Use it as a reference when creating your own plugins.
+ *
+ * Features demonstrated:
+ * - Per-feature timing offset
+ * - Data-driven expressions
+ * - GLSL utilities (easing, SDF, noise, hash)
+ * - Presets for common use cases
  */
 
-// Thematic plugins
-export { datavizPlugin } from './dataviz';
-export { atmosphericPlugin } from './atmospheric';
-export { scifiPlugin } from './scifi';
-export { organicPlugin } from './organic';
-
-// All-in-one plugin
-export { corePlugin } from './core';
+export { examplePlugin } from './example';

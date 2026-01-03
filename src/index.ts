@@ -91,25 +91,15 @@ export type {
   IPluginManager,
 } from './types';
 
-// Built-in thematic plugins (synchronous)
-export {
-  datavizPlugin,
-  atmosphericPlugin,
-  scifiPlugin,
-  organicPlugin,
-  corePlugin,
-} from './plugins';
+// Built-in example plugin (synchronous)
+export { examplePlugin } from './plugins';
 
 // Lazy loading for plugins (code splitting)
 export {
   loadPlugin,
   loadPlugins,
   preloadPlugins,
-  loadDatavizPlugin,
-  loadAtmosphericPlugin,
-  loadScifiPlugin,
-  loadOrganicPlugin,
-  loadCorePlugin,
+  loadExamplePlugin,
   pluginLoaders,
 } from './plugins';
 export type { BuiltinPluginName, PluginLoader } from './plugins';

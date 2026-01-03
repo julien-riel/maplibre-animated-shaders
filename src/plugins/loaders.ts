@@ -8,12 +8,12 @@
  * @example
  * ```typescript
  * // Instead of importing all plugins at once:
- * // import { datavizPlugin, atmosphericPlugin } from 'maplibre-animated-shaders';
+ * // import { examplePlugin } from 'maplibre-animated-shaders';
  *
  * // Load plugins on demand:
- * const { loadDatavizPlugin, loadAtmosphericPlugin } = await import('maplibre-animated-shaders/plugins/loaders');
- * const datavizPlugin = await loadDatavizPlugin();
- * shaderManager.use(datavizPlugin);
+ * const { loadExamplePlugin } = await import('maplibre-animated-shaders/plugins/loaders');
+ * const examplePlugin = await loadExamplePlugin();
+ * shaderManager.use(examplePlugin);
  * ```
  */
 
@@ -22,7 +22,7 @@ import type { ShaderPlugin } from '../types';
 /**
  * Available plugin names for lazy loading
  */
-export type BuiltinPluginName = 'dataviz' | 'atmospheric' | 'scifi' | 'organic' | 'core';
+export type BuiltinPluginName = 'example';
 
 /**
  * Plugin loader function type
@@ -30,77 +30,24 @@ export type BuiltinPluginName = 'dataviz' | 'atmospheric' | 'scifi' | 'organic' 
 export type PluginLoader = () => Promise<ShaderPlugin>;
 
 /**
- * Lazy load the dataviz plugin
+ * Lazy load the example plugin
  *
- * Includes shaders for data visualization:
- * - pulse, heartbeat, radar (points)
- * - flow, gradientTravel, breathing, snake (lines)
- * - scanLines, fillWave, marchingAnts (polygons)
+ * Includes demonstration shaders for all geometry types:
+ * - point: Pulse Marker (per-feature timing, easing, SDF)
+ * - line: Flow Line (direction, gradient, glow)
+ * - polygon: Wave Polygon (simplex noise, FBM, patterns)
+ * - global: Grid Overlay (hash functions, scan effects)
  */
-export async function loadDatavizPlugin(): Promise<ShaderPlugin> {
-  const module = await import('./builtin/dataviz');
-  return module.datavizPlugin;
-}
-
-/**
- * Lazy load the atmospheric plugin
- *
- * Includes shaders for weather and atmospheric effects:
- * - weather, depthFog, dayNightCycle (global)
- * - ripple, noise (polygons)
- */
-export async function loadAtmosphericPlugin(): Promise<ShaderPlugin> {
-  const module = await import('./builtin/atmospheric');
-  return module.atmosphericPlugin;
-}
-
-/**
- * Lazy load the scifi plugin
- *
- * Includes shaders for futuristic/tech effects:
- * - radar, glow (points)
- * - electric, neon (lines)
- * - holographicGrid, heatShimmer (global)
- */
-export async function loadScifiPlugin(): Promise<ShaderPlugin> {
-  const module = await import('./builtin/scifi');
-  return module.scifiPlugin;
-}
-
-/**
- * Lazy load the organic plugin
- *
- * Includes shaders for natural/organic effects:
- * - heartbeat, particleBurst, morphingShapes (points)
- * - trailFade (lines)
- * - hatching, gradientRotation, dissolve (polygons)
- */
-export async function loadOrganicPlugin(): Promise<ShaderPlugin> {
-  const module = await import('./builtin/organic');
-  return module.organicPlugin;
-}
-
-/**
- * Lazy load the core plugin
- *
- * Includes all built-in shaders for backwards compatibility.
- * This is the largest plugin - prefer loading thematic plugins
- * if you only need specific shaders.
- */
-export async function loadCorePlugin(): Promise<ShaderPlugin> {
-  const module = await import('./builtin/core');
-  return module.corePlugin;
+export async function loadExamplePlugin(): Promise<ShaderPlugin> {
+  const module = await import('./builtin/example');
+  return module.examplePlugin;
 }
 
 /**
  * Map of plugin names to their loaders
  */
 export const pluginLoaders: Record<BuiltinPluginName, PluginLoader> = {
-  dataviz: loadDatavizPlugin,
-  atmospheric: loadAtmosphericPlugin,
-  scifi: loadScifiPlugin,
-  organic: loadOrganicPlugin,
-  core: loadCorePlugin,
+  example: loadExamplePlugin,
 };
 
 /**
@@ -112,7 +59,7 @@ export const pluginLoaders: Record<BuiltinPluginName, PluginLoader> = {
  *
  * @example
  * ```typescript
- * const plugin = await loadPlugin('dataviz');
+ * const plugin = await loadPlugin('example');
  * shaderManager.use(plugin);
  * ```
  */
@@ -134,7 +81,7 @@ export async function loadPlugin(name: BuiltinPluginName): Promise<ShaderPlugin>
  *
  * @example
  * ```typescript
- * const plugins = await loadPlugins(['dataviz', 'atmospheric']);
+ * const plugins = await loadPlugins(['example']);
  * plugins.forEach(plugin => shaderManager.use(plugin));
  * ```
  */
@@ -153,10 +100,10 @@ export async function loadPlugins(names: BuiltinPluginName[]): Promise<ShaderPlu
  * @example
  * ```typescript
  * // Start loading in background while user interacts
- * preloadPlugins(['atmospheric', 'scifi']);
+ * preloadPlugins(['example']);
  *
  * // Later, when actually needed, load will be instant
- * const plugin = await loadPlugin('atmospheric');
+ * const plugin = await loadPlugin('example');
  * ```
  */
 export function preloadPlugins(names: BuiltinPluginName[]): void {

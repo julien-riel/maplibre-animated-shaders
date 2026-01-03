@@ -1,7 +1,7 @@
 /**
  * Shader Tests
  *
- * Tests all 26 shaders for:
+ * Tests all 4 example shaders for:
  * - Required structure (name, geometry, fragmentShader, etc.)
  * - Valid configuration schema
  * - getUniforms function returns expected values
@@ -10,45 +10,13 @@
 
 import { describe, it, expect } from 'vitest';
 
-// Import shaders from new plugin structure
-import { pulseShader } from '../src/plugins/builtin/dataviz/shaders';
+// Import shaders from new example plugin structure
 import {
-  heartbeatShader,
-  particleBurstShader,
-  morphingShapesShader,
-} from '../src/plugins/builtin/organic/shaders';
-import { radarShader, glowShader } from '../src/plugins/builtin/scifi/shaders';
-
-// Import all line shaders
-import {
-  flowShader,
-  gradientTravelShader,
-  snakeShader,
-} from '../src/plugins/builtin/dataviz/shaders';
-import { electricShader, neonShader } from '../src/plugins/builtin/scifi/shaders';
-import { trailFadeShader, breathingShader } from '../src/plugins/builtin/organic/shaders';
-
-// Import all polygon shaders
-import {
-  scanLinesShader,
-  fillWaveShader,
-  marchingAntsShader,
-} from '../src/plugins/builtin/dataviz/shaders';
-import { rippleShader, noiseShader } from '../src/plugins/builtin/atmospheric/shaders';
-import {
-  hatchingShader,
-  gradientRotationShader,
-  dissolveShader,
-} from '../src/plugins/builtin/organic/shaders';
-
-// Import all global shaders
-import {
-  heatShimmerShader,
-  dayNightCycleShader,
-  depthFogShader,
-  weatherShader,
-} from '../src/plugins/builtin/atmospheric/shaders';
-import { holographicGridShader } from '../src/plugins/builtin/scifi/shaders';
+  pointShader,
+  lineShader,
+  polygonShader,
+  globalShader,
+} from '../src/plugins/builtin/example/shaders';
 
 import type { ShaderDefinition, GeometryType } from '../src/types';
 
@@ -68,44 +36,22 @@ const createShaderEntry = (
  * All shaders organized by category
  */
 const allShaders: { name: string; shader: ShaderDefinition; expectedGeometry: GeometryType }[] = [
-  // Point shaders (6)
-  createShaderEntry(pulseShader as unknown as ShaderDefinition, 'point'),
-  createShaderEntry(heartbeatShader as unknown as ShaderDefinition, 'point'),
-  createShaderEntry(radarShader as unknown as ShaderDefinition, 'point'),
-  createShaderEntry(particleBurstShader as unknown as ShaderDefinition, 'point'),
-  createShaderEntry(glowShader as unknown as ShaderDefinition, 'point'),
-  createShaderEntry(morphingShapesShader as unknown as ShaderDefinition, 'point'),
+  // Point shader
+  createShaderEntry(pointShader as unknown as ShaderDefinition, 'point'),
 
-  // Line shaders (7)
-  createShaderEntry(flowShader as unknown as ShaderDefinition, 'line'),
-  createShaderEntry(gradientTravelShader as unknown as ShaderDefinition, 'line'),
-  createShaderEntry(electricShader as unknown as ShaderDefinition, 'line'),
-  createShaderEntry(trailFadeShader as unknown as ShaderDefinition, 'line'),
-  createShaderEntry(breathingShader as unknown as ShaderDefinition, 'line'),
-  createShaderEntry(snakeShader as unknown as ShaderDefinition, 'line'),
-  createShaderEntry(neonShader as unknown as ShaderDefinition, 'line'),
+  // Line shader
+  createShaderEntry(lineShader as unknown as ShaderDefinition, 'line'),
 
-  // Polygon shaders (8)
-  createShaderEntry(scanLinesShader as unknown as ShaderDefinition, 'polygon'),
-  createShaderEntry(rippleShader as unknown as ShaderDefinition, 'polygon'),
-  createShaderEntry(hatchingShader as unknown as ShaderDefinition, 'polygon'),
-  createShaderEntry(fillWaveShader as unknown as ShaderDefinition, 'polygon'),
-  createShaderEntry(noiseShader as unknown as ShaderDefinition, 'polygon'),
-  createShaderEntry(marchingAntsShader as unknown as ShaderDefinition, 'polygon'),
-  createShaderEntry(gradientRotationShader as unknown as ShaderDefinition, 'polygon'),
-  createShaderEntry(dissolveShader as unknown as ShaderDefinition, 'polygon'),
+  // Polygon shader
+  createShaderEntry(polygonShader as unknown as ShaderDefinition, 'polygon'),
 
-  // Global shaders (5)
-  createShaderEntry(heatShimmerShader as unknown as ShaderDefinition, 'global'),
-  createShaderEntry(dayNightCycleShader as unknown as ShaderDefinition, 'global'),
-  createShaderEntry(depthFogShader as unknown as ShaderDefinition, 'global'),
-  createShaderEntry(weatherShader as unknown as ShaderDefinition, 'global'),
-  createShaderEntry(holographicGridShader as unknown as ShaderDefinition, 'global'),
+  // Global shader
+  createShaderEntry(globalShader as unknown as ShaderDefinition, 'global'),
 ];
 
 describe('Shaders', () => {
-  it('should have 26 shaders total', () => {
-    expect(allShaders).toHaveLength(26);
+  it('should have 4 shaders total (one per geometry type)', () => {
+    expect(allShaders).toHaveLength(4);
   });
 
   describe.each(allShaders)('$name shader', ({ name, shader, expectedGeometry }) => {
@@ -252,7 +198,7 @@ describe('Shaders', () => {
             typeof value === 'number' ||
             typeof value === 'boolean' ||
             typeof value === 'string' ||
-            (Array.isArray(value) && value.every(v => typeof v === 'number'));
+            (Array.isArray(value) && value.every((v) => typeof v === 'number'));
 
           expect(isValidType).toBe(true);
         }
@@ -263,10 +209,11 @@ describe('Shaders', () => {
         const keys = Object.keys(uniforms);
 
         // Should have some time-related uniform
-        const hasTimeUniform = keys.some(key =>
-          key.toLowerCase().includes('time') ||
-          key.toLowerCase().includes('phase') ||
-          key.toLowerCase().includes('cycle')
+        const hasTimeUniform = keys.some(
+          (key) =>
+            key.toLowerCase().includes('time') ||
+            key.toLowerCase().includes('phase') ||
+            key.toLowerCase().includes('cycle')
         );
 
         expect(hasTimeUniform || keys.includes('u_time')).toBe(true);
@@ -294,41 +241,41 @@ describe('Shaders', () => {
 });
 
 describe('Shader Categories', () => {
-  describe('Point shaders', () => {
-    const pointShaders = allShaders.filter(s => s.expectedGeometry === 'point');
+  describe('Point shader', () => {
+    const pointShaders = allShaders.filter((s) => s.expectedGeometry === 'point');
 
-    it('should have 6 point shaders', () => {
-      expect(pointShaders).toHaveLength(6);
+    it('should have 1 point shader', () => {
+      expect(pointShaders).toHaveLength(1);
     });
 
-    it('should all have varying v_pos for normalized quad position', () => {
-      for (const { shader, name } of pointShaders) {
+    it('should have varying v_pos for normalized quad position', () => {
+      for (const { shader } of pointShaders) {
         expect(shader.fragmentShader).toMatch(/varying\s+vec2\s+v_pos/);
       }
     });
   });
 
-  describe('Line shaders', () => {
-    const lineShaders = allShaders.filter(s => s.expectedGeometry === 'line');
+  describe('Line shader', () => {
+    const lineShaders = allShaders.filter((s) => s.expectedGeometry === 'line');
 
-    it('should have 7 line shaders', () => {
-      expect(lineShaders).toHaveLength(7);
+    it('should have 1 line shader', () => {
+      expect(lineShaders).toHaveLength(1);
     });
   });
 
-  describe('Polygon shaders', () => {
-    const polygonShaders = allShaders.filter(s => s.expectedGeometry === 'polygon');
+  describe('Polygon shader', () => {
+    const polygonShaders = allShaders.filter((s) => s.expectedGeometry === 'polygon');
 
-    it('should have 8 polygon shaders', () => {
-      expect(polygonShaders).toHaveLength(8);
+    it('should have 1 polygon shader', () => {
+      expect(polygonShaders).toHaveLength(1);
     });
   });
 
-  describe('Global shaders', () => {
-    const globalShaders = allShaders.filter(s => s.expectedGeometry === 'global');
+  describe('Global shader', () => {
+    const globalShaders = allShaders.filter((s) => s.expectedGeometry === 'global');
 
-    it('should have 5 global shaders', () => {
-      expect(globalShaders).toHaveLength(5);
+    it('should have 1 global shader', () => {
+      expect(globalShaders).toHaveLength(1);
     });
   });
 });
@@ -356,32 +303,17 @@ describe('GLSL Syntax Validation', () => {
     it('should not have obvious syntax errors', () => {
       // Check for double semicolons (common typo)
       expect(source).not.toMatch(/;;(?!\s*\/\/)/);
-
-      // Check for missing semicolons before closing braces (excluding comments)
-      // This is a simplified check - not exhaustive
-      const lines = source.split('\n');
-      for (let i = 0; i < lines.length - 1; i++) {
-        const line = lines[i].trim();
-        const nextLine = lines[i + 1].trim();
-
-        // Skip comments and preprocessor directives
-        if (line.startsWith('//') || line.startsWith('#') || line === '') continue;
-
-        // If line ends with { or }, it's fine
-        if (line.endsWith('{') || line.endsWith('}')) continue;
-
-        // If line is a closing brace only, fine
-        if (line === '}') continue;
-      }
     });
 
     it('should declare uniforms before use', () => {
       // Extract uniform declarations
       const uniformDecls = source.match(/uniform\s+\w+\s+(\w+)/g) || [];
-      const declaredUniforms = uniformDecls.map(decl => {
-        const match = decl.match(/uniform\s+\w+\s+(\w+)/);
-        return match ? match[1] : null;
-      }).filter(Boolean);
+      const declaredUniforms = uniformDecls
+        .map((decl) => {
+          const match = decl.match(/uniform\s+\w+\s+(\w+)/);
+          return match ? match[1] : null;
+        })
+        .filter(Boolean);
 
       // All declared uniforms should be valid identifiers
       for (const uniform of declaredUniforms) {
@@ -396,12 +328,24 @@ describe('GLSL Syntax Validation', () => {
 
     it('should use valid GLSL types', () => {
       const validTypes = [
-        'void', 'bool', 'int', 'float',
-        'vec2', 'vec3', 'vec4',
-        'ivec2', 'ivec3', 'ivec4',
-        'bvec2', 'bvec3', 'bvec4',
-        'mat2', 'mat3', 'mat4',
-        'sampler2D', 'samplerCube',
+        'void',
+        'bool',
+        'int',
+        'float',
+        'vec2',
+        'vec3',
+        'vec4',
+        'ivec2',
+        'ivec3',
+        'ivec4',
+        'bvec2',
+        'bvec3',
+        'bvec4',
+        'mat2',
+        'mat3',
+        'mat4',
+        'sampler2D',
+        'samplerCube',
       ];
 
       // Extract type declarations

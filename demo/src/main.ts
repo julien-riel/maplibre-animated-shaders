@@ -11,7 +11,7 @@ import { ConfigPanel } from './components/ConfigPanel';
 import { MapView } from './components/MapView';
 import { EffectsStackPanel } from './components/EffectsStackPanel';
 import { PerformanceMonitor } from './components/PerformanceMonitor';
-import { globalRegistry, corePlugin, ShaderManager } from '../../src';
+import { globalRegistry, examplePlugin, ShaderManager } from '../../src';
 import type { ShaderDefinition } from '../../src/types';
 import type {
   EffectStackState,
@@ -28,9 +28,9 @@ import {
 } from './types/effectStack';
 import { PluginManager } from '../../src/plugins';
 
-// Register all built-in shaders via the core plugin
+// Register all built-in shaders via the example plugin
 const pluginManager = new PluginManager(globalRegistry);
-pluginManager.use(corePlugin);
+pluginManager.use(examplePlugin);
 
 /**
  * Application state
