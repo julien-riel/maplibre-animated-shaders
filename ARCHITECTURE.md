@@ -96,6 +96,9 @@ MapLibre Animated Shaders is a WebGL-based library that extends MapLibre GL JS w
 | Component | Responsibility |
 |-----------|---------------|
 | **ShaderManager** | Main facade - orchestrates all operations |
+| **core/ShaderState** | Shared state management and factory |
+| **core/ShaderRegistration** | Shader register/unregister logic |
+| **core/ShaderPlayback** | Play/pause/speed/config control |
 | **PluginManager** | Plugin registration, validation, namespace resolution |
 | **ShaderRegistry** | Storage and lookup of shader definitions |
 | **AnimationLoop** | Global timing and frame synchronization |
@@ -875,10 +878,16 @@ onRemove(map: MapLibreMap, gl: WebGLRenderingContext): void {
 src/
 ├── index.ts                    # Public exports
 ├── constants.ts                # Centralized constants
-├── ShaderManager.ts            # Main facade (926 lines)
+├── ShaderManager.ts            # Main facade (316 lines)
 ├── AnimationLoop.ts            # Frame timing (128 lines)
 ├── ShaderRegistry.ts           # Shader storage (94 lines)
 ├── ConfigResolver.ts           # Config validation
+│
+├── core/                       # ShaderManager internal modules
+│   ├── index.ts                # Module exports
+│   ├── ShaderState.ts          # Shared state management (204 lines)
+│   ├── ShaderRegistration.ts   # Register/unregister logic (408 lines)
+│   └── ShaderPlayback.ts       # Play/pause/speed control (229 lines)
 │
 ├── adapters/
 │   └── index.ts                # IMapAdapter, MapLibreAdapter
