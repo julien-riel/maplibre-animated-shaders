@@ -171,6 +171,8 @@ describe('ShaderRegistry', () => {
 // =============================================================================
 
 describe('ConfigResolver', () => {
+  const resolver = new ConfigResolver();
+
   const schema = {
     color: { type: 'color' as const, default: '#ff0000' },
     speed: { type: 'number' as const, min: 0.1, max: 10, default: 1 },
@@ -188,11 +190,11 @@ describe('ConfigResolver', () => {
   };
 
   bench('resolve config (simple)', () => {
-    ConfigResolver.resolve(defaults, { color: '#00ff00' });
+    resolver.resolve(defaults, { color: '#00ff00' });
   });
 
   bench('resolve config (full override)', () => {
-    ConfigResolver.resolve(defaults, {
+    resolver.resolve(defaults, {
       color: '#00ff00',
       speed: 2,
       intensity: 0.5,
@@ -202,17 +204,17 @@ describe('ConfigResolver', () => {
   });
 
   bench('validate config', () => {
-    ConfigResolver.validate({ color: '#00ff00', speed: 2, intensity: 0.5 }, schema);
+    resolver.validate({ color: '#00ff00', speed: 2, intensity: 0.5 }, schema);
   });
 
   bench('resolve + validate 1,000 configs', () => {
     for (let i = 0; i < 1000; i++) {
-      const resolved = ConfigResolver.resolve(defaults, {
+      const resolved = resolver.resolve(defaults, {
         color: `#${i.toString(16).padStart(6, '0')}`,
         speed: (i % 10) + 0.1,
         intensity: (i % 100) / 100,
       });
-      ConfigResolver.validate(resolved, schema);
+      resolver.validate(resolved, schema);
     }
   });
 });

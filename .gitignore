@@ -35,3 +35,4 @@ e2e/**/*.png
 # Generated files
 docs/
 *.tgz
+benchmark-results.json

@@ -30,6 +30,9 @@ jobs:
       - name: Run benchmarks
         run: npm run bench:run
 
+      - name: Transform benchmark output
+        run: npx tsx scripts/transform-benchmark.ts benchmark-results.json
+
       - name: Store benchmark result
         uses: benchmark-action/github-action-benchmark@v1
         with:
@@ -73,6 +76,9 @@ jobs:
       - name: Run benchmarks on PR branch
         run: npm run bench:run
 
+      - name: Transform PR benchmark output
+        run: npx tsx scripts/transform-benchmark.ts benchmark-results.json
+
       - name: Save PR benchmark results
         run: mv benchmark-results.json pr-benchmark-results.json
 
@@ -87,6 +93,12 @@ jobs:
 
       - name: Run benchmarks on base branch
         run: npm run bench:run || echo "No benchmarks on base branch"
+
+      - name: Transform base benchmark output
+        run: |
+          if [ -f benchmark-results.json ]; then
+            npx tsx scripts/transform-benchmark.ts benchmark-results.json
+          fi
 
       - name: Compare results
         id: compare
