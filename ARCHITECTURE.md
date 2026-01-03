@@ -103,6 +103,134 @@ MapLibre Animated Shaders is a WebGL-based library that extends MapLibre GL JS w
 | **ExpressionEvaluator** | MapLibre expression evaluation |
 | **TimeOffsetCalculator** | Per-feature timing offsets |
 | **InteractionHandler** | Feature click/hover handling |
+| **EventEmitter** | Centralized event system |
+| **MapLibreAdapter** | Map abstraction layer |
+| **ProgramCache** | Shader program caching |
+
+---
+
+## Core Infrastructure
+
+### Constants (`src/constants.ts`)
+
+All magic numbers and configuration defaults are centralized:
+
+```typescript
+// Animation
+export const DEFAULT_TARGET_FPS = 60;
+export const DEFAULT_ANIMATION_SPEED = 1.0;
+export const MS_PER_SECOND = 1000;
+
+// Layer suffixes
+export const GEOMETRY_LAYER_SUFFIX = '-shader';
+export const GLOBAL_LAYER_SUFFIX = '-global-shader';
+
+// Metrics thresholds
+export const METRICS_DEFAULTS = {
+  sampleWindow: 60,
+  lowFPSThreshold: 30,
+  highFrameTimeThreshold: 50,
+  // ...
+} as const;
+```
+
+### Error Hierarchy (`src/errors/`)
+
+Typed error classes for better error handling:
+
+```typescript
+// Base error
+export class ShaderManagerError extends Error {
+  constructor(
+    message: string,
+    public readonly code: ErrorCode,
+    public readonly details?: Record<string, unknown>
+  ) { ... }
+}
+
+// Specific errors
+export class ShaderNotFoundError extends ShaderManagerError { }
+export class LayerNotFoundError extends ShaderManagerError { }
+export class PluginValidationError extends ShaderManagerError { }
+export class ConfigurationError extends ShaderManagerError { }
+export class WebGLNotSupportedError extends ShaderManagerError { }
+
+// Type guards
+export function isShaderManagerError(error: unknown): error is ShaderManagerError;
+export function hasErrorCode(error: unknown, code: ErrorCode): boolean;
+```
+
+### Event System (`src/events/`)
+
+Centralized typed event emitter:
+
+```typescript
+export type ShaderEventType =
+  | 'shader:registered'
+  | 'shader:unregistered'
+  | 'shader:play'
+  | 'shader:pause'
+  | 'plugin:registered'
+  | 'error'
+  | 'performance:warning';
+
+export class ShaderEventEmitter {
+  on<K extends ShaderEventType>(type: K, handler: Handler<K>): () => void;
+  once<K extends ShaderEventType>(type: K, handler: Handler<K>): void;
+  off<K extends ShaderEventType>(type: K, handler: Handler<K>): void;
+  emit<K extends ShaderEventType>(type: K, event: ShaderEventMap[K]): void;
+}
+
+// Global instance
+export const globalEventEmitter = new ShaderEventEmitter();
+```
+
+### Map Adapter (`src/adapters/`)
+
+Abstraction layer for MapLibre decoupling:
+
+```typescript
+export interface IMapAdapter {
+  getLayer(id: string): unknown | undefined;
+  addLayer(layer: CustomLayerInterface, beforeId?: string): void;
+  removeLayer(id: string): void;
+  setPaintProperty(layerId: string, property: string, value: unknown): void;
+  triggerRepaint(): void;
+  getCanvas(): HTMLCanvasElement;
+  on(event: string, handler: MapEventHandler): void;
+  // ...
+}
+
+export class MapLibreAdapter implements IMapAdapter {
+  constructor(private readonly map: maplibregl.Map) {}
+  // Wraps all MapLibre-specific calls
+}
+```
+
+### Program Cache (`src/utils/program-cache.ts`)
+
+Reference-counted shader program cache:
+
+```typescript
+export class ProgramCache {
+  // Get or create a compiled program
+  getOrCreate(
+    gl: WebGLRenderingContext,
+    vertexSource: string,
+    fragmentSource: string,
+    layerId?: string
+  ): WebGLProgram;
+
+  // Release when layer is removed
+  release(vertexSource: string, fragmentSource: string, gl: WebGLRenderingContext): void;
+
+  // Clear all on context loss
+  clear(gl: WebGLRenderingContext): void;
+}
+
+// Global instance for sharing programs across layers
+export const globalProgramCache = new ProgramCache();
+```
 
 ---
 
@@ -746,10 +874,20 @@ onRemove(map: MapLibreMap, gl: WebGLRenderingContext): void {
 ```
 src/
 ├── index.ts                    # Public exports
+├── constants.ts                # Centralized constants
 ├── ShaderManager.ts            # Main facade (926 lines)
 ├── AnimationLoop.ts            # Frame timing (128 lines)
 ├── ShaderRegistry.ts           # Shader storage (94 lines)
 ├── ConfigResolver.ts           # Config validation
+│
+├── adapters/
+│   └── index.ts                # IMapAdapter, MapLibreAdapter
+│
+├── errors/
+│   └── index.ts                # Error hierarchy
+│
+├── events/
+│   └── index.ts                # ShaderEventEmitter
 │
 ├── layers/
 │   ├── index.ts
@@ -815,6 +953,7 @@ src/
     ├── maplibre-helpers.ts
     ├── metrics-collector.ts    # Performance metrics
     ├── object-pool.ts          # Memory optimization
+    ├── program-cache.ts        # Shader program caching
     ├── throttle.ts
     ├── webgl-capabilities.ts   # WebGL feature detection
     └── webgl-error-handler.ts  # Error handling

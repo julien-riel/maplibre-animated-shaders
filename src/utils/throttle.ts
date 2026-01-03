@@ -84,8 +84,5 @@ export function debounce<T extends (...args: unknown[]) => void>(fn: T, waitMs: 
   }) as T;
 }
 
-/**
- * Default throttle interval for source data updates (milliseconds).
- * Limits updates to 10 per second.
- */
-export const DEFAULT_UPDATE_THROTTLE_MS = 100;
+// Re-export from constants for backward compatibility
+export { DEFAULT_UPDATE_THROTTLE_MS } from '../constants';

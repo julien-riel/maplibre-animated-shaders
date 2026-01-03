@@ -10,6 +10,49 @@ export { AnimationLoop } from './AnimationLoop';
 export { ShaderRegistry, globalRegistry } from './ShaderRegistry';
 export { ConfigResolver } from './ConfigResolver';
 
+// Constants
+export * from './constants';
+
+// Error hierarchy
+export * from './errors';
+
+// Event system
+export {
+  ShaderEventEmitter,
+  globalEventEmitter,
+} from './events';
+export type {
+  ShaderEventType,
+  ShaderEvent,
+  ShaderEventMap,
+  ShaderEventHandler,
+  ShaderRegisteredEvent,
+  ShaderUnregisteredEvent,
+  ShaderConfigUpdatedEvent,
+  ShaderPlayEvent,
+  ShaderPauseEvent,
+  ShaderSpeedChangedEvent,
+  PluginRegisteredEvent,
+  PluginUnregisteredEvent,
+  ShaderErrorEvent,
+  PerformanceWarningEvent,
+  PerformanceFrameEvent,
+  DestroyedEvent,
+} from './events';
+
+// Adapters
+export {
+  MapLibreAdapter,
+  createMapAdapter,
+} from './adapters';
+export type {
+  IMapAdapter,
+  MapEventHandler,
+} from './adapters';
+
+// Program cache
+export { ProgramCache, globalProgramCache } from './utils/program-cache';
+
 // Types
 export type {
   // Core types

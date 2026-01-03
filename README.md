@@ -14,6 +14,9 @@ Animated GLSL shaders for MapLibre GL JS. Add stunning visual effects to your ma
 - **Plugin architecture** - Extensible system for organizing and sharing shaders
 - **TypeScript first** - Full type definitions with strict typing
 - **Built-in shader library** - Ready-to-use GLSL utilities (noise, easing, colors, shapes)
+- **Typed event system** - Subscribe to shader lifecycle events
+- **Error hierarchy** - Typed errors with error codes for robust error handling
+- **Performance optimized** - Shader program caching, object pooling, buffer reuse
 
 ## Installation
 
@@ -219,6 +222,62 @@ const presets = shaderManager.getAllPresets();
 
 // Use a preset
 shaderManager.registerPreset('my-layer', 'example:point-alert');
+```
+
+## Event System
+
+Subscribe to shader lifecycle events:
+
+```typescript
+import { globalEventEmitter } from 'maplibre-animated-shaders';
+
+// Listen to shader registration
+const unsubscribe = globalEventEmitter.on('shader:registered', (event) => {
+  console.log(`Shader registered on layer: ${event.layerId}`);
+});
+
+// Listen to errors
+globalEventEmitter.on('error', (event) => {
+  console.error(`Error: ${event.error.message}`, event.context);
+});
+
+// Available events:
+// - 'shader:registered', 'shader:unregistered', 'shader:configUpdated'
+// - 'shader:play', 'shader:pause', 'shader:speedChanged'
+// - 'plugin:registered', 'plugin:unregistered'
+// - 'error', 'performance:warning', 'performance:frame'
+// - 'destroyed'
+
+// Unsubscribe when done
+unsubscribe();
+```
+
+## Error Handling
+
+The library provides typed errors for better error handling:
+
+```typescript
+import {
+  ShaderManagerError,
+  ShaderNotFoundError,
+  LayerNotFoundError,
+  isShaderManagerError,
+  hasErrorCode,
+  ErrorCodes
+} from 'maplibre-animated-shaders';
+
+try {
+  shaderManager.register('unknown-layer', 'example:point', {});
+} catch (error) {
+  if (isShaderManagerError(error)) {
+    console.log(`Error code: ${error.code}`);
+    console.log(`Details: ${JSON.stringify(error.details)}`);
+  }
+
+  if (hasErrorCode(error, ErrorCodes.LAYER_NOT_FOUND)) {
+    console.log('The layer does not exist on the map');
+  }
+}
 ```
 
 ## GLSL Utilities
