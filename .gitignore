@@ -37,3 +37,6 @@ e2e/test-results/
 docs/
 *.tgz
 benchmark-results.json
+
+# Playwright videos and screenshots
+.playwright-mcp

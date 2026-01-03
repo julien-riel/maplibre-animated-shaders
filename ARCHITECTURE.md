@@ -13,16 +13,27 @@
 │  │ ShaderManager │  │ AnimationLoop │  │ ConfigResolver    │    │
 │  └───────┬───────┘  └───────┬───────┘  └─────────┬─────────┘    │
 │          │                  │                    │               │
-│  ┌───────▼──────────────────▼────────────────────▼───────┐      │
-│  │                    ShaderRegistry                      │      │
-│  │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐      │      │
-│  │  │ Points  │ │ Lines   │ │Polygons │ │ Global  │      │      │
-│  │  │ Shaders │ │ Shaders │ │ Shaders │ │ Effects │      │      │
-│  │  └─────────┘ └─────────┘ └─────────┘ └─────────┘      │      │
-│  └───────────────────────────────────────────────────────┘      │
-├─────────────────────────────────────────────────────────────────┤
-│                       MapLibre GL JS                             │
-└─────────────────────────────────────────────────────────────────┘
+│  ┌───────▼──────────────────┴────────────────────┘               │
+│  │                                                               │
+│  │  ┌─────────────────┐      ┌─────────────────────────────┐    │
+│  │  │  PluginManager  │─────▶│       ShaderRegistry        │    │
+│  │  └────────┬────────┘      └─────────────────────────────┘    │
+│  │           │                                                   │
+│  │  ┌────────▼────────────────────────────────────────────┐     │
+│  │  │              Thematic Plugins                        │     │
+│  │  │  ┌──────────┐ ┌────────────┐ ┌─────────┐ ┌────────┐ │     │
+│  │  │  │ dataviz  │ │atmospheric │ │  scifi  │ │organic │ │     │
+│  │  │  │ (7)      │ │ (6)        │ │  (5)    │ │ (8)    │ │     │
+│  │  │  └──────────┘ └────────────┘ └─────────┘ └────────┘ │     │
+│  │  │                    ┌──────────────────┐              │     │
+│  │  │                    │    corePlugin    │              │     │
+│  │  │                    │   (26 shaders)   │              │     │
+│  │  │                    └──────────────────┘              │     │
+│  │  └──────────────────────────────────────────────────────┘    │
+│  │                                                               │
+├──┼───────────────────────────────────────────────────────────────┤
+│  │                     MapLibre GL JS                            │
+└──┴───────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -35,6 +46,13 @@ Main entry point. Manages the shader lifecycle on a MapLibre instance.
 
 ```typescript
 interface ShaderManager {
+  // Plugin management
+  use(plugin: ShaderPlugin): void;
+  unuse(pluginName: string): boolean;
+  getPlugin(name: string): ShaderPlugin | undefined;
+  hasPlugin(name: string): boolean;
+  listPlugins(): string[];
+
   // Registration
   register(layerId: string, shaderName: string, config?: ShaderConfig): void;
   unregister(layerId: string): void;
@@ -52,7 +70,63 @@ interface ShaderManager {
 }
 ```
 
-### 2. AnimationLoop
+### 2. PluginManager
+
+Manages shader plugin lifecycle with namespace support.
+
+```typescript
+interface PluginManager {
+  // Plugin registration
+  use(plugin: ShaderPlugin): void;
+  unuse(pluginName: string): boolean;
+
+  // Plugin introspection
+  getPlugin(name: string): ShaderPlugin | undefined;
+  hasPlugin(name: string): boolean;
+  listPlugins(): string[];
+  getPluginState(name: string): PluginState | undefined;
+
+  // Shader resolution
+  resolveShaderName(name: string): string | undefined;
+  getShaderPlugin(shaderName: string): ShaderPlugin | undefined;
+
+  // Presets
+  getPreset(pluginName: string, presetName: string): PresetConfig | undefined;
+  getAllPresets(): PresetInfo[];
+
+  // Statistics
+  getStats(): { pluginCount: number; shaderCount: number; presetCount: number };
+}
+
+interface ShaderPlugin {
+  name: string;                    // Unique plugin identifier
+  version: string;                 // Semver version (e.g., "1.0.0")
+  author?: string;                 // Plugin author
+  description?: string;            // Plugin description
+  shaders: ShaderDefinition[];     // Array of shader definitions
+  presets?: Record<string, {       // Optional configuration presets
+    shader: string;
+    config: Record<string, unknown>;
+  }>;
+  useNamespace?: boolean;          // Enable/disable namespacing (default: true)
+  onRegister?(manager: IShaderManager): void;    // Lifecycle hook
+  onUnregister?(manager: IShaderManager): void;  // Lifecycle hook
+}
+```
+
+### Namespace Resolution
+
+Shaders are namespaced by plugin name using `:` separator:
+
+```typescript
+// Fully qualified name
+manager.register('layer', 'dataviz:pulse', config);
+
+// Short name (if unambiguous)
+manager.register('layer', 'pulse', config);  // Resolves to 'dataviz:pulse'
+```
+
+### 3. AnimationLoop
 
 Manages the global animation loop with `requestAnimationFrame`. Injects uniform time into all active shaders.
 
@@ -66,7 +140,7 @@ interface AnimationLoop {
 }
 ```
 
-### 3. ShaderRegistry
+### 4. ShaderRegistry
 
 Catalog of all available shaders, organized by geometry.
 
@@ -80,7 +154,7 @@ interface ShaderRegistry {
 type GeometryType = 'point' | 'line' | 'polygon' | 'global';
 ```
 
-### 4. ConfigResolver
+### 5. ConfigResolver
 
 Merges user configuration with shader default values.
 
@@ -95,7 +169,7 @@ interface ConfigResolver {
 }
 ```
 
-### 5. ExpressionEvaluator (Data-Driven)
+### 6. ExpressionEvaluator (Data-Driven)
 
 Wrapper around the MapLibre expression system for data-driven properties.
 
@@ -119,7 +193,7 @@ interface ExpressionEvaluator {
 }
 ```
 
-### 6. TimeOffsetCalculator (Animation Timing)
+### 7. TimeOffsetCalculator (Animation Timing)
 
 Calculates per-feature time offsets for animations.
 
@@ -138,7 +212,7 @@ type TimeOffsetValue =
   | { min: number; max: number }; // Random range
 ```
 
-### 7. FeatureAnimationStateManager (Interactive Control)
+### 8. FeatureAnimationStateManager (Interactive Control)
 
 Manages per-feature animation state for interactive control (play/pause/toggle/reset).
 
@@ -183,7 +257,7 @@ interface FeatureAnimationState {
 }
 ```
 
-### 8. FeatureInteractionHandler (Event Handling)
+### 9. FeatureInteractionHandler (Event Handling)
 
 Handles MapLibre events (click/hover) and dispatches to state manager.
 
@@ -433,6 +507,105 @@ interface ShaderConfig {
 
 ---
 
+## Plugin System Architecture
+
+The plugin system provides a modular way to organize and distribute shaders.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      ShaderManager                               │
+│  manager.use(datavizPlugin)                                      │
+├─────────────────────────────────────────────────────────────────┤
+│                      PluginManager                               │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │ 1. Validate plugin (name, version, shaders)             │    │
+│  │ 2. Register shaders with namespace (dataviz:pulse)      │    │
+│  │ 3. Track shader→plugin mapping                          │    │
+│  │ 4. Execute lifecycle hooks (onRegister)                 │    │
+│  └─────────────────────────────────────────────────────────┘    │
+│                          │                                       │
+│                          ▼                                       │
+├─────────────────────────────────────────────────────────────────┤
+│                      ShaderRegistry                              │
+│  ┌───────────────────────────────────────────────────────┐      │
+│  │ 'dataviz:pulse'     → ShaderDefinition                │      │
+│  │ 'dataviz:flow'      → ShaderDefinition                │      │
+│  │ 'scifi:neon'        → ShaderDefinition                │      │
+│  │ 'atmospheric:rain'  → ShaderDefinition                │      │
+│  └───────────────────────────────────────────────────────┘      │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Built-in Plugins
+
+| Plugin | Shaders | Theme | Use Cases |
+|--------|---------|-------|-----------|
+| **datavizPlugin** | 7 | Data Visualization | Alerts, progress, traffic flow, selections |
+| **atmosphericPlugin** | 6 | Weather & Environment | Rain, snow, fog, heat, water ripples |
+| **scifiPlugin** | 5 | Sci-Fi & Tech | Holograms, neon, radar, electric effects |
+| **organicPlugin** | 8 | Natural & Organic | Heartbeat, breathing, particles, dissolve |
+| **corePlugin** | 26 | All Shaders | Backwards compatibility bundle |
+
+### Plugin Lifecycle
+
+```
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│   Created    │────▶│  Registered  │────▶│ Unregistered │
+│              │     │              │     │              │
+│ ShaderPlugin │     │ use(plugin)  │     │unuse(name)   │
+│  definition  │     │              │     │              │
+└──────────────┘     └──────┬───────┘     └──────────────┘
+                           │
+                    ┌──────▼───────┐
+                    │ Lifecycle    │
+                    │ Hooks        │
+                    │ - onRegister │
+                    │ - onUnregister│
+                    └──────────────┘
+```
+
+### Creating Custom Plugins
+
+```typescript
+import type { ShaderPlugin, ShaderDefinition } from 'maplibre-animated-shaders';
+
+const myCustomShader: ShaderDefinition = {
+  name: 'myEffect',
+  geometry: 'point',
+  description: 'Custom animated effect',
+  fragmentShader: `
+    precision mediump float;
+    uniform float u_time;
+    uniform vec3 u_color;
+    void main() {
+      float pulse = sin(u_time * 3.0) * 0.5 + 0.5;
+      gl_FragColor = vec4(u_color * pulse, 1.0);
+    }
+  `,
+  defaultConfig: { color: '#ff0000', speed: 1.0 },
+  getUniforms(config, time) {
+    return { u_time: time * config.speed, u_color: hexToRgb(config.color) };
+  }
+};
+
+export const myPlugin: ShaderPlugin = {
+  name: 'mycompany',
+  version: '1.0.0',
+  author: 'My Company',
+  description: 'Custom shader effects',
+  shaders: [myCustomShader],
+  presets: {
+    'alert-red': { shader: 'myEffect', config: { color: '#ff0000', speed: 2.0 } }
+  }
+};
+
+// Usage
+manager.use(myPlugin);
+manager.register('layer', 'mycompany:myEffect', { color: '#00ff00' });
+```
+
+---
+
 ## File Organization
 
 ```
@@ -470,11 +643,16 @@ maplibre-animated-shaders/
 │   │   ├── PluginManager.ts
 │   │   ├── loaders.ts              # Lazy loading
 │   │   └── builtin/                # Built-in plugins
-│   │       ├── dataviz.ts
-│   │       ├── atmospheric.ts
-│   │       ├── scifi.ts
-│   │       ├── organic.ts
-│   │       └── core.ts
+│   │       ├── dataviz.ts          # Data visualization (7 shaders)
+│   │       ├── atmospheric.ts      # Weather effects (6 shaders)
+│   │       ├── scifi.ts            # Sci-fi/tech (5 shaders)
+│   │       ├── organic.ts          # Natural effects (8 shaders)
+│   │       ├── core.ts             # All shaders bundle (26 shaders)
+│   │       └── shaders/            # Shader implementations
+│   │           ├── points/         # Point shaders (pulse, heartbeat, etc.)
+│   │           ├── lines/          # Line shaders (flow, neon, etc.)
+│   │           ├── polygons/       # Polygon shaders (ripple, noise, etc.)
+│   │           └── global/         # Global effects (weather, fog, etc.)
 │   │
 │   ├── glsl/
 │   │   ├── common/
