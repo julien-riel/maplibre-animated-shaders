@@ -30,7 +30,8 @@ coverage
 /playwright-report/
 /blob-report/
 /playwright/.cache/
-e2e/**/*.png
+# E2E test failure outputs (keep baseline snapshots, ignore actual/diff)
+e2e/test-results/
 
 # Generated files
 docs/

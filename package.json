@@ -1,6 +1,6 @@
 {
   "name": "maplibre-animated-shaders",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Animated GLSL shaders for MapLibre GL JS",
   "type": "module",
   "main": "dist/index.cjs",

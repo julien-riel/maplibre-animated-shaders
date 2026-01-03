@@ -86,7 +86,7 @@ test.describe('Point Shaders', () => {
   test('pulse shader renders and animates', async ({ page }) => {
     // Apply pulse shader
     const success = await page.evaluate(() =>
-      window.applyShader('test-points-layer', 'pulse', {
+      window.applyShader('test-points-layer', 'core:pulse', {
         color: '#ff6b6b',
         speed: 2.0,
         rings: 3,
@@ -100,7 +100,7 @@ test.describe('Point Shaders', () => {
 
     // Verify shader is applied
     const shaderApplied = await page.evaluate(() => window.testState.shaderApplied);
-    expect(shaderApplied).toBe('pulse');
+    expect(shaderApplied).toBe('core:pulse');
 
     // Verify no errors
     const error = await page.evaluate(() => window.testState.error);
@@ -109,7 +109,7 @@ test.describe('Point Shaders', () => {
 
   test('glow shader renders correctly', async ({ page }) => {
     const success = await page.evaluate(() =>
-      window.applyShader('test-points-layer', 'glow', {
+      window.applyShader('test-points-layer', 'core:glow', {
         color: '#00ff88',
         intensity: 1.5,
       })
@@ -124,7 +124,7 @@ test.describe('Point Shaders', () => {
 
   test('radar shader renders with sweep animation', async ({ page }) => {
     const success = await page.evaluate(() =>
-      window.applyShader('test-points-layer', 'radar', {
+      window.applyShader('test-points-layer', 'core:radar', {
         color: '#3b82f6',
         speed: 1.0,
       })
@@ -146,7 +146,7 @@ test.describe('Line Shaders', () => {
 
   test('flow shader renders with moving dashes', async ({ page }) => {
     const success = await page.evaluate(() =>
-      window.applyShader('test-lines-layer', 'flow', {
+      window.applyShader('test-lines-layer', 'core:flow', {
         color: '#00ff88',
         speed: 2.0,
         dashLength: 0.1,
@@ -162,7 +162,7 @@ test.describe('Line Shaders', () => {
 
   test('neon shader renders with glow effect', async ({ page }) => {
     const success = await page.evaluate(() =>
-      window.applyShader('test-lines-layer', 'neon', {
+      window.applyShader('test-lines-layer', 'core:neon', {
         color: '#ff00ff',
         glowIntensity: 2.0,
       })
@@ -184,7 +184,7 @@ test.describe('Polygon Shaders', () => {
 
   test('ripple shader renders with expanding circles', async ({ page }) => {
     const success = await page.evaluate(() =>
-      window.applyShader('test-polygons-layer', 'ripple', {
+      window.applyShader('test-polygons-layer', 'core:ripple', {
         color: '#4a90d9',
         speed: 1.5,
         rings: 4,
@@ -200,7 +200,7 @@ test.describe('Polygon Shaders', () => {
 
   test('scan-lines shader renders with moving lines', async ({ page }) => {
     const success = await page.evaluate(() =>
-      window.applyShader('test-polygons-layer', 'scan-lines', {
+      window.applyShader('test-polygons-layer', 'core:scan-lines', {
         color: '#00ff00',
         speed: 1.0,
         lineCount: 10,
@@ -224,13 +224,13 @@ test.describe('Shader Lifecycle', () => {
   test('can apply and remove shader', async ({ page }) => {
     // Apply shader
     let success = await page.evaluate(() =>
-      window.applyShader('test-points-layer', 'pulse', {})
+      window.applyShader('test-points-layer', 'core:pulse', {})
     );
     expect(success).toBe(true);
 
     // Verify applied
     let shaderApplied = await page.evaluate(() => window.testState.shaderApplied);
-    expect(shaderApplied).toBe('pulse');
+    expect(shaderApplied).toBe('core:pulse');
 
     // Remove shader
     success = await page.evaluate(() =>
@@ -246,19 +246,19 @@ test.describe('Shader Lifecycle', () => {
   test('can switch between shaders', async ({ page }) => {
     // Apply first shader
     await page.evaluate(() =>
-      window.applyShader('test-points-layer', 'pulse', {})
+      window.applyShader('test-points-layer', 'core:pulse', {})
     );
 
     let shader = await page.evaluate(() => window.testState.shaderApplied);
-    expect(shader).toBe('pulse');
+    expect(shader).toBe('core:pulse');
 
     // Apply different shader (should replace)
     await page.evaluate(() =>
-      window.applyShader('test-points-layer', 'glow', {})
+      window.applyShader('test-points-layer', 'core:glow', {})
     );
 
     shader = await page.evaluate(() => window.testState.shaderApplied);
-    expect(shader).toBe('glow');
+    expect(shader).toBe('core:glow');
   });
 });
 
@@ -270,7 +270,7 @@ test.describe('Animation Control', () => {
 
   test('animation continues after shader applied', async ({ page }) => {
     await page.evaluate(() =>
-      window.applyShader('test-points-layer', 'pulse', { speed: 2.0 })
+      window.applyShader('test-points-layer', 'core:pulse', { speed: 2.0 })
     );
 
     // Reset frame count
@@ -305,7 +305,7 @@ test.describe('Visual Regression', () => {
   // These tests verify the shader is applied without errors
   test('pulse shader visual check', async ({ page }) => {
     await page.evaluate(() =>
-      window.applyShader('test-points-layer', 'pulse', {
+      window.applyShader('test-points-layer', 'core:pulse', {
         color: '#ff6b6b',
         speed: 0, // Pause animation for consistent screenshot
       })
@@ -343,7 +343,7 @@ test.describe('Error Handling', () => {
 
   test('handles invalid layer ID gracefully', async ({ page }) => {
     const success = await page.evaluate(() =>
-      window.applyShader('nonexistent-layer', 'pulse', {})
+      window.applyShader('nonexistent-layer', 'core:pulse', {})
     );
 
     expect(success).toBe(false);
