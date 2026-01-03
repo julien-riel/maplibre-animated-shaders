@@ -380,6 +380,102 @@ describe('LineShaderLayer', () => {
       expect(layer).toBeDefined();
     });
   });
+
+  describe('feature processing', () => {
+    it('should process LineString features', () => {
+      vi.mocked(map.querySourceFeatures).mockReturnValue([
+        {
+          type: 'Feature',
+          geometry: {
+            type: 'LineString',
+            coordinates: [[0, 0], [1, 1], [2, 0]],
+          },
+          properties: {},
+        },
+      ] as unknown as maplibregl.MapGeoJSONFeature[]);
+      vi.mocked(map.isSourceLoaded).mockReturnValue(true);
+
+      layer.onAdd(map, gl);
+
+      const matrix = new Float32Array(16);
+      layer.render(gl, matrix as unknown as import('gl-matrix').mat4);
+
+      expect(gl.bindBuffer).toHaveBeenCalled();
+      expect(gl.bufferData).toHaveBeenCalled();
+    });
+
+    it('should process MultiLineString features', () => {
+      vi.mocked(map.querySourceFeatures).mockReturnValue([
+        {
+          type: 'Feature',
+          geometry: {
+            type: 'MultiLineString',
+            coordinates: [
+              [[0, 0], [1, 1]],
+              [[2, 2], [3, 3]],
+            ],
+          },
+          properties: {},
+        },
+      ] as unknown as maplibregl.MapGeoJSONFeature[]);
+      vi.mocked(map.isSourceLoaded).mockReturnValue(true);
+
+      layer.onAdd(map, gl);
+
+      const matrix = new Float32Array(16);
+      layer.render(gl, matrix as unknown as import('gl-matrix').mat4);
+
+      expect(gl.bufferData).toHaveBeenCalled();
+    });
+
+    it('should handle empty LineString', () => {
+      vi.mocked(map.querySourceFeatures).mockReturnValue([
+        {
+          type: 'Feature',
+          geometry: {
+            type: 'LineString',
+            coordinates: [[0, 0]], // Only one point
+          },
+          properties: {},
+        },
+      ] as unknown as maplibregl.MapGeoJSONFeature[]);
+      vi.mocked(map.isSourceLoaded).mockReturnValue(true);
+
+      layer.onAdd(map, gl);
+
+      const matrix = new Float32Array(16);
+      layer.render(gl, matrix as unknown as import('gl-matrix').mat4);
+
+      // Should not crash
+      expect(layer).toBeDefined();
+    });
+
+    it('should render lines with correct draw call', () => {
+      vi.mocked(map.querySourceFeatures).mockReturnValue([
+        {
+          type: 'Feature',
+          geometry: {
+            type: 'LineString',
+            coordinates: [[0, 0], [1, 1]],
+          },
+          properties: {},
+        },
+      ] as unknown as maplibregl.MapGeoJSONFeature[]);
+      vi.mocked(map.isSourceLoaded).mockReturnValue(true);
+
+      layer.onAdd(map, gl);
+
+      const matrix = new Float32Array(16);
+      layer.render(gl, matrix as unknown as import('gl-matrix').mat4);
+
+      expect(gl.drawElements).toHaveBeenCalledWith(
+        gl.TRIANGLES,
+        expect.any(Number),
+        gl.UNSIGNED_SHORT,
+        0
+      );
+    });
+  });
 });
 
 describe('PolygonShaderLayer', () => {
@@ -428,6 +524,157 @@ describe('PolygonShaderLayer', () => {
 
       expect(gl.deleteProgram).toHaveBeenCalled();
       expect(gl.deleteBuffer).toHaveBeenCalled();
+    });
+  });
+
+  describe('feature processing', () => {
+    it('should process Polygon features', () => {
+      vi.mocked(map.querySourceFeatures).mockReturnValue([
+        {
+          type: 'Feature',
+          geometry: {
+            type: 'Polygon',
+            coordinates: [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
+          },
+          properties: {},
+        },
+      ] as unknown as maplibregl.MapGeoJSONFeature[]);
+      vi.mocked(map.isSourceLoaded).mockReturnValue(true);
+
+      layer.onAdd(map, gl);
+
+      const matrix = new Float32Array(16);
+      layer.render(gl, matrix as unknown as import('gl-matrix').mat4);
+
+      expect(gl.bindBuffer).toHaveBeenCalled();
+      expect(gl.bufferData).toHaveBeenCalled();
+    });
+
+    it('should process MultiPolygon features', () => {
+      vi.mocked(map.querySourceFeatures).mockReturnValue([
+        {
+          type: 'Feature',
+          geometry: {
+            type: 'MultiPolygon',
+            coordinates: [
+              [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
+              [[[2, 2], [3, 2], [3, 3], [2, 3], [2, 2]]],
+            ],
+          },
+          properties: {},
+        },
+      ] as unknown as maplibregl.MapGeoJSONFeature[]);
+      vi.mocked(map.isSourceLoaded).mockReturnValue(true);
+
+      layer.onAdd(map, gl);
+
+      const matrix = new Float32Array(16);
+      layer.render(gl, matrix as unknown as import('gl-matrix').mat4);
+
+      expect(gl.bufferData).toHaveBeenCalled();
+    });
+
+    it('should handle triangle polygon', () => {
+      vi.mocked(map.querySourceFeatures).mockReturnValue([
+        {
+          type: 'Feature',
+          geometry: {
+            type: 'Polygon',
+            coordinates: [[[0, 0], [1, 0], [0.5, 1], [0, 0]]],
+          },
+          properties: {},
+        },
+      ] as unknown as maplibregl.MapGeoJSONFeature[]);
+      vi.mocked(map.isSourceLoaded).mockReturnValue(true);
+
+      layer.onAdd(map, gl);
+
+      const matrix = new Float32Array(16);
+      layer.render(gl, matrix as unknown as import('gl-matrix').mat4);
+
+      expect(gl.drawElements).toHaveBeenCalled();
+    });
+
+    it('should handle polygon with less than 3 vertices', () => {
+      vi.mocked(map.querySourceFeatures).mockReturnValue([
+        {
+          type: 'Feature',
+          geometry: {
+            type: 'Polygon',
+            coordinates: [[[0, 0], [1, 0]]], // Only 2 vertices
+          },
+          properties: {},
+        },
+      ] as unknown as maplibregl.MapGeoJSONFeature[]);
+      vi.mocked(map.isSourceLoaded).mockReturnValue(true);
+
+      layer.onAdd(map, gl);
+
+      const matrix = new Float32Array(16);
+      layer.render(gl, matrix as unknown as import('gl-matrix').mat4);
+
+      // Should not crash
+      expect(layer).toBeDefined();
+    });
+
+    it('should triangulate complex polygons', () => {
+      // Pentagon
+      vi.mocked(map.querySourceFeatures).mockReturnValue([
+        {
+          type: 'Feature',
+          geometry: {
+            type: 'Polygon',
+            coordinates: [[[0, 0], [1, 0], [1.5, 0.5], [0.5, 1], [-0.5, 0.5], [0, 0]]],
+          },
+          properties: {},
+        },
+      ] as unknown as maplibregl.MapGeoJSONFeature[]);
+      vi.mocked(map.isSourceLoaded).mockReturnValue(true);
+
+      layer.onAdd(map, gl);
+
+      const matrix = new Float32Array(16);
+      layer.render(gl, matrix as unknown as import('gl-matrix').mat4);
+
+      expect(gl.drawElements).toHaveBeenCalledWith(
+        gl.TRIANGLES,
+        expect.any(Number),
+        gl.UNSIGNED_SHORT,
+        0
+      );
+    });
+
+    it('should render polygons with correct draw call', () => {
+      vi.mocked(map.querySourceFeatures).mockReturnValue([
+        {
+          type: 'Feature',
+          geometry: {
+            type: 'Polygon',
+            coordinates: [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
+          },
+          properties: {},
+        },
+      ] as unknown as maplibregl.MapGeoJSONFeature[]);
+      vi.mocked(map.isSourceLoaded).mockReturnValue(true);
+
+      layer.onAdd(map, gl);
+
+      const matrix = new Float32Array(16);
+      layer.render(gl, matrix as unknown as import('gl-matrix').mat4);
+
+      expect(gl.drawElements).toHaveBeenCalledWith(
+        gl.TRIANGLES,
+        expect.any(Number),
+        gl.UNSIGNED_SHORT,
+        0
+      );
+    });
+  });
+
+  describe('configuration', () => {
+    it('should update config', () => {
+      layer.updateConfig({ color: '#0000ff' });
+      expect(layer).toBeDefined();
     });
   });
 });
