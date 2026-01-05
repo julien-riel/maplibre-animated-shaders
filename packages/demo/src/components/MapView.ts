@@ -6,9 +6,9 @@
 
 import maplibregl from 'maplibre-gl';
 import type { Map as MapLibreMap } from 'maplibre-gl';
-import { createShaderManager, globalRegistry } from '../../../src';
-import type { ShaderManager } from '../../../src/ShaderManager';
-import type { InteractivityConfig } from '../../../src/types';
+import { createShaderManager, globalRegistry } from '../../../../src';
+import type { ShaderManager } from '../../../../src/ShaderManager';
+import type { InteractivityConfig } from '../../../../src/types';
 import type { EffectId, StackedEffect, GeometryType, AdvancedEffectConfig } from '../types/effectStack';
 import { buildShaderAdvancedConfig } from '../types/effectStack';
 

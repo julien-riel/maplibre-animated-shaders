@@ -7,7 +7,7 @@ export default defineConfig({
   root: resolve(__dirname),
   resolve: {
     alias: {
-      '@lib': resolve(__dirname, '../src'),
+      '@lib': resolve(__dirname, '../../src'),
     },
   },
   json: {
@@ -22,7 +22,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: resolve(__dirname, '../dist-demo'),
+    outDir: resolve(__dirname, '../../dist-demo'),
     emptyOutDir: true,
     rollupOptions: {
       input: {
@@ -49,7 +49,7 @@ export default defineConfig({
     {
       name: 'serve-api-docs',
       configureServer(server) {
-        const docsPath = resolve(__dirname, '../generated-docs');
+        const docsPath = resolve(__dirname, '../../generated-docs');
 
         // Import sirv once at startup
         let sirvHandler: ReturnType<typeof import('sirv').default> | null = null;

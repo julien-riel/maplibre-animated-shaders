@@ -5,7 +5,7 @@
  * Includes advanced configuration for timing and interactivity
  */
 
-import type { ShaderDefinition, ConfigSchema, ConfigParamSchema } from '../../../src/types';
+import type { ShaderDefinition, ConfigSchema, ConfigParamSchema } from '../../../../src/types';
 import type { StackedEffect, EffectId, AdvancedEffectConfig, TimeOffsetMode } from '../types/effectStack';
 import { createDefaultAdvancedConfig } from '../types/effectStack';
 import { CodePreview } from './CodePreview';

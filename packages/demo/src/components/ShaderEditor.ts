@@ -9,8 +9,8 @@
  * - Export/import functionality
  */
 
-import { globalRegistry } from '../../../src';
-import type { ShaderDefinition, ShaderConfig } from '../../../src/types';
+import { globalRegistry } from '../../../../src';
+import type { ShaderDefinition, ShaderConfig } from '../../../../src/types';
 
 /**
  * Uniform type for the editor

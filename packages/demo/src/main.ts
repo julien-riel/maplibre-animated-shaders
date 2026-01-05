@@ -13,8 +13,8 @@ import { EffectsStackPanel } from './components/EffectsStackPanel';
 import { PerformanceMonitor } from './components/PerformanceMonitor';
 import { FeaturesShowcase } from './components/FeaturesShowcase';
 import { ShaderEditor } from './components/ShaderEditor';
-import { globalRegistry, examplePlugin, ShaderManager } from '../../src';
-import type { ShaderDefinition } from '../../src/types';
+import { globalRegistry, examplePlugin, ShaderManager } from '../../../src';
+import type { ShaderDefinition } from '../../../src/types';
 import type {
   EffectStackState,
   StackedEffect,
@@ -28,7 +28,7 @@ import {
   removeEffectFromStack,
   createDefaultAdvancedConfig,
 } from './types/effectStack';
-import { PluginManager } from '../../src/plugins';
+import { PluginManager } from '../../../src/plugins';
 
 // Register all built-in shaders via the example plugin
 const pluginManager = new PluginManager(globalRegistry);
