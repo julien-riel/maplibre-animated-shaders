@@ -408,7 +408,7 @@ export function transformToWebGL1(
   // Replace in with attribute/varying
   if (type === 'vertex') {
     // First line 'in' declarations are attributes, rest are uniforms/etc
-    let isFirstBlock = true;
+    const isFirstBlock = true;
     transformed = transformed.replace(/\bin\s+(\w+\s+\w+)/g, (match, rest) => {
       if (isFirstBlock && !rest.startsWith('uniform')) {
         return 'attribute ' + rest;

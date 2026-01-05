@@ -1,16 +1,16 @@
 {
   "$schema": "https://typedoc.org/schema.json",
   "entryPoints": ["src/index.ts"],
-  "out": "docs",
-  "name": "MapLibre GL Shaders",
+  "out": "generated-docs",
+  "name": "MapLibre Animated Shaders",
   "readme": "README.md",
   "excludePrivate": true,
   "excludeProtected": true,
   "excludeInternal": true,
   "includeVersion": true,
   "navigationLinks": {
-    "GitHub": "https://github.com/maplibre/maplibre-animated-shaders",
-    "Demo": "https://maplibre-animated-shaders.dev"
+    "GitHub": "https://github.com/julien-riel/maplibre-animated-shaders",
+    "Demo": "/"
   },
   "categorizeByGroup": true,
   "categoryOrder": [
@@ -21,5 +21,12 @@
     "*"
   ],
   "plugin": [],
-  "theme": "default"
+  "theme": "default",
+  "highlightLanguages": [
+    "typescript",
+    "javascript",
+    "json",
+    "bash",
+    "glsl"
+  ]
 }

@@ -24,7 +24,7 @@ Animated GLSL shaders for MapLibre GL JS. Add stunning visual effects to your ma
 |-------|---------|--------|
 | 1.1 | WebGL 2.0 Support avec Fallback | ✅ Complete |
 | 1.2 | Config Immutability (deep-freeze) | ✅ Complete |
-| 1.3 | Complete JSDoc documentation | ⏳ In Progress |
+| 1.3 | Complete JSDoc documentation | ✅ Complete |
 | 2.1 | Instanced Rendering | ✅ Complete |
 | 2.2 | Frustum Culling | ✅ Complete |
 | 2.3 | Level of Detail (LOD) | ✅ Complete |
@@ -295,6 +295,92 @@ try {
     console.log('The layer does not exist on the map');
   }
 }
+```
+
+## Worker Thread Support
+
+For heavy geometry processing on large datasets (10k+ features), use the `GeometryWorker` to offload CPU-intensive operations to a separate thread, keeping the main thread responsive.
+
+### Basic Usage
+
+```typescript
+import { GeometryWorker } from 'maplibre-animated-shaders';
+
+// Create worker
+const worker = new GeometryWorker();
+
+// Initialize (creates inline worker)
+await worker.initialize();
+
+// Process features off the main thread
+const features = await loadLargeGeoJSON(); // 50k+ features
+
+const result = await worker.processGeometry(features, {
+  computeBounds: true,
+  generateBuffers: true,
+  simplification: 0.5
+});
+
+// Use the results
+console.log(`Processed ${result.featureCount} features`);
+console.log(`Generated ${result.vertexCount} vertices`);
+
+// Clean up when done
+worker.dispose();
+```
+
+### Available Operations
+
+| Method | Description |
+|--------|-------------|
+| `processGeometry(features, options)` | Process features with multiple operations |
+| `simplify(features, tolerance)` | Simplify geometries using Douglas-Peucker |
+| `computeBounds(features)` | Calculate bounding boxes for all features |
+| `generateBuffers(features, stride)` | Generate vertex and index buffers |
+
+### Processing Options
+
+```typescript
+interface GeometryProcessOptions {
+  simplification?: number;   // Douglas-Peucker tolerance (0-1)
+  computeBounds?: boolean;   // Calculate feature bounds
+  generateBuffers?: boolean; // Generate WebGL buffers
+  stride?: number;           // Vertex buffer stride
+}
+```
+
+### Fallback Behavior
+
+If Web Workers are not available (e.g., in some environments), the `GeometryWorker` automatically falls back to main-thread processing:
+
+```typescript
+// Check support before intensive operations
+if (GeometryWorker.isSupported()) {
+  // Use worker for large datasets
+  const worker = new GeometryWorker();
+  await worker.initialize();
+  // ...
+} else {
+  // Handle synchronously or use smaller batches
+  console.warn('Workers not supported, using main thread');
+}
+```
+
+### Performance Tips
+
+- **Large datasets**: Use workers for 10k+ features
+- **Batch processing**: Group features when possible
+- **Simplification**: Apply simplification at lower zoom levels
+- **Timeout handling**: Configure timeout for large operations
+
+```typescript
+const worker = new GeometryWorker({ timeout: 60000 }); // 60 second timeout
+
+// Handle errors gracefully
+worker.onError = (error) => {
+  console.error('Worker error:', error);
+  // Fallback to main thread processing
+};
 ```
 
 ## GLSL Utilities

@@ -1,5 +1,5 @@
 /**
- * MapLibre GL Shaders - Animated GLSL shaders for MapLibre GL JS
+ * MapLibre Animated Shaders - Animated GLSL shaders for MapLibre GL JS
  *
  * @packageDocumentation
  */

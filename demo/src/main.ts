@@ -1,5 +1,5 @@
 /**
- * MapLibre GL Shaders - Playground
+ * MapLibre Animated Shaders - Playground
  * Interactive demo site for testing and configuring shaders
  * Supports stacked effects (Photoshop-style layers)
  */
@@ -81,12 +81,12 @@ function init(): void {
   app.innerHTML = `
     <header class="header">
       <div class="header-title">
-        <h1>MapLibre GL Shaders</h1>
+        <h1>MapLibre Animated Shaders</h1>
         <span>v0.1.0</span>
       </div>
       <nav class="header-links">
         <a href="https://github.com/julien-riel/maplibre-animated-shaders" target="_blank">GitHub</a>
-        <a href="https://github.com/julien-riel/maplibre-animated-shaders#readme" target="_blank">Docs</a>
+        <a href="/api-docs/">API Docs</a>
       </nav>
     </header>
     <main class="main-layout">
