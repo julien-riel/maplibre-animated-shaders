@@ -5,9 +5,9 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['tests/**/*.test.ts'],
-    setupFiles: ['./tests/setup.ts'],
-    exclude: ['node_modules', 'dist', 'demo'],
+    include: ['packages/lib/tests/**/*.test.ts'],
+    setupFiles: ['./packages/lib/tests/setup.ts'],
+    exclude: ['node_modules', 'dist', 'dist-demo'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -27,7 +27,7 @@ export default defineConfig({
     },
     // Benchmark configuration
     benchmark: {
-      include: ['benchmarks/**/*.bench.ts'],
+      include: ['packages/lib/benchmarks/**/*.bench.ts'],
       exclude: ['node_modules', 'dist'],
       reporters: ['default'],
       outputJson: 'benchmark-results.json',
