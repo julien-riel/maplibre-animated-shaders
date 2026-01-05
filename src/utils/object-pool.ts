@@ -1,8 +1,38 @@
 /**
- * ObjectPool - Generic object pooling for reduced GC pressure
+ * Object Pool
  *
- * Reuses objects instead of creating new ones, reducing garbage collection
- * overhead on large datasets (10k+ features).
+ * Generic object pooling for reduced garbage collection pressure.
+ * Reuses objects instead of creating new ones, significantly improving
+ * performance on large datasets (10k+ features).
+ *
+ * @module utils/object-pool
+ *
+ * @example
+ * ```typescript
+ * import { ObjectPool, createFloat32ArrayPool, createVertexPool } from 'maplibre-animated-shaders';
+ *
+ * // Create a custom object pool
+ * interface MyVertex { x: number; y: number; z: number; }
+ *
+ * const vertexPool = new ObjectPool<MyVertex>(
+ *   () => ({ x: 0, y: 0, z: 0 }),           // Factory
+ *   (v) => { v.x = 0; v.y = 0; v.z = 0; },  // Resetter
+ *   { initialSize: 1000, maxSize: 100000 }  // Config
+ * );
+ *
+ * // Use the pool
+ * const vertex = vertexPool.acquire();
+ * vertex.x = 10;
+ * vertex.y = 20;
+ * // ... use vertex ...
+ * vertexPool.release(vertex);
+ *
+ * // Use pre-built Float32Array pool
+ * const arrayPool = createFloat32ArrayPool(16); // 16 floats per array
+ * const arr = arrayPool.acquire();
+ * // ... fill array ...
+ * arrayPool.release(arr);
+ * ```
  */
 
 /**

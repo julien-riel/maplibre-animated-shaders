@@ -280,7 +280,7 @@ function registerPaintShader(
 
   // Register with animation loop
   // Import updatePaintShader dynamically to avoid circular dependency
-  state.animationLoop.addShader(layerId, (time, deltaTime) => {
+  state.animationLoop.addShader(layerId, (_time, deltaTime) => {
     // This callback will be handled by ShaderPlayback
     const inst = state.instances.get(layerId);
     if (inst && inst.isPlaying && !state.customLayers.has(layerId)) {

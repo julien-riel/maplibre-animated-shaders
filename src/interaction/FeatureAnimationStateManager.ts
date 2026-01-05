@@ -1,15 +1,70 @@
 /**
- * FeatureAnimationStateManager - Manages per-feature animation state
+ * Feature Animation State Manager
  *
- * Tracks isPlaying, localTime, and playCount for each feature.
- * Supports efficient dirty-tracking for GPU buffer updates.
+ * Manages per-feature animation state for interactive shader layers.
+ * Tracks isPlaying, localTime, and playCount for each feature with
+ * efficient dirty-tracking for GPU buffer updates.
+ *
+ * @module interaction/FeatureAnimationStateManager
+ *
+ * @example
+ * ```typescript
+ * import { FeatureAnimationStateManager } from 'maplibre-animated-shaders';
+ *
+ * // Create manager with initial paused state
+ * const stateManager = new FeatureAnimationStateManager({
+ *   initialState: 'paused',
+ *   featureIdProperty: 'id'
+ * });
+ *
+ * // Initialize from GeoJSON features
+ * stateManager.initializeFromFeatures(geojson.features);
+ *
+ * // Control individual features
+ * stateManager.playFeature('feature-1');
+ * stateManager.pauseFeature('feature-2');
+ * stateManager.toggleFeature('feature-3');
+ *
+ * // Generate GPU buffer data
+ * const { isPlayingData, localTimeData } = stateManager.generateBufferData(4);
+ * ```
  */
 
 import type { FeatureAnimationState, InteractivityConfig } from '../types';
 
 /**
  * Manages animation state for individual features within a shader layer.
- * Provides play/pause/reset controls and generates GPU buffer data.
+ *
+ * This class provides:
+ * - Per-feature play/pause/reset controls
+ * - Efficient dirty-tracking for GPU buffer updates
+ * - Support for custom feature ID properties
+ * - Bulk operations (playAll, pauseAll, resetAll)
+ * - GPU buffer generation for instanced rendering
+ *
+ * @example
+ * ```typescript
+ * const manager = new FeatureAnimationStateManager({
+ *   initialState: 'playing',
+ *   featureIdProperty: 'objectId'
+ * });
+ *
+ * // Initialize from features
+ * manager.initializeFromFeatures(features);
+ *
+ * // Toggle on click
+ * map.on('click', 'layer', (e) => {
+ *   const id = e.features[0].properties.objectId;
+ *   manager.toggleFeature(id);
+ * });
+ *
+ * // Check if buffers need updating
+ * if (manager.isDirty()) {
+ *   const data = manager.generateBufferData(4);
+ *   updateGPUBuffers(data);
+ *   manager.clearDirty();
+ * }
+ * ```
  */
 export class FeatureAnimationStateManager {
   private states: Map<string | number, FeatureAnimationState> = new Map();
@@ -19,13 +74,44 @@ export class FeatureAnimationStateManager {
   private featureIdProperty?: string;
   private lastGlobalTime: number = 0;
 
+  /**
+   * Create a new feature animation state manager.
+   *
+   * @param config - Optional interactivity configuration
+   *
+   * @example
+   * ```typescript
+   * // Default playing state
+   * const manager = new FeatureAnimationStateManager();
+   *
+   * // Custom initial state and ID property
+   * const manager = new FeatureAnimationStateManager({
+   *   initialState: 'paused',
+   *   featureIdProperty: 'objectId'
+   * });
+   * ```
+   */
   constructor(config?: InteractivityConfig) {
     this.initialState = config?.initialState ?? 'playing';
     this.featureIdProperty = config?.featureIdProperty;
   }
 
   /**
-   * Initialize states from features
+   * Initialize animation states from an array of GeoJSON features.
+   *
+   * This clears any existing state and creates new state entries for each feature.
+   * The initial playing state is determined by the configuration.
+   *
+   * @param features - Array of GeoJSON features to initialize
+   *
+   * @example
+   * ```typescript
+   * // Initialize from GeoJSON data
+   * const geojson = await fetch('/data/points.geojson').then(r => r.json());
+   * manager.initializeFromFeatures(geojson.features);
+   *
+   * console.log(`Initialized ${manager.getFeatureCount()} features`);
+   * ```
    */
   initializeFromFeatures(features: GeoJSON.Feature[]): void {
     this.states.clear();
@@ -70,7 +156,15 @@ export class FeatureAnimationStateManager {
   }
 
   /**
-   * Play animation for a specific feature
+   * Start playing animation for a specific feature.
+   *
+   * @param featureId - ID of the feature to play
+   *
+   * @example
+   * ```typescript
+   * manager.playFeature('point-123');
+   * manager.playFeature(42);
+   * ```
    */
   playFeature(featureId: string | number): void {
     const state = this.states.get(featureId);
@@ -81,7 +175,12 @@ export class FeatureAnimationStateManager {
   }
 
   /**
-   * Pause animation for a specific feature
+   * Pause animation for a specific feature.
+   *
+   * When paused, the feature's local time is preserved so it can resume
+   * from the same position.
+   *
+   * @param featureId - ID of the feature to pause
    */
   pauseFeature(featureId: string | number): void {
     const state = this.states.get(featureId);
@@ -94,7 +193,11 @@ export class FeatureAnimationStateManager {
   }
 
   /**
-   * Reset animation for a specific feature
+   * Reset animation for a specific feature to initial state.
+   *
+   * Sets local time and play count back to zero.
+   *
+   * @param featureId - ID of the feature to reset
    */
   resetFeature(featureId: string | number): void {
     const state = this.states.get(featureId);
@@ -106,7 +209,18 @@ export class FeatureAnimationStateManager {
   }
 
   /**
-   * Toggle play/pause for a specific feature
+   * Toggle between play and pause states for a specific feature.
+   *
+   * @param featureId - ID of the feature to toggle
+   *
+   * @example
+   * ```typescript
+   * // On click, toggle the animation
+   * map.on('click', 'layer', (e) => {
+   *   const id = e.features[0].id;
+   *   manager.toggleFeature(id);
+   * });
+   * ```
    */
   toggleFeature(featureId: string | number): void {
     const state = this.states.get(featureId);
@@ -206,8 +320,26 @@ export class FeatureAnimationStateManager {
   }
 
   /**
-   * Generate GPU buffer data for isPlaying and localTime
-   * Expands data for multi-vertex geometries (e.g., 4 vertices per point quad)
+   * Generate GPU buffer data for isPlaying and localTime uniforms.
+   *
+   * Creates Float32Arrays suitable for uploading to GPU buffers.
+   * Data is expanded for multi-vertex geometries (e.g., 4 vertices per point quad).
+   *
+   * @param verticesPerFeature - Number of vertices per feature (e.g., 4 for quads)
+   * @returns Object containing isPlayingData and localTimeData Float32Arrays
+   *
+   * @example
+   * ```typescript
+   * // For point sprites with 4 vertices each
+   * const { isPlayingData, localTimeData } = manager.generateBufferData(4);
+   *
+   * // Upload to GPU
+   * gl.bindBuffer(gl.ARRAY_BUFFER, isPlayingBuffer);
+   * gl.bufferData(gl.ARRAY_BUFFER, isPlayingData, gl.DYNAMIC_DRAW);
+   *
+   * gl.bindBuffer(gl.ARRAY_BUFFER, localTimeBuffer);
+   * gl.bufferData(gl.ARRAY_BUFFER, localTimeData, gl.DYNAMIC_DRAW);
+   * ```
    */
   generateBufferData(verticesPerFeature: number): {
     isPlayingData: Float32Array;

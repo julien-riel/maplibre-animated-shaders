@@ -156,6 +156,53 @@ export { glsl, noiseGLSL, easingGLSL, shapesGLSL, colorsGLSL } from './glsl';
 // Custom WebGL layers
 export { PointShaderLayer } from './layers';
 
+// WebGL 2.0 abstraction layer
+export {
+  WebGLContext,
+  createWebGLContext,
+  wrapWebGLContext,
+  type IWebGLContext,
+  type WebGLContextType,
+  type WebGLVersion,
+  type WebGLCapabilities as WebGL2Capabilities,
+  buildProgram,
+  compileShader,
+  applyDefines,
+  addLineNumbers,
+  extractUniforms as extractGLSLUniforms,
+  extractAttributes,
+  usesInstancing,
+  transformToWebGL2,
+  transformToWebGL1,
+  ShaderCompilationError,
+  ProgramLinkError,
+  type CompiledProgram,
+  type ProgramOptions,
+  InstancedRenderer,
+  createQuadGeometry,
+  createLineGeometry,
+  type InstanceAttribute,
+  type InstanceLayout,
+} from './webgl';
+
+// Rendering optimizations
+export * from './rendering';
+
+// Performance management
+export * from './performance';
+
+// Texture management
+export * from './textures';
+
+// Shader transitions
+export * from './transitions';
+
+// Terrain/3D support
+export * from './terrain';
+
+// Worker thread support
+export * from './workers';
+
 // Re-import for use in helper functions
 import { globalRegistry as registry } from './ShaderRegistry';
 import type { GeometryType, ShaderConfig, ShaderDefinition } from './types';

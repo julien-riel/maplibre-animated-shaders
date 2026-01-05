@@ -18,6 +18,23 @@ Animated GLSL shaders for MapLibre GL JS. Add stunning visual effects to your ma
 - **Error hierarchy** - Typed errors with error codes for robust error handling
 - **Performance optimized** - Shader program caching, object pooling, buffer reuse
 
+### Implementation Progress
+
+| Phase | Feature | Status |
+|-------|---------|--------|
+| 1.1 | WebGL 2.0 Support avec Fallback | ✅ Complete |
+| 1.2 | Config Immutability (deep-freeze) | ✅ Complete |
+| 1.3 | Complete JSDoc documentation | ⏳ In Progress |
+| 2.1 | Instanced Rendering | ✅ Complete |
+| 2.2 | Frustum Culling | ✅ Complete |
+| 2.3 | Level of Detail (LOD) | ✅ Complete |
+| 2.4 | Adaptive Frame Rate | ✅ Complete |
+| 3.1 | Textures and Sprites | ✅ Complete |
+| 3.2 | Post-Processing Pipeline | ✅ Complete |
+| 3.3 | Shader Transitions | ✅ Complete |
+| 4.1 | Terrain/3D Shaders | ✅ Complete |
+| 5.1 | Worker Thread Support | ✅ Complete |
+
 ## Installation
 
 ```bash

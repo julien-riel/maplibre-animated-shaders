@@ -1,13 +1,41 @@
 /**
- * BaseShaderLayer - Abstract base class for geometry shader layers
+ * Base Shader Layer
  *
- * Provides common functionality for Point, Line, and Polygon shader layers:
- * - WebGL program management
- * - Animation state (play/pause/speed)
- * - Data-driven property evaluation
- * - Interactive animation support
- * - Time offset calculations
- * - Error handling
+ * Abstract base class for geometry-specific shader layers (Point, Line, Polygon).
+ * Implements MapLibre's CustomLayerInterface and provides common functionality:
+ *
+ * - **WebGL Management**: Shader compilation, program linking, buffer management
+ * - **Animation Control**: Play/pause/speed control, time tracking
+ * - **Data-Driven Properties**: Expression evaluation for per-feature styling
+ * - **Interactive Animations**: Per-feature play/pause with click/hover support
+ * - **Time Offsets**: Desynchronized animations for visual variety
+ * - **Error Handling**: Graceful degradation with detailed error logging
+ *
+ * @module layers/BaseShaderLayer
+ *
+ * @example
+ * ```typescript
+ * // BaseShaderLayer is abstract - use concrete implementations:
+ * import { PointShaderLayer, LineShaderLayer } from 'maplibre-animated-shaders';
+ *
+ * // Create a point shader layer
+ * const layer = new PointShaderLayer('my-points', 'points-source', pulseShader, {
+ *   color: '#ff0000',
+ *   speed: 1.5,
+ *   interactivity: {
+ *     onClick: 'toggle',
+ *     onHover: { enter: 'play', leave: 'pause' }
+ *   }
+ * });
+ *
+ * // Add to map
+ * map.addLayer(layer);
+ *
+ * // Control animation
+ * layer.play();
+ * layer.pause();
+ * layer.setSpeed(2.0);
+ * ```
  */
 
 import type { CustomLayerInterface, Map as MapLibreMap } from 'maplibre-gl';
@@ -41,7 +69,22 @@ export interface FeatureData {
 }
 
 /**
- * Abstract base class for shader layers
+ * Abstract base class for shader layers.
+ *
+ * Subclasses must implement:
+ * - `createGeometryBuffers(gl, features)`: Create vertex/index buffers for the geometry type
+ * - `layerTypeName`: String identifier for logging (e.g., 'PointShaderLayer')
+ *
+ * @example
+ * ```typescript
+ * class MyCustomLayer extends BaseShaderLayer {
+ *   protected readonly layerTypeName = 'MyCustomLayer';
+ *
+ *   protected createGeometryBuffers(gl: WebGLRenderingContext, features: GeoJSON.Feature[]): void {
+ *     // Create buffers for custom geometry
+ *   }
+ * }
+ * ```
  */
 export abstract class BaseShaderLayer implements CustomLayerInterface {
   id: string;

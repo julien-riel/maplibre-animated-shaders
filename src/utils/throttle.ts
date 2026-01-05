@@ -1,7 +1,26 @@
 /**
- * Throttle Utility
+ * Throttle and Debounce Utilities
  *
- * Limits the rate at which a function can be called.
+ * Rate-limiting utilities for controlling function execution frequency.
+ * Essential for optimizing map update performance and reducing CPU load.
+ *
+ * - **throttle**: Ensures function runs at most once per interval
+ * - **debounce**: Delays execution until calls stop for specified time
+ *
+ * @module utils/throttle
+ *
+ * @example
+ * ```typescript
+ * import { throttle, debounce, DEFAULT_UPDATE_THROTTLE_MS } from 'maplibre-animated-shaders';
+ *
+ * // Throttle buffer updates to max 10/second
+ * const throttledUpdate = throttle(updateBuffers, 100);
+ * map.on('sourcedata', throttledUpdate);
+ *
+ * // Debounce search input
+ * const debouncedSearch = debounce(performSearch, 300);
+ * input.addEventListener('input', debouncedSearch);
+ * ```
  */
 
 /**

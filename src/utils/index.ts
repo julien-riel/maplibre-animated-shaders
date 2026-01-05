@@ -1,5 +1,6 @@
 export * from './color';
 export * from './config-helpers';
+export * from './deep-freeze';
 export * from './glsl-loader';
 export * from './glsl-uniform-extractor';
 export * from './maplibre-helpers';

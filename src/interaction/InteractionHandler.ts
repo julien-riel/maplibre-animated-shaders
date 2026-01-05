@@ -1,8 +1,37 @@
 /**
- * FeatureInteractionHandler - Handles MapLibre click/hover events
+ * Feature Interaction Handler
  *
- * Attaches to map events and dispatches interaction actions
- * to the FeatureAnimationStateManager.
+ * Handles MapLibre click/hover events and dispatches interaction actions
+ * to the FeatureAnimationStateManager. Provides automatic cursor changes
+ * and support for various interaction types (click, hover enter/leave).
+ *
+ * @module interaction/InteractionHandler
+ *
+ * @example
+ * ```typescript
+ * import { FeatureInteractionHandler, FeatureAnimationStateManager } from 'maplibre-animated-shaders';
+ *
+ * const stateManager = new FeatureAnimationStateManager({
+ *   initialState: 'paused',
+ *   featureIdProperty: 'id'
+ * });
+ *
+ * const handler = new FeatureInteractionHandler(
+ *   map,
+ *   'my-layer',
+ *   stateManager,
+ *   {
+ *     onClick: 'toggle',
+ *     onHover: {
+ *       enter: 'play',
+ *       leave: 'pause'
+ *     }
+ *   }
+ * );
+ *
+ * // Later, clean up
+ * handler.dispose();
+ * ```
  */
 
 import type { Map as MapLibreMap, MapLayerMouseEvent, MapGeoJSONFeature } from 'maplibre-gl';
@@ -15,24 +44,82 @@ import type {
 import type { FeatureAnimationStateManager } from './FeatureAnimationStateManager';
 
 /**
- * Handles MapLibre click/hover events and dispatches to state manager
+ * Handles MapLibre click/hover events and dispatches to state manager.
+ *
+ * This class automatically attaches event listeners to MapLibre map layers
+ * and translates user interactions into animation state changes. It supports:
+ * - Click interactions (toggle, play, pause, reset, playOnce, or custom handler)
+ * - Hover interactions with separate enter/leave actions
+ * - Automatic cursor changes on hover
+ *
+ * @example
+ * ```typescript
+ * // Basic toggle on click
+ * new FeatureInteractionHandler(map, 'layer-id', stateManager, {
+ *   onClick: 'toggle'
+ * });
+ *
+ * // Custom click handler
+ * new FeatureInteractionHandler(map, 'layer-id', stateManager, {
+ *   onClick: (feature, state) => {
+ *     console.log(`Clicked feature ${feature.id}, playing: ${state.isPlaying}`);
+ *     stateManager.toggleFeature(state.featureId);
+ *   }
+ * });
+ * ```
  */
 export class FeatureInteractionHandler {
+  /** @internal MapLibre map instance */
   private map: MapLibreMap;
+
+  /** @internal Layer ID to attach events to */
   private layerId: string;
+
+  /** @internal Animation state manager */
   private stateManager: FeatureAnimationStateManager;
+
+  /** @internal Interactivity configuration */
   private config: InteractivityConfig;
 
-  // Bound event handlers for cleanup
+  /** @internal Bound click event handler for cleanup */
   private clickHandler?: (e: MapLayerMouseEvent) => void;
+
+  /** @internal Bound mouse enter event handler for cleanup */
   private mouseEnterHandler?: (e: MapLayerMouseEvent) => void;
+
+  /** @internal Bound mouse leave event handler for cleanup */
   private mouseLeaveHandler?: () => void;
+
+  /** @internal Bound cursor enter handler for cleanup */
   private cursorEnterHandler?: () => void;
+
+  /** @internal Bound cursor leave handler for cleanup */
   private cursorLeaveHandler?: () => void;
 
-  // Track hovered feature for leave events
+  /** @internal Currently hovered feature ID for leave events */
   private hoveredFeatureId: string | number | null = null;
 
+  /**
+   * Create a new feature interaction handler.
+   *
+   * @param map - MapLibre map instance
+   * @param layerId - ID of the layer to attach events to
+   * @param stateManager - Animation state manager instance
+   * @param config - Interactivity configuration
+   *
+   * @example
+   * ```typescript
+   * const handler = new FeatureInteractionHandler(
+   *   map,
+   *   'animated-points',
+   *   stateManager,
+   *   {
+   *     onClick: 'toggle',
+   *     onHover: { enter: 'play', leave: 'pause' }
+   *   }
+   * );
+   * ```
+   */
   constructor(
     map: MapLibreMap,
     layerId: string,
@@ -172,7 +259,17 @@ export class FeatureInteractionHandler {
   }
 
   /**
-   * Cleanup event listeners
+   * Clean up all event listeners and release resources.
+   *
+   * Call this method when removing the layer or destroying the handler
+   * to prevent memory leaks and stale event handlers.
+   *
+   * @example
+   * ```typescript
+   * // When layer is removed
+   * handler.dispose();
+   * map.removeLayer('animated-points');
+   * ```
    */
   dispose(): void {
     if (this.clickHandler) {

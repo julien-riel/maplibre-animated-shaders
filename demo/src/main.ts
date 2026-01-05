@@ -11,6 +11,7 @@ import { ConfigPanel } from './components/ConfigPanel';
 import { MapView } from './components/MapView';
 import { EffectsStackPanel } from './components/EffectsStackPanel';
 import { PerformanceMonitor } from './components/PerformanceMonitor';
+import { FeaturesShowcase } from './components/FeaturesShowcase';
 import { globalRegistry, examplePlugin, ShaderManager } from '../../src';
 import type { ShaderDefinition } from '../../src/types';
 import type {
@@ -137,6 +138,7 @@ function init(): void {
   const effectsPanel = new EffectsStackPanel('effects-stack');
   const configPanel = new ConfigPanel('config-controls');
   const perfMonitor = new PerformanceMonitor('map-container');
+  const featuresShowcase = new FeaturesShowcase('map-container', mapView);
 
   // Handle shader addition from gallery
   gallery.onAdd((shaderName) => {
