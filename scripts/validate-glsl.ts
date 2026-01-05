@@ -366,7 +366,7 @@ async function main() {
   console.log(`${colors.blue}║       GLSL Shader Validation Tool        ║${colors.reset}`);
   console.log(`${colors.blue}╚══════════════════════════════════════════╝${colors.reset}\n`);
 
-  const srcDir = path.resolve(__dirname, '../src');
+  const srcDir = path.resolve(__dirname, '../packages/lib/src');
   const files = findShaderFiles(srcDir);
 
   console.log(`${colors.gray}Scanning ${files.length} files for GLSL shaders...${colors.reset}\n`);

@@ -11,12 +11,12 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      include: ['src/**/*.ts'],
+      include: ['packages/lib/src/**/*.ts'],
       exclude: [
-        'src/**/*.test.ts',
-        'src/**/index.ts',
-        'src/types/**',
-        'src/glsl/**/*.ts',
+        'packages/lib/src/**/*.test.ts',
+        'packages/lib/src/**/index.ts',
+        'packages/lib/src/types/**',
+        'packages/lib/src/glsl/**/*.ts',
       ],
       thresholds: {
         lines: 80,
@@ -35,7 +35,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': resolve(__dirname, './src'),
+      '@': resolve(__dirname, './packages/lib/src'),
+      'maplibre-animated-shaders': resolve(__dirname, './packages/lib/src'),
     },
   },
 });

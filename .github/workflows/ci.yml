@@ -147,7 +147,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dist
-          path: dist/
+          path: packages/lib/dist/
           retention-days: 7
 
       - name: Check bundle size

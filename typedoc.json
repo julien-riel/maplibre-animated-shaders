@@ -1,6 +1,6 @@
 {
   "$schema": "https://typedoc.org/schema.json",
-  "entryPoints": ["src/index.ts"],
+  "entryPoints": ["packages/lib/src/index.ts"],
   "out": "generated-docs",
   "name": "MapLibre Animated Shaders",
   "readme": "README.md",

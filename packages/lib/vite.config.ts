@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => {
             dts({
               insertTypesEntry: true,
               include: ['src/**/*.ts'],
-              exclude: ['src/**/*.test.ts', 'demo/**/*'],
+              exclude: ['src/**/*.test.ts'],
             }),
           ]
         : []),
@@ -28,28 +28,24 @@ export default defineConfig(({ mode }) => {
         '@': resolve(__dirname, './src'),
       },
     },
-    build: isLib
-      ? {
-          lib: {
-            entry: resolve(__dirname, 'src/index.ts'),
-            name: 'MapLibreGLShaders',
-            formats: ['es', 'cjs'],
-            fileName: (format) => `index.${format === 'es' ? 'js' : 'cjs'}`,
+    build: {
+      lib: {
+        entry: resolve(__dirname, 'src/index.ts'),
+        name: 'MapLibreGLShaders',
+        formats: ['es', 'cjs'],
+        fileName: (format) => `index.${format === 'es' ? 'js' : 'cjs'}`,
+      },
+      rollupOptions: {
+        external: ['maplibre-gl'],
+        output: {
+          globals: {
+            'maplibre-gl': 'maplibregl',
           },
-          rollupOptions: {
-            external: ['maplibre-gl'],
-            output: {
-              globals: {
-                'maplibre-gl': 'maplibregl',
-              },
-            },
-          },
-          sourcemap: true,
-          minify: 'esbuild',
-        }
-      : {
-          outDir: 'dist-demo',
         },
+      },
+      sourcemap: true,
+      minify: 'esbuild',
+    },
     server: {
       port: 3000,
       open: true,

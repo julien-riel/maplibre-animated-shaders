@@ -64,7 +64,7 @@ jobs:
         run: |
           cat > /tmp/test-import.mjs << 'EOF'
           import maplibregl from 'maplibre-gl';
-          import { ShaderManager, globalRegistry } from './dist/index.js';
+          import { ShaderManager, globalRegistry } from './packages/lib/dist/index.js';
 
           console.log('MapLibre version:', maplibregl.version || 'unknown');
           console.log('ShaderManager:', typeof ShaderManager);
