@@ -9,7 +9,7 @@ import type { Map as MapLibreMap } from 'maplibre-gl';
 import { createShaderManager, globalRegistry } from 'maplibre-animated-shaders';
 import type { ShaderManager } from 'maplibre-animated-shaders';
 import type { InteractivityConfig } from 'maplibre-animated-shaders/types';
-import type { EffectId, StackedEffect, GeometryType, AdvancedEffectConfig } from '../types/effectStack';
+import type { EffectId, StackedEffect, GeometryType } from '../types/effectStack';
 import { buildShaderAdvancedConfig } from '../types/effectStack';
 
 import demoPoints from '../data/demo-points.geojson';
@@ -332,7 +332,11 @@ export class MapView {
    */
   updateEffectWithCustomShader(
     effect: StackedEffect,
-    customShader: { vertexShader?: string; fragmentShader?: string; defaultConfig?: Record<string, unknown> }
+    customShader: {
+      vertexShader?: string;
+      fragmentShader?: string;
+      defaultConfig?: Record<string, unknown>;
+    }
   ): void {
     const layerId = this.effectLayers.get(effect.id);
     if (!layerId || !this.shaderManager) {
@@ -521,7 +525,7 @@ export class MapView {
     }
 
     // Notify ready callbacks
-    this.readyCallbacks.forEach(cb => cb());
+    this.readyCallbacks.forEach((cb) => cb());
     this.readyCallbacks = [];
   }
 
@@ -620,12 +624,14 @@ export class MapView {
 
       new maplibregl.Popup()
         .setLngLat(coordinates as [number, number])
-        .setHTML(`
+        .setHTML(
+          `
           <div style="padding: 4px;">
             <strong>${name}</strong>
             ${category ? `<br><small style="color: #666;">${category}</small>` : ''}
           </div>
-        `)
+        `
+        )
         .addTo(this.map);
     });
   }

@@ -3,10 +3,7 @@
  */
 
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
-import {
-  ProductionPerformanceMonitor,
-  getPerformanceMonitor,
-} from 'maplibre-animated-shaders';
+import { ProductionPerformanceMonitor, getPerformanceMonitor } from 'maplibre-animated-shaders';
 import type { PerformanceMetrics } from 'maplibre-animated-shaders';
 import type { UsePerformanceMonitorOptions, UsePerformanceMonitorReturn } from '../types';
 
@@ -35,13 +32,7 @@ import type { UsePerformanceMonitorOptions, UsePerformanceMonitorReturn } from '
 export function usePerformanceMonitor(
   options: UsePerformanceMonitorOptions = {}
 ): UsePerformanceMonitorReturn {
-  const {
-    enabled = true,
-    updateInterval = 500,
-    canvasRef,
-    onMetrics,
-    onWarning,
-  } = options;
+  const { enabled = true, updateInterval = 500, canvasRef, onMetrics, onWarning } = options;
 
   const [metrics, setMetrics] = useState<PerformanceMetrics | null>(null);
   const [isMonitoring, setIsMonitoring] = useState(false);

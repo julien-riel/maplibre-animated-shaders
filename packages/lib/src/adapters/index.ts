@@ -202,7 +202,8 @@ export class MapLibreAdapter implements IMapAdapter {
 
   getWebGLContext(): WebGLRenderingContext | null {
     const canvas = this.map.getCanvas();
-    return (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')) as WebGLRenderingContext | null;
+    return (canvas.getContext('webgl') ||
+      canvas.getContext('experimental-webgl')) as WebGLRenderingContext | null;
   }
 
   on(event: string, handler: MapEventHandler): void {

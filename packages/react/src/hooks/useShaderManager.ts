@@ -36,9 +36,7 @@ import type { UseShaderManagerOptions, UseShaderManagerReturn } from '../types';
  * }
  * ```
  */
-export function useShaderManager(
-  options: UseShaderManagerOptions = {}
-): UseShaderManagerReturn {
+export function useShaderManager(options: UseShaderManagerOptions = {}): UseShaderManagerReturn {
   const { autoInit = true } = options;
 
   const [manager, setManager] = useState<ShaderManager | null>(null);

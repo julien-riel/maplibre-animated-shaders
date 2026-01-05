@@ -120,20 +120,24 @@ map.on('load', () => {
    * Basic syntax highlighting
    */
   private highlightSyntax(code: string): string {
-    return code
-      // Keywords
-      .replace(/\b(import|from|const|let|var|function|return|new|if|else)\b/g,
-        '<span class="keyword">$1</span>')
-      // Strings
-      .replace(/'([^']*)'/g, '<span class="string">\'$1\'</span>')
-      // Comments
-      .replace(/(\/\/.*)/g, '<span class="comment">$1</span>')
-      // Numbers
-      .replace(/\b(\d+\.?\d*)\b/g, '<span class="number">$1</span>')
-      // Properties
-      .replace(/(\w+):/g, '<span class="property">$1</span>:')
-      // Methods
-      .replace(/\.(\w+)\(/g, '.<span class="method">$1</span>(');
+    return (
+      code
+        // Keywords
+        .replace(
+          /\b(import|from|const|let|var|function|return|new|if|else)\b/g,
+          '<span class="keyword">$1</span>'
+        )
+        // Strings
+        .replace(/'([^']*)'/g, '<span class="string">\'$1\'</span>')
+        // Comments
+        .replace(/(\/\/.*)/g, '<span class="comment">$1</span>')
+        // Numbers
+        .replace(/\b(\d+\.?\d*)\b/g, '<span class="number">$1</span>')
+        // Properties
+        .replace(/(\w+):/g, '<span class="property">$1</span>:')
+        // Methods
+        .replace(/\.(\w+)\(/g, '.<span class="method">$1</span>(')
+    );
   }
 
   /**

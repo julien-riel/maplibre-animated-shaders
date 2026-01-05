@@ -2,8 +2,7 @@
  * useShaderEffect - Composable for applying shader effects
  */
 
-import { ref, watch, onUnmounted, type Ref } from 'vue';
-import type { Map as MapLibreMap } from 'maplibre-gl';
+import { ref, watch, onUnmounted } from 'vue';
 import { globalRegistry } from 'maplibre-animated-shaders';
 import type { ShaderConfig } from 'maplibre-animated-shaders';
 import type { UseShaderEffectOptions, UseShaderEffectReturn } from '../types';
@@ -198,11 +197,15 @@ export function useShaderEffect(options: UseShaderEffectOptions): UseShaderEffec
     }
   });
 
-  watch(config, () => {
-    if (isApplied.value) {
-      updateConfig(config.value);
-    }
-  }, { deep: true });
+  watch(
+    config,
+    () => {
+      if (isApplied.value) {
+        updateConfig(config.value);
+      }
+    },
+    { deep: true }
+  );
 
   // Cleanup on unmount
   onUnmounted(() => {

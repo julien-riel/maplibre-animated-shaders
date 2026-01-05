@@ -329,8 +329,7 @@ export class AdaptiveFrameRate {
       return this.config.targetFPS;
     }
 
-    const avgFrameTime =
-      this.frameTimes.reduce((a, b) => a + b, 0) / this.frameTimes.length;
+    const avgFrameTime = this.frameTimes.reduce((a, b) => a + b, 0) / this.frameTimes.length;
     return 1000 / avgFrameTime;
   }
 

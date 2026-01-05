@@ -144,11 +144,7 @@ export class ProgramCache {
    * @param fragmentSource - The fragment shader source code
    * @param gl - The WebGL rendering context (needed for cleanup)
    */
-  release(
-    vertexSource: string,
-    fragmentSource: string,
-    gl: WebGLRenderingContext
-  ): void {
+  release(vertexSource: string, fragmentSource: string, gl: WebGLRenderingContext): void {
     const hash = createCacheKey(vertexSource, fragmentSource);
     this.releaseByHash(hash, gl);
   }
@@ -211,7 +207,11 @@ export class ProgramCache {
   /**
    * Get cache statistics.
    */
-  getStats(): { programs: number; totalRefs: number; entries: { hash: string; refCount: number }[] } {
+  getStats(): {
+    programs: number;
+    totalRefs: number;
+    entries: { hash: string; refCount: number }[];
+  } {
     let totalRefs = 0;
     const entries: { hash: string; refCount: number }[] = [];
 
@@ -247,11 +247,7 @@ export class ProgramCache {
   /**
    * Compile a shader.
    */
-  private compileShader(
-    gl: WebGLRenderingContext,
-    type: number,
-    source: string
-  ): WebGLShader {
+  private compileShader(gl: WebGLRenderingContext, type: number, source: string): WebGLShader {
     const shader = gl.createShader(type);
     if (!shader) {
       throw new Error('Failed to create shader');

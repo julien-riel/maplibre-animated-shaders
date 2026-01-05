@@ -492,9 +492,7 @@ export class GeometryWorker {
         const pending = this.pendingRequests.get(id);
         if (pending) {
           this.pendingRequests.delete(id);
-          pending.reject(
-            new Error(`Worker request timed out after ${this.requestTimeout}ms`)
-          );
+          pending.reject(new Error(`Worker request timed out after ${this.requestTimeout}ms`));
         }
       }, this.requestTimeout);
 
@@ -550,9 +548,7 @@ export class GeometryWorker {
           (data as { tolerance: number }).tolerance
         );
       case 'computeBounds':
-        return this.computeBoundsSync(
-          (data as { features: GeoJSON.Feature[] }).features
-        );
+        return this.computeBoundsSync((data as { features: GeoJSON.Feature[] }).features);
       case 'generateBuffers':
         return this.generateBuffersSync(
           (data as { features: GeoJSON.Feature[]; stride: number }).features,
@@ -592,20 +588,14 @@ export class GeometryWorker {
   /**
    * Synchronous simplification using Douglas-Peucker.
    */
-  private simplifySync(
-    features: GeoJSON.Feature[],
-    tolerance: number
-  ): GeoJSON.Feature[] {
+  private simplifySync(features: GeoJSON.Feature[], tolerance: number): GeoJSON.Feature[] {
     return features.map((f) => ({
       ...f,
       geometry: this.simplifyGeometrySync(f.geometry, tolerance),
     }));
   }
 
-  private simplifyGeometrySync(
-    geometry: GeoJSON.Geometry,
-    tolerance: number
-  ): GeoJSON.Geometry {
+  private simplifyGeometrySync(geometry: GeoJSON.Geometry, tolerance: number): GeoJSON.Geometry {
     if (!geometry) return geometry;
 
     switch (geometry.type) {
@@ -617,16 +607,12 @@ export class GeometryWorker {
       case 'Polygon':
         return {
           type: 'Polygon',
-          coordinates: geometry.coordinates.map((ring) =>
-            this.douglasPeuckerSync(ring, tolerance)
-          ),
+          coordinates: geometry.coordinates.map((ring) => this.douglasPeuckerSync(ring, tolerance)),
         };
       case 'MultiLineString':
         return {
           type: 'MultiLineString',
-          coordinates: geometry.coordinates.map((line) =>
-            this.douglasPeuckerSync(line, tolerance)
-          ),
+          coordinates: geometry.coordinates.map((line) => this.douglasPeuckerSync(line, tolerance)),
         };
       case 'MultiPolygon':
         return {
@@ -640,21 +626,14 @@ export class GeometryWorker {
     }
   }
 
-  private douglasPeuckerSync(
-    points: GeoJSON.Position[],
-    tolerance: number
-  ): GeoJSON.Position[] {
+  private douglasPeuckerSync(points: GeoJSON.Position[], tolerance: number): GeoJSON.Position[] {
     if (points.length <= 2) return points;
 
     let maxDist = 0;
     let maxIndex = 0;
 
     for (let i = 1; i < points.length - 1; i++) {
-      const dist = this.perpendicularDistanceSync(
-        points[i],
-        points[0],
-        points[points.length - 1]
-      );
+      const dist = this.perpendicularDistanceSync(points[i], points[0], points[points.length - 1]);
       if (dist > maxDist) {
         maxDist = dist;
         maxIndex = i;
@@ -662,10 +641,7 @@ export class GeometryWorker {
     }
 
     if (maxDist > tolerance) {
-      const left = this.douglasPeuckerSync(
-        points.slice(0, maxIndex + 1),
-        tolerance
-      );
+      const left = this.douglasPeuckerSync(points.slice(0, maxIndex + 1), tolerance);
       const right = this.douglasPeuckerSync(points.slice(maxIndex), tolerance);
       return [...left.slice(0, -1), ...right];
     }
@@ -682,27 +658,21 @@ export class GeometryWorker {
     const dy = lineEnd[1] - lineStart[1];
 
     if (dx === 0 && dy === 0) {
-      return Math.sqrt(
-        Math.pow(point[0] - lineStart[0], 2) +
-          Math.pow(point[1] - lineStart[1], 2)
-      );
+      return Math.sqrt(Math.pow(point[0] - lineStart[0], 2) + Math.pow(point[1] - lineStart[1], 2));
     }
 
     const t = Math.max(
       0,
       Math.min(
         1,
-        ((point[0] - lineStart[0]) * dx + (point[1] - lineStart[1]) * dy) /
-          (dx * dx + dy * dy)
+        ((point[0] - lineStart[0]) * dx + (point[1] - lineStart[1]) * dy) / (dx * dx + dy * dy)
       )
     );
 
     const nearestX = lineStart[0] + t * dx;
     const nearestY = lineStart[1] + t * dy;
 
-    return Math.sqrt(
-      Math.pow(point[0] - nearestX, 2) + Math.pow(point[1] - nearestY, 2)
-    );
+    return Math.sqrt(Math.pow(point[0] - nearestX, 2) + Math.pow(point[1] - nearestY, 2));
   }
 
   /**
@@ -872,10 +842,7 @@ export class GeometryWorker {
    * @param tolerance - Simplification tolerance
    * @returns Promise resolving to simplified features
    */
-  async simplify(
-    features: GeoJSON.Feature[],
-    tolerance: number
-  ): Promise<GeoJSON.Feature[]> {
+  async simplify(features: GeoJSON.Feature[], tolerance: number): Promise<GeoJSON.Feature[]> {
     if (!this.isInitialized) {
       await this.initialize();
     }

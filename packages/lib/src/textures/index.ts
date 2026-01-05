@@ -27,11 +27,7 @@
  * ```
  */
 
-export {
-  TextureManager,
-  type TextureOptions,
-  type TextureInfo,
-} from './TextureManager';
+export { TextureManager, type TextureOptions, type TextureInfo } from './TextureManager';
 
 export {
   SpriteAtlas,

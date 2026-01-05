@@ -9,7 +9,6 @@
  * - Export/import functionality
  */
 
-import { globalRegistry } from 'maplibre-animated-shaders';
 import type { ShaderDefinition, ShaderConfig } from 'maplibre-animated-shaders/types';
 
 /**
@@ -246,7 +245,7 @@ export class ShaderEditor {
     });
 
     // Tab support in textareas
-    [this.vertexEditor, this.fragmentEditor].forEach(editor => {
+    [this.vertexEditor, this.fragmentEditor].forEach((editor) => {
       editor?.addEventListener('keydown', (e) => {
         if (e.key === 'Tab') {
           e.preventDefault();
@@ -289,7 +288,14 @@ export class ShaderEditor {
           type,
           value: controlValue,
           min: type === 'float' ? 0 : undefined,
-          max: type === 'float' ? (key.includes('speed') ? 5 : key.includes('opacity') ? 1 : 10) : undefined,
+          max:
+            type === 'float'
+              ? key.includes('speed')
+                ? 5
+                : key.includes('opacity')
+                  ? 1
+                  : 10
+              : undefined,
           step: type === 'float' ? 0.1 : undefined,
         });
       }
@@ -302,12 +308,13 @@ export class ShaderEditor {
   private renderUniformControls(): void {
     if (!this.uniformsContainer) return;
 
-    this.uniformsContainer.innerHTML = this.uniforms.map(uniform => {
-      let input = '';
+    this.uniformsContainer.innerHTML = this.uniforms
+      .map((uniform) => {
+        let input = '';
 
-      switch (uniform.type) {
-        case 'float':
-          input = `
+        switch (uniform.type) {
+          case 'float':
+            input = `
             <input type="range"
                    data-uniform="${uniform.name}"
                    value="${uniform.value}"
@@ -316,42 +323,48 @@ export class ShaderEditor {
                    step="${uniform.step ?? 0.1}">
             <span class="uniform-value">${uniform.value}</span>
           `;
-          break;
-        case 'color':
-          input = `
+            break;
+          case 'color':
+            input = `
             <input type="color"
                    data-uniform="${uniform.name}"
                    value="${uniform.value}">
           `;
-          break;
-        case 'vec2':
-        case 'vec3':
-        case 'vec4':
-          const values = uniform.value as number[];
-          input = values.map((v, i) => `
+            break;
+          case 'vec2':
+          case 'vec3':
+          case 'vec4': {
+            const values = uniform.value as number[];
+            input = values
+              .map(
+                (v, i) => `
             <input type="number"
                    data-uniform="${uniform.name}"
                    data-index="${i}"
                    value="${v}"
                    step="0.1">
-          `).join('');
-          break;
-      }
+          `
+              )
+              .join('');
+            break;
+          }
+        }
 
-      return `
+        return `
         <div class="uniform-control">
           <label>${uniform.name}</label>
           <div class="uniform-input">${input}</div>
         </div>
       `;
-    }).join('');
+      })
+      .join('');
 
     // Bind uniform change events
-    this.uniformsContainer.querySelectorAll('input').forEach(input => {
+    this.uniformsContainer.querySelectorAll('input').forEach((input) => {
       input.addEventListener('input', (e) => {
         const target = e.target as HTMLInputElement;
         const uniformName = target.dataset.uniform;
-        const uniform = this.uniforms.find(u => u.name === uniformName);
+        const uniform = this.uniforms.find((u) => u.name === uniformName);
         if (!uniform) return;
 
         if (uniform.type === 'float') {
@@ -383,7 +396,7 @@ export class ShaderEditor {
 
       // Build config from uniforms
       const config: ShaderConfig = {};
-      this.uniforms.forEach(u => {
+      this.uniforms.forEach((u) => {
         config[u.name] = u.value;
       });
 
@@ -458,7 +471,7 @@ export class ShaderEditor {
     if (!this.currentShader) return;
 
     const config: ShaderConfig = {};
-    this.uniforms.forEach(u => {
+    this.uniforms.forEach((u) => {
       config[u.name] = u.value;
     });
 

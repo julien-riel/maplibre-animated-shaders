@@ -12,7 +12,6 @@
 import {
   WebGLContext,
   AdaptiveFrameRate,
-  DEFAULT_QUALITY_LEVELS,
   ShaderTransition,
   Easing,
   deepFreeze,
@@ -120,9 +119,10 @@ export class FeaturesShowcase {
         <polyline points="22 8.5 12 15.5 2 8.5"/>
       </svg>`,
       status: version === 2 ? 'available' : 'fallback',
-      details: version === 2
-        ? `WebGL 2.0 | VAO: ${capabilities?.vertexArrayObject ? 'Yes' : 'No'}`
-        : `WebGL 1.0 fallback`,
+      details:
+        version === 2
+          ? `WebGL 2.0 | VAO: ${capabilities?.vertexArrayObject ? 'Yes' : 'No'}`
+          : `WebGL 1.0 fallback`,
     };
   }
 
@@ -210,7 +210,7 @@ export class FeaturesShowcase {
    * Textures detection
    */
   private detectTextures(): FeatureDemo {
-    const maxTextureSize = this.gl?.getParameter(this.gl.MAX_TEXTURE_SIZE) || 'N/A';
+    const _maxTextureSize = this.gl?.getParameter(this.gl.MAX_TEXTURE_SIZE) || 'N/A';
 
     return {
       id: 'textures',
@@ -579,11 +579,13 @@ export class FeaturesShowcase {
       type: 'geojson',
       data: {
         type: 'FeatureCollection',
-        features: [{
-          type: 'Feature',
-          geometry: { type: 'Polygon', coordinates: [originalCoordinates] },
-          properties: {},
-        }],
+        features: [
+          {
+            type: 'Feature',
+            geometry: { type: 'Polygon', coordinates: [originalCoordinates] },
+            properties: {},
+          },
+        ],
       },
     });
 
@@ -674,11 +676,13 @@ export class FeaturesShowcase {
       if (source) {
         source.setData({
           type: 'FeatureCollection',
-          features: [{
-            type: 'Feature',
-            geometry: { type: 'Polygon', coordinates: [simplifiedCoords] },
-            properties: {},
-          }],
+          features: [
+            {
+              type: 'Feature',
+              geometry: { type: 'Polygon', coordinates: [simplifiedCoords] },
+              properties: {},
+            },
+          ],
         });
       }
 
@@ -844,7 +848,7 @@ export class FeaturesShowcase {
 
     const sourceId = 'demo-terrain-source';
     const layerId = 'demo-terrain-layer';
-    const hillshadeLayerId = 'demo-terrain-hillshade';
+    const _hillshadeLayerId = 'demo-terrain-hillshade';
 
     // Generate a synthetic terrain heightmap
     const gridSize = 50;
@@ -857,9 +861,11 @@ export class FeaturesShowcase {
 
     // Generate elevation using multiple octaves of noise (simplex-like)
     const noise = (x: number, y: number, freq: number): number => {
-      return Math.sin(x * freq) * Math.cos(y * freq) +
-             Math.sin(x * freq * 2.1 + 1.3) * Math.cos(y * freq * 1.9 + 0.7) * 0.5 +
-             Math.sin(x * freq * 4.3 + 2.1) * Math.cos(y * freq * 3.7 + 1.4) * 0.25;
+      return (
+        Math.sin(x * freq) * Math.cos(y * freq) +
+        Math.sin(x * freq * 2.1 + 1.3) * Math.cos(y * freq * 1.9 + 0.7) * 0.5 +
+        Math.sin(x * freq * 4.3 + 2.1) * Math.cos(y * freq * 3.7 + 1.4) * 0.25
+      );
     };
 
     let minElev = Infinity;
@@ -871,9 +877,8 @@ export class FeaturesShowcase {
         // Generate elevation with multiple frequencies
         const nx = x / gridSize;
         const ny = y / gridSize;
-        const elevation = noise(nx, ny, 8) * 500 +
-                         noise(nx, ny, 16) * 200 +
-                         noise(nx, ny, 32) * 100;
+        const elevation =
+          noise(nx, ny, 8) * 500 + noise(nx, ny, 16) * 200 + noise(nx, ny, 32) * 100;
 
         elevationData[y][x] = elevation;
         minElev = Math.min(minElev, elevation);
@@ -933,9 +938,12 @@ export class FeaturesShowcase {
           'interpolate',
           ['linear'],
           ['get', 'normalizedElev'],
-          0, 4,
-          0.5, 6,
-          1, 10
+          0,
+          4,
+          0.5,
+          6,
+          1,
+          10,
         ],
         'circle-color': ['get', 'color'],
         'circle-opacity': 0.9,
@@ -955,24 +963,29 @@ export class FeaturesShowcase {
         const lat2 = lat1 + cellSize;
 
         // Average elevation for the cell
-        const avgElev = (
-          elevationData[y][x] +
-          elevationData[y][x + 1] +
-          elevationData[y + 1][x] +
-          elevationData[y + 1][x + 1]
-        ) / 4;
+        const avgElev =
+          (elevationData[y][x] +
+            elevationData[y][x + 1] +
+            elevationData[y + 1][x] +
+            elevationData[y + 1][x + 1]) /
+          4;
         const normalizedElev = (avgElev - minElev) / elevationRange;
 
         // Calculate slope for hillshade effect
-        const dzdx = (elevationData[y][Math.min(x + 1, gridSize - 1)] - elevationData[y][Math.max(x - 1, 0)]) / 2;
-        const dzdy = (elevationData[Math.min(y + 1, gridSize - 1)][x] - elevationData[Math.max(y - 1, 0)][x]) / 2;
+        const dzdx =
+          (elevationData[y][Math.min(x + 1, gridSize - 1)] - elevationData[y][Math.max(x - 1, 0)]) /
+          2;
+        const dzdy =
+          (elevationData[Math.min(y + 1, gridSize - 1)][x] - elevationData[Math.max(y - 1, 0)][x]) /
+          2;
         const slope = Math.sqrt(dzdx * dzdx + dzdy * dzdy);
         const aspect = Math.atan2(dzdy, -dzdx);
 
         // Simple hillshade calculation (sun from northwest)
         const sunAzimuth = Math.PI * 0.75; // 315 degrees
         const sunAltitude = Math.PI / 4; // 45 degrees
-        const hillshade = Math.cos(sunAltitude) * slope * Math.cos(aspect - sunAzimuth) + Math.sin(sunAltitude);
+        const hillshade =
+          Math.cos(sunAltitude) * slope * Math.cos(aspect - sunAzimuth) + Math.sin(sunAltitude);
         const shadeFactor = Math.max(0.3, Math.min(1, (hillshade + 1) / 2));
 
         // Color with hillshade
@@ -985,13 +998,15 @@ export class FeaturesShowcase {
           type: 'Feature',
           geometry: {
             type: 'Polygon',
-            coordinates: [[
-              [lng1, lat1],
-              [lng2, lat1],
-              [lng2, lat2],
-              [lng1, lat2],
-              [lng1, lat1],
-            ]],
+            coordinates: [
+              [
+                [lng1, lat1],
+                [lng2, lat1],
+                [lng2, lat2],
+                [lng1, lat2],
+                [lng1, lat1],
+              ],
+            ],
           },
           properties: {
             elevation: avgElev.toFixed(0),
@@ -1010,15 +1025,18 @@ export class FeaturesShowcase {
       data: { type: 'FeatureCollection', features: meshFeatures },
     });
 
-    this.map.addLayer({
-      id: meshLayerId,
-      type: 'fill',
-      source: meshSourceId,
-      paint: {
-        'fill-color': ['get', 'color'],
-        'fill-opacity': 0.85,
+    this.map.addLayer(
+      {
+        id: meshLayerId,
+        type: 'fill',
+        source: meshSourceId,
+        paint: {
+          'fill-color': ['get', 'color'],
+          'fill-opacity': 0.85,
+        },
       },
-    }, layerId); // Add below the points layer
+      layerId
+    ); // Add below the points layer
 
     // Add contour lines
     const contourFeatures: GeoJSON.Feature[] = [];
@@ -1197,8 +1215,12 @@ export class FeaturesShowcase {
       // Apply vignette effect
       if (effects.vignette.enabled) {
         const gradient = overlayCtx.createRadialGradient(
-          width / 2, height / 2, height * 0.3,
-          width / 2, height / 2, height * 0.8
+          width / 2,
+          height / 2,
+          height * 0.3,
+          width / 2,
+          height / 2,
+          height * 0.8
         );
         gradient.addColorStop(0, 'transparent');
         gradient.addColorStop(1, `rgba(0,0,0,${effects.vignette.intensity})`);
@@ -1247,12 +1269,16 @@ export class FeaturesShowcase {
       { name: 'sepia', label: 'Sepia', icon: '📜' },
     ];
 
-    const buttonsHtml = effectButtons.map(btn => `
+    const buttonsHtml = effectButtons
+      .map(
+        (btn) => `
       <button class="demo-effect-btn" data-effect="${btn.name}">
         <span class="demo-effect-icon">${btn.icon}</span>
         <span class="demo-effect-label">${btn.label}</span>
       </button>
-    `).join('');
+    `
+      )
+      .join('');
 
     // Show overlay with effect controls
     this.showDemoOverlay(`
@@ -1275,7 +1301,7 @@ export class FeaturesShowcase {
 
     // Add click handlers for effect buttons
     const buttons = document.querySelectorAll('.demo-effect-btn');
-    buttons.forEach(btn => {
+    buttons.forEach((btn) => {
       btn.addEventListener('click', () => {
         const effectName = btn.getAttribute('data-effect') as keyof typeof effects;
         if (effectName && effects[effectName]) {
@@ -1288,9 +1314,7 @@ export class FeaturesShowcase {
             .map(([name]) => name);
           const activeEl = document.getElementById('active-effects');
           if (activeEl) {
-            activeEl.textContent = activeNames.length > 0
-              ? activeNames.join(', ')
-              : 'None';
+            activeEl.textContent = activeNames.length > 0 ? activeNames.join(', ') : 'None';
           }
 
           updateFilters();
@@ -1377,11 +1401,11 @@ export class FeaturesShowcase {
 
     // Quality level colors
     const qualityColors: Record<string, string> = {
-      'Minimal': '#ef4444',
-      'Low': '#f97316',
-      'Medium': '#eab308',
-      'High': '#22c55e',
-      'Ultra': '#3b82f6',
+      Minimal: '#ef4444',
+      Low: '#f97316',
+      Medium: '#eab308',
+      High: '#22c55e',
+      Ultra: '#3b82f6',
     };
 
     // Start with variable load
@@ -1551,7 +1575,9 @@ export class FeaturesShowcase {
 
       // Simulate variable load by doing extra work
       if (currentLoad !== targetLoad) {
-        currentLoad = currentLoad + Math.sign(targetLoad - currentLoad) * Math.min(100, Math.abs(targetLoad - currentLoad));
+        currentLoad =
+          currentLoad +
+          Math.sign(targetLoad - currentLoad) * Math.min(100, Math.abs(targetLoad - currentLoad));
 
         // Update features
         const source = this.map?.getSource(sourceId) as GeoJSONSource;
@@ -1565,12 +1591,12 @@ export class FeaturesShowcase {
 
       // Simulate heavy computation based on load
       const startCompute = performance.now();
-      let sum = 0;
+      let _sum = 0;
       const iterations = currentLoad * 50;
       for (let i = 0; i < iterations; i++) {
-        sum += Math.sin(i * 0.001) * Math.cos(i * 0.001);
+        _sum += Math.sin(i * 0.001) * Math.cos(i * 0.001);
       }
-      const computeTime = performance.now() - startCompute;
+      const _computeTime = performance.now() - startCompute;
 
       // Record frame time (delta + compute time)
       afr.recordFrame(deltaTime);
@@ -1633,7 +1659,16 @@ export class FeaturesShowcase {
 
     // Sprite configuration
     const spriteSize = 48; // Larger for better visibility
-    const shapeNames = ['circle', 'star5', 'diamond', 'triangle', 'hexagon', 'star4', 'cross', 'ring'];
+    const shapeNames = [
+      'circle',
+      'star5',
+      'diamond',
+      'triangle',
+      'hexagon',
+      'star4',
+      'cross',
+      'ring',
+    ];
     const numColors = 8; // Colors per shape
     const totalSprites = shapeNames.length * numColors;
     const addedImages: string[] = [];
@@ -1682,7 +1717,10 @@ export class FeaturesShowcase {
     };
 
     // Shape drawer functions
-    const shapeDrawers: Record<string, (ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number) => void> = {
+    const shapeDrawers: Record<
+      string,
+      (ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number) => void
+    > = {
       circle: (ctx, cx, cy, r) => {
         ctx.beginPath();
         ctx.arc(cx, cy, r, 0, Math.PI * 2);

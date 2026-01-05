@@ -2,15 +2,7 @@
  * AnimatedMap - Complete map component with shader support
  */
 
-import React, {
-  useEffect,
-  useRef,
-  useState,
-  useCallback,
-  Children,
-  cloneElement,
-  isValidElement,
-} from 'react';
+import React, { useEffect, useRef, useState, Children, cloneElement, isValidElement } from 'react';
 import maplibregl, { Map as MapLibreMap } from 'maplibre-gl';
 import type { AnimatedMapProps } from '../types';
 import { ShaderLayer } from './ShaderLayer';

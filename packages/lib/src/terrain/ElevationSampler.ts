@@ -211,7 +211,10 @@ export class ElevationSampler {
 
       case 'raw':
         // Raw 16-bit in RG channels
-        return (r * 256 + g) / 65535 * (this.config.maxElevation - this.config.minElevation) + this.config.minElevation;
+        return (
+          ((r * 256 + g) / 65535) * (this.config.maxElevation - this.config.minElevation) +
+          this.config.minElevation
+        );
 
       default:
         return 0;
@@ -315,12 +318,7 @@ export class ElevationSampler {
   /**
    * Bilinear interpolation of elevation data.
    */
-  private sampleBilinear(
-    data: Float32Array,
-    u: number,
-    v: number,
-    size: number
-  ): number {
+  private sampleBilinear(data: Float32Array, u: number, v: number, size: number): number {
     // Flip V to match image coordinates
     v = 1 - v;
 
@@ -357,8 +355,9 @@ export class ElevationSampler {
   getElevationNormalized(lng: number, lat: number): number {
     // Validation done in sampleElevation
     const elevation = this.sampleElevation(lng, lat);
-    return (elevation - this.config.minElevation) /
-      (this.config.maxElevation - this.config.minElevation);
+    return (
+      (elevation - this.config.minElevation) / (this.config.maxElevation - this.config.minElevation)
+    );
   }
 
   /**

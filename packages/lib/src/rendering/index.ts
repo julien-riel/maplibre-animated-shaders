@@ -41,12 +41,7 @@ export {
   type CullStats,
 } from './FrustumCuller';
 
-export {
-  LODManager,
-  DEFAULT_LOD_CONFIG,
-  type LODLevel,
-  type LODConfig,
-} from './LODManager';
+export { LODManager, DEFAULT_LOD_CONFIG, type LODLevel, type LODConfig } from './LODManager';
 
 export {
   PostProcessingPipeline,

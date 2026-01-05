@@ -17,10 +17,7 @@ export * from './constants';
 export * from './errors';
 
 // Event system
-export {
-  ShaderEventEmitter,
-  globalEventEmitter,
-} from './events';
+export { ShaderEventEmitter, globalEventEmitter } from './events';
 export type {
   ShaderEventType,
   ShaderEvent,
@@ -41,14 +38,8 @@ export type {
 } from './events';
 
 // Adapters
-export {
-  MapLibreAdapter,
-  createMapAdapter,
-} from './adapters';
-export type {
-  IMapAdapter,
-  MapEventHandler,
-} from './adapters';
+export { MapLibreAdapter, createMapAdapter } from './adapters';
+export type { IMapAdapter, MapEventHandler } from './adapters';
 
 // Program cache
 export { ProgramCache, globalProgramCache } from './utils/program-cache';

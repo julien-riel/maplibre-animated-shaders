@@ -14,9 +14,18 @@ type AddCallback = (shaderName: string) => void;
  */
 const geometryLabels: Record<GeometryType, { label: string; icon: string }> = {
   point: { label: 'Points', icon: '<circle cx="6" cy="6" r="4" fill="currentColor"/>' },
-  line: { label: 'Lines', icon: '<line x1="2" y1="10" x2="10" y2="2" stroke="currentColor" stroke-width="2"/>' },
-  polygon: { label: 'Polygons', icon: '<rect x="2" y="2" width="8" height="8" fill="currentColor"/>' },
-  global: { label: 'Global Effects', icon: '<circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/>' },
+  line: {
+    label: 'Lines',
+    icon: '<line x1="2" y1="10" x2="10" y2="2" stroke="currentColor" stroke-width="2"/>',
+  },
+  polygon: {
+    label: 'Polygons',
+    icon: '<rect x="2" y="2" width="8" height="8" fill="currentColor"/>',
+  },
+  global: {
+    label: 'Global Effects',
+    icon: '<circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/>',
+  },
 };
 
 /**
@@ -127,7 +136,7 @@ export class ShaderGallery {
           <svg width="12" height="12" viewBox="0 0 12 12">${config.icon}</svg>
           ${config.label}
         </h3>
-        ${shaders.map(shader => this.renderShaderItem(shader)).join('')}
+        ${shaders.map((shader) => this.renderShaderItem(shader)).join('')}
       </div>
     `;
   }
@@ -226,7 +235,7 @@ export class ShaderGallery {
   private attachEventListeners(): void {
     const items = this.container.querySelectorAll('.shader-item');
 
-    items.forEach(item => {
+    items.forEach((item) => {
       item.addEventListener('click', () => {
         const shaderName = item.getAttribute('data-shader');
         if (shaderName) {
@@ -240,7 +249,7 @@ export class ShaderGallery {
    * Notify all add callbacks
    */
   private notifyAdd(shaderName: string): void {
-    this.addCallbacks.forEach(cb => cb(shaderName));
+    this.addCallbacks.forEach((cb) => cb(shaderName));
   }
 
   /**

@@ -2,14 +2,7 @@
  * ShaderProvider - Context provider for shader management
  */
 
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  useCallback,
-  useMemo,
-} from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import {
   ShaderManager,
   globalRegistry,
@@ -121,11 +114,7 @@ export function ShaderProvider({
     [manager, registry, registerShader, unregisterShader, listShaders, getShader]
   );
 
-  return (
-    <ShaderContext.Provider value={contextValue}>
-      {children}
-    </ShaderContext.Provider>
-  );
+  return <ShaderContext.Provider value={contextValue}>{children}</ShaderContext.Provider>;
 }
 
 /**

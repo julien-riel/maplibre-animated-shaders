@@ -123,7 +123,7 @@ export class EffectsStackPanel {
         <span class="effects-stack-count">${count}</span>
       </div>
       <div class="effects-stack-list">
-        ${effectsReversed.map(effect => this.renderEffectItem(effect)).join('')}
+        ${effectsReversed.map((effect) => this.renderEffectItem(effect)).join('')}
       </div>
       ${count >= 10 ? '<div class="effects-stack-warning">Performance warning: many effects active</div>' : ''}
     `;
@@ -154,9 +154,10 @@ export class EffectsStackPanel {
         </div>
         <button class="effect-visibility" data-visible="${effect.visible}" title="${effect.visible ? 'Hide effect' : 'Show effect'}">
           <svg width="16" height="16" viewBox="0 0 16 16">
-            ${effect.visible
-              ? '<path d="M8 3C4.5 3 1.5 5.5 0.5 8c1 2.5 4 5 7.5 5s6.5-2.5 7.5-5c-1-2.5-4-5-7.5-5zm0 8c-1.7 0-3-1.3-3-3s1.3-3 3-3 3 1.3 3 3-1.3 3-3 3z" fill="currentColor"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/>'
-              : '<path d="M13.5 2.5l-11 11M8 3C4.5 3 1.5 5.5 0.5 8c.5 1.3 1.5 2.5 2.8 3.3M5.8 10.2c.6.5 1.4.8 2.2.8 1.7 0 3-1.3 3-3 0-.8-.3-1.6-.8-2.2M8 13c3.5 0 6.5-2.5 7.5-5-.3-.8-.8-1.5-1.3-2.2" stroke="currentColor" stroke-width="1.5" fill="none"/>'
+            ${
+              effect.visible
+                ? '<path d="M8 3C4.5 3 1.5 5.5 0.5 8c1 2.5 4 5 7.5 5s6.5-2.5 7.5-5c-1-2.5-4-5-7.5-5zm0 8c-1.7 0-3-1.3-3-3s1.3-3 3-3 3 1.3 3 3-1.3 3-3 3z" fill="currentColor"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/>'
+                : '<path d="M13.5 2.5l-11 11M8 3C4.5 3 1.5 5.5 0.5 8c.5 1.3 1.5 2.5 2.8 3.3M5.8 10.2c.6.5 1.4.8 2.2.8 1.7 0 3-1.3 3-3 0-.8-.3-1.6-.8-2.2M8 13c3.5 0 6.5-2.5 7.5-5-.3-.8-.8-1.5-1.3-2.2" stroke="currentColor" stroke-width="1.5" fill="none"/>'
             }
           </svg>
         </button>
@@ -195,7 +196,7 @@ export class EffectsStackPanel {
    */
   private updateSelection(): void {
     const items = this.container.querySelectorAll('.effect-item');
-    items.forEach(item => {
+    items.forEach((item) => {
       const effectId = item.getAttribute('data-effect-id');
       if (effectId === this.currentState?.selectedEffectId) {
         item.classList.add('selected');
@@ -211,7 +212,7 @@ export class EffectsStackPanel {
   private attachEventListeners(): void {
     const items = this.container.querySelectorAll('.effect-item');
 
-    items.forEach(item => {
+    items.forEach((item) => {
       const effectId = item.getAttribute('data-effect-id');
       if (!effectId) return;
 
@@ -266,7 +267,7 @@ export class EffectsStackPanel {
       this.draggedEffectId = null;
       item.classList.remove('dragging');
       // Remove all drag-over classes
-      this.container.querySelectorAll('.effect-item').forEach(el => {
+      this.container.querySelectorAll('.effect-item').forEach((el) => {
         el.classList.remove('drag-over');
       });
     });
@@ -291,15 +292,15 @@ export class EffectsStackPanel {
 
       // Calculate new order
       const effects = [...this.currentState.effects];
-      const draggedIndex = effects.findIndex(ef => ef.id === this.draggedEffectId);
-      const targetIndex = effects.findIndex(ef => ef.id === effectId);
+      const draggedIndex = effects.findIndex((ef) => ef.id === this.draggedEffectId);
+      const targetIndex = effects.findIndex((ef) => ef.id === effectId);
 
       if (draggedIndex === -1 || targetIndex === -1) return;
 
       // Move element
       const [draggedEffect] = effects.splice(draggedIndex, 1);
       // UI is reversed, so we need to account for that
-      const actualTargetIndex = effects.length - 1 - (effects.length - 1 - targetIndex);
+      const _actualTargetIndex = effects.length - 1 - (effects.length - 1 - targetIndex);
 
       // Insert at new position (considering UI is top-to-bottom = high-to-low index)
       if (draggedIndex < targetIndex) {
@@ -316,27 +317,27 @@ export class EffectsStackPanel {
    * Notify select callbacks
    */
   private notifySelect(effectId: EffectId | null): void {
-    this.selectCallbacks.forEach(cb => cb(effectId));
+    this.selectCallbacks.forEach((cb) => cb(effectId));
   }
 
   /**
    * Notify remove callbacks
    */
   private notifyRemove(effectId: EffectId): void {
-    this.removeCallbacks.forEach(cb => cb(effectId));
+    this.removeCallbacks.forEach((cb) => cb(effectId));
   }
 
   /**
    * Notify reorder callbacks
    */
   private notifyReorder(newOrder: StackedEffect[]): void {
-    this.reorderCallbacks.forEach(cb => cb(newOrder));
+    this.reorderCallbacks.forEach((cb) => cb(newOrder));
   }
 
   /**
    * Notify visibility toggle callbacks
    */
   private notifyVisibilityToggle(effectId: EffectId, visible: boolean): void {
-    this.visibilityCallbacks.forEach(cb => cb(effectId, visible));
+    this.visibilityCallbacks.forEach((cb) => cb(effectId, visible));
   }
 }

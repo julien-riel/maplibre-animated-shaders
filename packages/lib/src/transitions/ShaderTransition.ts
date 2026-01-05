@@ -151,7 +151,9 @@ const DEFAULT_CONFIG: Required<Omit<TransitionConfig, 'onComplete' | 'onUpdate'>
 export class ShaderTransition {
   private fromConfig: ShaderConfig | null = null;
   private toConfig: ShaderConfig | null = null;
-  private config: Required<Omit<TransitionConfig, 'onComplete' | 'onUpdate'>> = { ...DEFAULT_CONFIG };
+  private config: Required<Omit<TransitionConfig, 'onComplete' | 'onUpdate'>> = {
+    ...DEFAULT_CONFIG,
+  };
   private onComplete?: () => void;
   private onUpdate?: (progress: number) => void;
 
@@ -256,10 +258,7 @@ export class ShaderTransition {
     const t = this.progress;
 
     // Get all keys from both configs
-    const allKeys = new Set([
-      ...Object.keys(this.fromConfig),
-      ...Object.keys(this.toConfig),
-    ]);
+    const allKeys = new Set([...Object.keys(this.fromConfig), ...Object.keys(this.toConfig)]);
 
     for (const key of allKeys) {
       const fromVal = this.fromConfig[key];

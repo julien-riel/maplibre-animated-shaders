@@ -349,10 +349,7 @@ export function usesInstancing(vertexSource: string): boolean {
  * @param type - Shader type
  * @returns WebGL 2 compatible source
  */
-export function transformToWebGL2(
-  source: string,
-  type: 'vertex' | 'fragment'
-): string {
+export function transformToWebGL2(source: string, type: 'vertex' | 'fragment'): string {
   let transformed = source;
 
   // Add version directive if not present
@@ -377,7 +374,10 @@ export function transformToWebGL2(
           precisionMatch[0] + '\nout vec4 fragColor;'
         );
       } else {
-        transformed = transformed.replace('#version 300 es\n', '#version 300 es\nout vec4 fragColor;\n');
+        transformed = transformed.replace(
+          '#version 300 es\n',
+          '#version 300 es\nout vec4 fragColor;\n'
+        );
       }
       transformed = transformed.replace(/gl_FragColor/g, 'fragColor');
     }
@@ -396,10 +396,7 @@ export function transformToWebGL2(
  * @param type - Shader type
  * @returns WebGL 1 compatible source
  */
-export function transformToWebGL1(
-  source: string,
-  type: 'vertex' | 'fragment'
-): string {
+export function transformToWebGL1(source: string, type: 'vertex' | 'fragment'): string {
   let transformed = source;
 
   // Remove version directive

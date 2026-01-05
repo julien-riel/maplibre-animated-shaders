@@ -33,7 +33,4 @@
  * ```
  */
 
-export {
-  ElevationSampler,
-  type DEMConfig,
-} from './ElevationSampler';
+export { ElevationSampler, type DEMConfig } from './ElevationSampler';

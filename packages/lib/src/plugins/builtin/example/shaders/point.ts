@@ -265,7 +265,9 @@ export const pointShader: ShaderDefinition<PointConfig> = {
 
     const phase = (time * config.speed * 0.5) % 1;
     const currentRadius = phase * config.maxRadius;
-    const opacity = config.fadeOut ? (1 - phase) * (config.intensity ?? 1) : (config.intensity ?? 1);
+    const opacity = config.fadeOut
+      ? (1 - phase) * (config.intensity ?? 1)
+      : (config.intensity ?? 1);
     const colorRgba = `rgba(${Math.round(rgba[0] * 255)}, ${Math.round(rgba[1] * 255)}, ${Math.round(rgba[2] * 255)}, ${opacity})`;
 
     return {

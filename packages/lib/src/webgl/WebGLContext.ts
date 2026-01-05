@@ -501,7 +501,10 @@ export function createWebGLContext(
   options?: WebGLContextAttributes
 ): WebGLContext | null {
   // Try WebGL 2 first
-  let gl: WebGLContextType | null = canvas.getContext('webgl2', options) as WebGL2RenderingContext | null;
+  let gl: WebGLContextType | null = canvas.getContext(
+    'webgl2',
+    options
+  ) as WebGL2RenderingContext | null;
 
   // Fall back to WebGL 1
   if (!gl) {

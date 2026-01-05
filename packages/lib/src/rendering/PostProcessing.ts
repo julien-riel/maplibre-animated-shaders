@@ -247,11 +247,7 @@ export class PostProcessingPipeline {
     const gl = this.ctx.gl;
     this.quadBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.quadBuffer);
-    gl.bufferData(
-      gl.ARRAY_BUFFER,
-      new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]),
-      gl.STATIC_DRAW
-    );
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
   }
 
   /**
@@ -579,12 +575,14 @@ export class PostProcessingPipeline {
    * @param options - Color grading options
    * @returns Color grade effect
    */
-  static createColorGrade(options: {
-    brightness?: number;
-    contrast?: number;
-    saturation?: number;
-    tint?: [number, number, number];
-  } = {}): PostProcessEffect {
+  static createColorGrade(
+    options: {
+      brightness?: number;
+      contrast?: number;
+      saturation?: number;
+      tint?: [number, number, number];
+    } = {}
+  ): PostProcessEffect {
     return {
       name: 'colorGrade',
       fragmentShader: COLOR_GRADE_FRAGMENT,

@@ -5,8 +5,17 @@
  * Includes advanced configuration for timing and interactivity
  */
 
-import type { ShaderDefinition, ConfigSchema, ConfigParamSchema } from 'maplibre-animated-shaders/types';
-import type { StackedEffect, EffectId, AdvancedEffectConfig, TimeOffsetMode } from '../types/effectStack';
+import type {
+  ShaderDefinition,
+  ConfigSchema,
+  ConfigParamSchema,
+} from 'maplibre-animated-shaders/types';
+import type {
+  StackedEffect,
+  EffectId,
+  AdvancedEffectConfig,
+  TimeOffsetMode,
+} from '../types/effectStack';
 import { createDefaultAdvancedConfig } from '../types/effectStack';
 import { CodePreview } from './CodePreview';
 
@@ -65,15 +74,24 @@ const EXPRESSION_PRESETS: ExpressionPreset[] = [
     description: 'Different colors based on category (landmark, museum, etc.)',
     configKeys: ['color'],
     expressions: {
-      color: ['match', ['get', 'category'],
-        'landmark', '#f59e0b',
-        'museum', '#8b5cf6',
-        'park', '#22c55e',
-        'transport', '#3b82f6',
-        'shopping', '#ec4899',
-        'culture', '#ef4444',
-        'restaurant', '#f97316',
-        '#888888'
+      color: [
+        'match',
+        ['get', 'category'],
+        'landmark',
+        '#f59e0b',
+        'museum',
+        '#8b5cf6',
+        'park',
+        '#22c55e',
+        'transport',
+        '#3b82f6',
+        'shopping',
+        '#ec4899',
+        'culture',
+        '#ef4444',
+        'restaurant',
+        '#f97316',
+        '#888888',
       ],
     },
     geometry: 'point',
@@ -84,12 +102,7 @@ const EXPRESSION_PRESETS: ExpressionPreset[] = [
     description: 'High priority = bright, low priority = dim',
     configKeys: ['intensity'],
     expressions: {
-      intensity: ['match', ['get', 'priority'],
-        'high', 1.0,
-        'medium', 0.6,
-        'low', 0.3,
-        0.5
-      ],
+      intensity: ['match', ['get', 'priority'], 'high', 1.0, 'medium', 0.6, 'low', 0.3, 0.5],
     },
     geometry: 'all',
   },
@@ -99,11 +112,7 @@ const EXPRESSION_PRESETS: ExpressionPreset[] = [
     description: 'Smooth interpolation of speed based on feature speed property',
     configKeys: ['speed'],
     expressions: {
-      speed: ['interpolate', ['linear'], ['get', 'speed'],
-        0.3, 0.5,
-        1.0, 1.0,
-        2.0, 2.5
-      ],
+      speed: ['interpolate', ['linear'], ['get', 'speed'], 0.3, 0.5, 1.0, 1.0, 2.0, 2.5],
     },
     geometry: 'all',
   },
@@ -125,13 +134,20 @@ const EXPRESSION_PRESETS: ExpressionPreset[] = [
     description: 'Different colors for routes, metro, bus lines',
     configKeys: ['color'],
     expressions: {
-      color: ['match', ['get', 'type'],
-        'route', '#3b82f6',
-        'metro', '#ef4444',
-        'bus', '#22c55e',
-        'cycling', '#f59e0b',
-        'walking', '#8b5cf6',
-        '#888888'
+      color: [
+        'match',
+        ['get', 'type'],
+        'route',
+        '#3b82f6',
+        'metro',
+        '#ef4444',
+        'bus',
+        '#22c55e',
+        'cycling',
+        '#f59e0b',
+        'walking',
+        '#8b5cf6',
+        '#888888',
       ],
     },
     geometry: 'line',
@@ -142,11 +158,16 @@ const EXPRESSION_PRESETS: ExpressionPreset[] = [
     description: 'Different colors for arrondissements and zones',
     configKeys: ['color'],
     expressions: {
-      color: ['match', ['get', 'type'],
-        'arrondissement', '#8b5cf6',
-        'commercial', '#ec4899',
-        'park', '#22c55e',
-        '#888888'
+      color: [
+        'match',
+        ['get', 'type'],
+        'arrondissement',
+        '#8b5cf6',
+        'commercial',
+        '#ec4899',
+        'park',
+        '#22c55e',
+        '#888888',
       ],
     },
     geometry: 'polygon',
@@ -363,7 +384,7 @@ export class ConfigPanel {
     const geometry = this.currentShader.geometry;
 
     // Filter presets by geometry
-    const applicablePresets = EXPRESSION_PRESETS.filter(preset => {
+    const applicablePresets = EXPRESSION_PRESETS.filter((preset) => {
       return preset.geometry === 'all' || preset.geometry === geometry;
     });
 
@@ -371,8 +392,8 @@ export class ConfigPanel {
     const availableKeys = Object.keys(this.currentShader.configSchema);
 
     // Further filter presets by available config keys
-    const validPresets = applicablePresets.filter(preset => {
-      return preset.configKeys.some(key => availableKeys.includes(key));
+    const validPresets = applicablePresets.filter((preset) => {
+      return preset.configKeys.some((key) => availableKeys.includes(key));
     });
 
     if (validPresets.length === 0) {
@@ -409,7 +430,7 @@ export class ConfigPanel {
           <div class="expressions-presets">
             <div class="expressions-presets-title">Presets</div>
             <div class="expressions-preset-list">
-              ${validPresets.map(preset => this.renderPresetButton(preset)).join('')}
+              ${validPresets.map((preset) => this.renderPresetButton(preset)).join('')}
             </div>
           </div>
 
@@ -469,7 +490,7 @@ export class ConfigPanel {
    */
   private renderPresetButton(preset: ExpressionPreset): string {
     // Check if any of this preset's expressions are currently active
-    const isActive = preset.configKeys.some(key => this.activeExpressions.has(key));
+    const isActive = preset.configKeys.some((key) => this.activeExpressions.has(key));
 
     return `
       <button class="expression-preset-btn${isActive ? ' active' : ''}"
@@ -648,10 +669,19 @@ export class ConfigPanel {
    * Render property tags for quick selection
    */
   private renderPropertyTags(): string {
-    const properties = ['id', 'delay', 'speed', 'intensity', 'priority', 'category', 'type', 'name'];
-    return properties.map(prop =>
-      `<span class="property-tag" data-property="${prop}">${prop}</span>`
-    ).join('');
+    const properties = [
+      'id',
+      'delay',
+      'speed',
+      'intensity',
+      'priority',
+      'category',
+      'type',
+      'name',
+    ];
+    return properties
+      .map((prop) => `<span class="property-tag" data-property="${prop}">${prop}</span>`)
+      .join('');
   }
 
   /**
@@ -696,7 +726,12 @@ export class ConfigPanel {
   /**
    * Render number slider control
    */
-  private renderNumberControl(key: string, param: ConfigParamSchema, value: number, label: string): string {
+  private renderNumberControl(
+    key: string,
+    param: ConfigParamSchema,
+    value: number,
+    label: string
+  ): string {
     const min = param.min ?? 0;
     const max = param.max ?? 100;
     const step = param.step ?? 1;
@@ -757,7 +792,12 @@ export class ConfigPanel {
   /**
    * Render select dropdown control
    */
-  private renderSelectControl(key: string, param: ConfigParamSchema, value: string, label: string): string {
+  private renderSelectControl(
+    key: string,
+    param: ConfigParamSchema,
+    value: string,
+    label: string
+  ): string {
     const options = param.options || [];
 
     return `
@@ -766,9 +806,13 @@ export class ConfigPanel {
           <span>${label}</span>
         </div>
         <select id="config-${key}" data-key="${key}" class="config-select">
-          ${options.map(opt => `
+          ${options
+            .map(
+              (opt) => `
             <option value="${opt}" ${opt === value ? 'selected' : ''}>${opt}</option>
-          `).join('')}
+          `
+            )
+            .join('')}
         </select>
       </div>
     `;
@@ -780,7 +824,7 @@ export class ConfigPanel {
   private formatLabel(key: string): string {
     return key
       .replace(/([A-Z])/g, ' $1')
-      .replace(/^./, str => str.toUpperCase())
+      .replace(/^./, (str) => str.toUpperCase())
       .replace(/([a-z])([A-Z])/g, '$1 $2');
   }
 
@@ -790,7 +834,7 @@ export class ConfigPanel {
   private attachEventListeners(): void {
     // Tab switching
     const tabs = this.container.querySelectorAll('.panel-tab');
-    tabs.forEach(tab => {
+    tabs.forEach((tab) => {
       tab.addEventListener('click', () => {
         const tabName = tab.getAttribute('data-tab') as 'config' | 'code';
         if (tabName) {
@@ -802,7 +846,7 @@ export class ConfigPanel {
 
     // Config controls
     const inputs = this.container.querySelectorAll('input[data-key], select[data-key]');
-    inputs.forEach(input => {
+    inputs.forEach((input) => {
       const key = input.getAttribute('data-key');
       if (!key) return;
 
@@ -816,10 +860,14 @@ export class ConfigPanel {
         } else if (htmlInput.type === 'range') {
           value = parseFloat(htmlInput.value);
           // Update displayed value
-          const valueSpan = this.container.querySelector(`#config-${key}`)?.parentElement?.querySelector('.config-value');
+          const valueSpan = this.container
+            .querySelector(`#config-${key}`)
+            ?.parentElement?.querySelector('.config-value');
           if (valueSpan) {
             const step = parseFloat(htmlInput.step);
-            valueSpan.textContent = Number.isInteger(step) ? String(value) : (value as number).toFixed(2);
+            valueSpan.textContent = Number.isInteger(step)
+              ? String(value)
+              : (value as number).toFixed(2);
           }
         } else if (htmlInput.tagName === 'SELECT') {
           value = htmlInput.value;
@@ -864,7 +912,7 @@ export class ConfigPanel {
     const editShaderBtn = this.container.querySelector('#btn-edit-shader');
     editShaderBtn?.addEventListener('click', () => {
       if (this.currentShader) {
-        this.editShaderCallbacks.forEach(cb => cb(this.currentShader!));
+        this.editShaderCallbacks.forEach((cb) => cb(this.currentShader!));
       }
     });
 
@@ -904,7 +952,7 @@ export class ConfigPanel {
 
     // Property tags (quick select)
     const propertyTags = this.container.querySelectorAll('.property-tag');
-    propertyTags.forEach(tag => {
+    propertyTags.forEach((tag) => {
       tag.addEventListener('click', () => {
         const property = tag.getAttribute('data-property');
         if (property && propInput) {
@@ -946,7 +994,9 @@ export class ConfigPanel {
     });
 
     // Per-feature control
-    const perFeatureCheckbox = this.container.querySelector('#adv-perFeatureControl') as HTMLInputElement;
+    const perFeatureCheckbox = this.container.querySelector(
+      '#adv-perFeatureControl'
+    ) as HTMLInputElement;
     perFeatureCheckbox?.addEventListener('change', () => {
       this.currentAdvancedConfig.interactivity = {
         ...this.currentAdvancedConfig.interactivity,
@@ -957,7 +1007,9 @@ export class ConfigPanel {
     });
 
     // Initial state
-    const initialStateSelect = this.container.querySelector('#adv-initialState') as HTMLSelectElement;
+    const initialStateSelect = this.container.querySelector(
+      '#adv-initialState'
+    ) as HTMLSelectElement;
     initialStateSelect?.addEventListener('change', () => {
       this.currentAdvancedConfig.interactivity = {
         ...this.currentAdvancedConfig.interactivity,
@@ -1020,14 +1072,16 @@ export class ConfigPanel {
 
     // Preset buttons
     const presetBtns = this.container.querySelectorAll('.expression-preset-btn');
-    presetBtns.forEach(btn => {
+    presetBtns.forEach((btn) => {
       btn.addEventListener('click', () => {
         const presetId = btn.getAttribute('data-preset-id');
-        const preset = EXPRESSION_PRESETS.find(p => p.id === presetId);
+        const preset = EXPRESSION_PRESETS.find((p) => p.id === presetId);
 
         if (preset) {
           // Check if this preset is already active - if so, remove its expressions
-          const isCurrentlyActive = preset.configKeys.some(key => this.activeExpressions.has(key));
+          const isCurrentlyActive = preset.configKeys.some((key) =>
+            this.activeExpressions.has(key)
+          );
 
           if (isCurrentlyActive) {
             // Remove expressions for this preset
@@ -1050,7 +1104,7 @@ export class ConfigPanel {
 
     // Remove individual expression buttons
     const removeBtns = this.container.querySelectorAll('.active-expression-remove');
-    removeBtns.forEach(btn => {
+    removeBtns.forEach((btn) => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const key = btn.getAttribute('data-key');
@@ -1076,7 +1130,7 @@ export class ConfigPanel {
    */
   private notifyChange(key: string, value: unknown): void {
     if (this.currentEffect) {
-      this.changeCallbacks.forEach(cb => cb(this.currentEffect!.id, key, value));
+      this.changeCallbacks.forEach((cb) => cb(this.currentEffect!.id, key, value));
     }
   }
 
@@ -1085,7 +1139,7 @@ export class ConfigPanel {
    */
   private notifyPlayPause(playing: boolean): void {
     if (this.currentEffect) {
-      this.playPauseCallbacks.forEach(cb => cb(this.currentEffect!.id, playing));
+      this.playPauseCallbacks.forEach((cb) => cb(this.currentEffect!.id, playing));
     }
   }
 
@@ -1094,7 +1148,7 @@ export class ConfigPanel {
    */
   private notifyAdvancedChange(): void {
     if (this.currentEffect) {
-      this.advancedChangeCallbacks.forEach(cb =>
+      this.advancedChangeCallbacks.forEach((cb) =>
         cb(this.currentEffect!.id, { ...this.currentAdvancedConfig })
       );
     }
@@ -1110,9 +1164,7 @@ export class ConfigPanel {
       for (const [key, value] of this.activeExpressions.entries()) {
         expressions[key] = value;
       }
-      this.expressionPresetCallbacks.forEach(cb =>
-        cb(this.currentEffect!.id, expressions)
-      );
+      this.expressionPresetCallbacks.forEach((cb) => cb(this.currentEffect!.id, expressions));
     }
   }
 }

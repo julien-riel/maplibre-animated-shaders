@@ -2,17 +2,7 @@
   AnimatedMap - Complete map component with shader support for Vue 3
 -->
 <script setup lang="ts">
-import {
-  ref,
-  onMounted,
-  onUnmounted,
-  watch,
-  provide,
-  useSlots,
-  h,
-  render,
-  type VNode,
-} from 'vue';
+import { ref, onMounted, onUnmounted, watch, provide, useSlots, h, render, type VNode } from 'vue';
 import maplibregl, { Map as MapLibreMap } from 'maplibre-gl';
 import { globalRegistry, examplePlugin, PluginManager } from 'maplibre-animated-shaders';
 
@@ -95,25 +85,34 @@ onUnmounted(() => {
 });
 
 // Watch for center changes
-watch(() => props.center, (newCenter) => {
-  if (map.value && isLoaded.value) {
-    map.value.setCenter(newCenter);
+watch(
+  () => props.center,
+  (newCenter) => {
+    if (map.value && isLoaded.value) {
+      map.value.setCenter(newCenter);
+    }
   }
-});
+);
 
 // Watch for zoom changes
-watch(() => props.zoom, (newZoom) => {
-  if (map.value && isLoaded.value) {
-    map.value.setZoom(newZoom);
+watch(
+  () => props.zoom,
+  (newZoom) => {
+    if (map.value && isLoaded.value) {
+      map.value.setZoom(newZoom);
+    }
   }
-});
+);
 
 // Watch for style changes
-watch(() => props.style, (newStyle) => {
-  if (map.value && isLoaded.value) {
-    map.value.setStyle(newStyle);
+watch(
+  () => props.style,
+  (newStyle) => {
+    if (map.value && isLoaded.value) {
+      map.value.setStyle(newStyle);
+    }
   }
-});
+);
 
 // Expose for parent components
 defineExpose({

@@ -77,27 +77,21 @@ export function createInitialEffectStackState(): EffectStackState {
   return {
     effects: [],
     selectedEffectId: null,
-    nextIdCounter: 1
+    nextIdCounter: 1,
   };
 }
 
 /**
  * Find an effect by ID in the stack
  */
-export function findEffect(
-  state: EffectStackState,
-  effectId: EffectId
-): StackedEffect | undefined {
+export function findEffect(state: EffectStackState, effectId: EffectId): StackedEffect | undefined {
   return state.effects.find((e) => e.id === effectId);
 }
 
 /**
  * Remove an effect from the stack
  */
-export function removeEffectFromStack(
-  state: EffectStackState,
-  effectId: EffectId
-): void {
+export function removeEffectFromStack(state: EffectStackState, effectId: EffectId): void {
   const index = state.effects.findIndex((e) => e.id === effectId);
   if (index !== -1) {
     state.effects.splice(index, 1);
@@ -145,8 +139,14 @@ export function buildShaderAdvancedConfig(
       }
       break;
     case 'range':
-      if (advancedConfig.timeOffsetMin !== undefined && advancedConfig.timeOffsetMax !== undefined) {
-        result.timeOffset = { min: advancedConfig.timeOffsetMin, max: advancedConfig.timeOffsetMax };
+      if (
+        advancedConfig.timeOffsetMin !== undefined &&
+        advancedConfig.timeOffsetMax !== undefined
+      ) {
+        result.timeOffset = {
+          min: advancedConfig.timeOffsetMin,
+          max: advancedConfig.timeOffsetMax,
+        };
       }
       break;
     case 'none':

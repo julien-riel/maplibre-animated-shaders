@@ -149,9 +149,7 @@ export function registerShader(
 
   // Get geometry configuration
   const geometryConfig =
-    definition.geometry === 'global'
-      ? GLOBAL_SHADER_CONFIG
-      : GEOMETRY_CONFIGS[definition.geometry];
+    definition.geometry === 'global' ? GLOBAL_SHADER_CONFIG : GEOMETRY_CONFIGS[definition.geometry];
 
   if (geometryConfig) {
     registerWebGLShader(

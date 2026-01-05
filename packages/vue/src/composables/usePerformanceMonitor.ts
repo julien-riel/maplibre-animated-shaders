@@ -2,11 +2,8 @@
  * usePerformanceMonitor - Composable for monitoring shader performance
  */
 
-import { ref, watch, onUnmounted, type Ref } from 'vue';
-import {
-  ProductionPerformanceMonitor,
-  getPerformanceMonitor,
-} from 'maplibre-animated-shaders';
+import { ref, watch, onUnmounted } from 'vue';
+import { ProductionPerformanceMonitor, getPerformanceMonitor } from 'maplibre-animated-shaders';
 import type { PerformanceMetrics } from 'maplibre-animated-shaders';
 import type { UsePerformanceMonitorOptions, UsePerformanceMonitorReturn } from '../types';
 
@@ -33,11 +30,7 @@ import type { UsePerformanceMonitorOptions, UsePerformanceMonitorReturn } from '
 export function usePerformanceMonitor(
   options: UsePerformanceMonitorOptions = {}
 ): UsePerformanceMonitorReturn {
-  const {
-    enabled = ref(true),
-    updateInterval = 500,
-    canvas,
-  } = options;
+  const { enabled = ref(true), updateInterval = 500, canvas } = options;
 
   const metrics = ref<PerformanceMetrics | null>(null);
   const isMonitoring = ref(false);
@@ -95,24 +88,31 @@ export function usePerformanceMonitor(
   };
 
   // Watch enabled state
-  watch(enabled, (newValue) => {
-    if (newValue) {
-      if (!monitor) {
-        init();
+  watch(
+    enabled,
+    (newValue) => {
+      if (newValue) {
+        if (!monitor) {
+          init();
+        } else {
+          start();
+        }
       } else {
-        start();
+        stop();
       }
-    } else {
-      stop();
-    }
-  }, { immediate: true });
+    },
+    { immediate: true }
+  );
 
   // Watch canvas ref
-  watch(() => canvas?.value, (newCanvas) => {
-    if (monitor && newCanvas) {
-      monitor.attachCanvas(newCanvas);
+  watch(
+    () => canvas?.value,
+    (newCanvas) => {
+      if (monitor && newCanvas) {
+        monitor.attachCanvas(newCanvas);
+      }
     }
-  });
+  );
 
   // Cleanup on unmount
   onUnmounted(() => {

@@ -282,7 +282,9 @@ export class ProductionPerformanceMonitor {
     };
 
     // Add memory info if available
-    const memory = (performance as unknown as { memory?: { usedJSHeapSize: number; jsHeapSizeLimit: number } }).memory;
+    const memory = (
+      performance as unknown as { memory?: { usedJSHeapSize: number; jsHeapSizeLimit: number } }
+    ).memory;
     if (memory) {
       metrics.jsHeapSize = memory.usedJSHeapSize;
       metrics.jsHeapLimit = memory.jsHeapSizeLimit;
@@ -347,8 +349,7 @@ export class ProductionPerformanceMonitor {
   private calculateFPS(): number {
     if (this.frameTimes.length === 0) return 0;
     const avgFrameTime =
-      this.frameTimes.slice(-60).reduce((a, b) => a + b, 0) /
-      Math.min(this.frameTimes.length, 60);
+      this.frameTimes.slice(-60).reduce((a, b) => a + b, 0) / Math.min(this.frameTimes.length, 60);
     return avgFrameTime > 0 ? Math.round(1000 / avgFrameTime) : 0;
   }
 

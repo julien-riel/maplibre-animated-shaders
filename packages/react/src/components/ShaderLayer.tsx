@@ -3,7 +3,6 @@
  */
 
 import { useEffect, useRef } from 'react';
-import type { Map as MapLibreMap } from 'maplibre-gl';
 import { globalRegistry } from 'maplibre-animated-shaders';
 import type { ShaderLayerProps } from '../types';
 
@@ -35,7 +34,7 @@ export function ShaderLayer({
   config = {},
   data,
   visible = true,
-  playing = true,
+  playing: _playing = true,
   beforeId,
   onAdd,
   onRemove,
@@ -102,9 +101,7 @@ export function ShaderLayer({
         // Update source data
         const source = map.getSource(sourceId);
         if (source && 'setData' in source) {
-          (source as maplibregl.GeoJSONSource).setData(
-            data as GeoJSON.FeatureCollection
-          );
+          (source as maplibregl.GeoJSONSource).setData(data as GeoJSON.FeatureCollection);
         }
       }
 
@@ -210,9 +207,7 @@ export function ShaderLayer({
     const source = map.getSource(sourceId);
     if (source && 'setData' in source) {
       try {
-        (source as maplibregl.GeoJSONSource).setData(
-          data as GeoJSON.FeatureCollection
-        );
+        (source as maplibregl.GeoJSONSource).setData(data as GeoJSON.FeatureCollection);
       } catch {
         // Ignore
       }

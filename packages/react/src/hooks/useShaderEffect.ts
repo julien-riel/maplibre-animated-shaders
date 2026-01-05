@@ -3,7 +3,6 @@
  */
 
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import type { Map as MapLibreMap } from 'maplibre-gl';
 import { globalRegistry } from 'maplibre-animated-shaders';
 import type { ShaderConfig } from 'maplibre-animated-shaders';
 import type { UseShaderEffectOptions, UseShaderEffectReturn } from '../types';

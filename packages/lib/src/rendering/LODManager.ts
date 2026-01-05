@@ -361,7 +361,10 @@ export class LODManager {
 
     const t = Math.max(
       0,
-      Math.min(1, ((point[0] - lineStart[0]) * dx + (point[1] - lineStart[1]) * dy) / (dx * dx + dy * dy))
+      Math.min(
+        1,
+        ((point[0] - lineStart[0]) * dx + (point[1] - lineStart[1]) * dy) / (dx * dx + dy * dy)
+      )
     );
 
     const nearestX = lineStart[0] + t * dx;

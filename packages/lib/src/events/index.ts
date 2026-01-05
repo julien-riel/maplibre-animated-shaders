@@ -205,10 +205,7 @@ export class ShaderEventEmitter {
    * @param type - The event type to listen for
    * @param handler - The handler function to call when the event is emitted
    */
-  once<K extends ShaderEventType>(
-    type: K,
-    handler: ShaderEventHandler<ShaderEventMap[K]>
-  ): void {
+  once<K extends ShaderEventType>(type: K, handler: ShaderEventHandler<ShaderEventMap[K]>): void {
     if (!this.onceListeners.has(type)) {
       this.onceListeners.set(type, new Set());
     }
@@ -220,10 +217,7 @@ export class ShaderEventEmitter {
    * @param type - The event type to unsubscribe from
    * @param handler - The handler function to remove
    */
-  off<K extends ShaderEventType>(
-    type: K,
-    handler: ShaderEventHandler<ShaderEventMap[K]>
-  ): void {
+  off<K extends ShaderEventType>(type: K, handler: ShaderEventHandler<ShaderEventMap[K]>): void {
     const handlers = this.listeners.get(type);
     if (handlers) {
       handlers.delete(handler as ShaderEventHandler);

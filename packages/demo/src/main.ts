@@ -13,15 +13,8 @@ import { EffectsStackPanel } from './components/EffectsStackPanel';
 import { PerformanceMonitor } from './components/PerformanceMonitor';
 import { FeaturesShowcase } from './components/FeaturesShowcase';
 import { ShaderEditor } from './components/ShaderEditor';
-import { globalRegistry, examplePlugin, ShaderManager } from 'maplibre-animated-shaders';
-import type { ShaderDefinition } from 'maplibre-animated-shaders/types';
-import type {
-  EffectStackState,
-  StackedEffect,
-  EffectId,
-  GeometryType,
-  AdvancedEffectConfig,
-} from './types/effectStack';
+import { globalRegistry, examplePlugin } from 'maplibre-animated-shaders';
+import type { EffectStackState, StackedEffect, GeometryType } from './types/effectStack';
 import {
   createInitialEffectStackState,
   findEffect,
@@ -140,7 +133,7 @@ function init(): void {
   const effectsPanel = new EffectsStackPanel('effects-stack');
   const configPanel = new ConfigPanel('config-controls');
   const perfMonitor = new PerformanceMonitor('map-container');
-  const featuresShowcase = new FeaturesShowcase('map-container', mapView);
+  const _featuresShowcase = new FeaturesShowcase('map-container', mapView);
   const shaderEditor = new ShaderEditor('shader-editor-container');
 
   // Handle shader addition from gallery

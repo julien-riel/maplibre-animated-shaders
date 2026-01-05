@@ -132,11 +132,7 @@ export class TextureManager {
    * });
    * ```
    */
-  async loadTexture(
-    name: string,
-    url: string,
-    options: TextureOptions = {}
-  ): Promise<TextureInfo> {
+  async loadTexture(name: string, url: string, options: TextureOptions = {}): Promise<TextureInfo> {
     // Check if already loaded
     const existing = this.textures.get(name);
     if (existing) {

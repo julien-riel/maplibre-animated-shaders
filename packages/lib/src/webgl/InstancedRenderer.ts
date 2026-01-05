@@ -492,10 +492,7 @@ export function createQuadGeometry(): {
   // Quad vertices: position (2) + uv (2)
   const vertices = new Float32Array([
     // x, y, u, v
-    -0.5, -0.5, 0, 0,
-    0.5, -0.5, 1, 0,
-    0.5, 0.5, 1, 1,
-    -0.5, 0.5, 0, 1,
+    -0.5, -0.5, 0, 0, 0.5, -0.5, 1, 0, 0.5, 0.5, 1, 1, -0.5, 0.5, 0, 1,
   ]);
 
   const indices = new Uint16Array([0, 1, 2, 0, 2, 3]);

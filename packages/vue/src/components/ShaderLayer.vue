@@ -185,35 +185,44 @@ const updateConfig = () => {
 };
 
 // Watchers
-watch(() => props.map, (newMap) => {
-  if (newMap) {
-    addLayer();
+watch(
+  () => props.map,
+  (newMap) => {
+    if (newMap) {
+      addLayer();
+    }
   }
-});
+);
 
-watch(() => props.shaderName, () => {
-  if (props.map) {
-    removeLayer();
-    addLayer();
+watch(
+  () => props.shaderName,
+  () => {
+    if (props.map) {
+      removeLayer();
+      addLayer();
+    }
   }
-});
+);
 
 watch(() => props.visible, updateVisibility);
 
 watch(() => props.config, updateConfig, { deep: true });
 
-watch(() => props.data, () => {
-  if (!props.map || !props.data) return;
+watch(
+  () => props.data,
+  () => {
+    if (!props.map || !props.data) return;
 
-  const source = props.map.getSource(sourceId);
-  if (source && 'setData' in source) {
-    try {
-      (source as maplibregl.GeoJSONSource).setData(props.data as GeoJSON.FeatureCollection);
-    } catch {
-      // Ignore
+    const source = props.map.getSource(sourceId);
+    if (source && 'setData' in source) {
+      try {
+        (source as maplibregl.GeoJSONSource).setData(props.data as GeoJSON.FeatureCollection);
+      } catch {
+        // Ignore
+      }
     }
   }
-});
+);
 
 // Lifecycle
 onMounted(() => {
