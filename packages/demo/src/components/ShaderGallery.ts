@@ -4,8 +4,8 @@
  * Click on a shader to add it to the effects stack
  */
 
-import { globalRegistry } from '../../../../src';
-import type { ShaderDefinition, GeometryType } from '../../../../src/types';
+import { globalRegistry } from 'maplibre-animated-shaders';
+import type { ShaderDefinition, GeometryType } from 'maplibre-animated-shaders/types';
 
 type AddCallback = (shaderName: string) => void;
 

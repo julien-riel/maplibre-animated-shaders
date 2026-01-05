@@ -16,7 +16,7 @@ import {
   ShaderTransition,
   Easing,
   deepFreeze,
-} from '../../../../src';
+} from 'maplibre-animated-shaders';
 import type { MapView } from './MapView';
 import type { Map as MapLibreMap, GeoJSONSource } from 'maplibre-gl';
 

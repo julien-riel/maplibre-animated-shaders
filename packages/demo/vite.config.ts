@@ -7,7 +7,10 @@ export default defineConfig({
   root: resolve(__dirname),
   resolve: {
     alias: {
-      '@lib': resolve(__dirname, '../../src'),
+      // Resolve workspace package to source for development
+      'maplibre-animated-shaders/types': resolve(__dirname, '../../src/types'),
+      'maplibre-animated-shaders/plugins': resolve(__dirname, '../../src/plugins'),
+      'maplibre-animated-shaders': resolve(__dirname, '../../src'),
     },
   },
   json: {

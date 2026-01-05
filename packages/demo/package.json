@@ -1,0 +1,21 @@
+{
+  "name": "@maplibre-animated-shaders/demo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Interactive demo and playground for maplibre-animated-shaders",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "maplibre-animated-shaders": "*",
+    "maplibre-gl": "^4.0.0"
+  },
+  "devDependencies": {
+    "sirv": "^3.0.2",
+    "vite": "^5.0.10",
+    "vite-plugin-glsl": "^1.2.0"
+  }
+}

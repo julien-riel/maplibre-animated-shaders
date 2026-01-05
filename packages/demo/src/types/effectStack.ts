@@ -2,7 +2,7 @@
  * Types for the stacked effects system
  */
 
-import type { TimeOffsetValue, InteractivityConfig } from '../../../../src/types';
+import type { TimeOffsetValue, InteractivityConfig } from 'maplibre-animated-shaders/types';
 
 export type EffectId = string;
 export type GeometryType = 'point' | 'line' | 'polygon' | 'global';
