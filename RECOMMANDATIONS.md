@@ -385,12 +385,12 @@ Créer `examples/` avec:
 - [x] Ajouter limite de taille de bundle dans CI (size-limit)
 - [x] Finaliser documentation Workers
 
-### Phase 2: Robustesse (Court Terme)
+### Phase 2: Robustesse (Court Terme) ✅ COMPLÉTÉE
 
-- [ ] Tests de récupération contexte WebGL
-- [ ] Tests multi-versions MapLibre
-- [ ] Exemples d'intégration frameworks
-- [ ] Monitoring de performance en production
+- [x] Tests de récupération contexte WebGL (`tests/webgl/context-recovery.test.ts`)
+- [x] Tests multi-versions MapLibre (`.github/workflows/maplibre-compat.yml`)
+- [x] Exemples d'intégration frameworks (`examples/react/`, `examples/vue/`, `examples/vanilla/`)
+- [x] Monitoring de performance en production (`src/utils/performance-monitor.ts`)
 
 ### Phase 3: Évolution (Moyen Terme)
 

@@ -6,6 +6,7 @@ export * from './glsl-uniform-extractor';
 export * from './maplibre-helpers';
 export * from './metrics-collector';
 export * from './object-pool';
+export * from './performance-monitor';
 export * from './throttle';
 export * from './webgl-error-handler';
 export * from './webgl-capabilities';
