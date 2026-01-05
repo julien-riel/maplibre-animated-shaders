@@ -392,10 +392,10 @@ Créer `examples/` avec:
 - [x] Exemples d'intégration frameworks (`examples/react/`, `examples/vue/`, `examples/vanilla/`)
 - [x] Monitoring de performance en production (`src/utils/performance-monitor.ts`)
 
-### Phase 3: Évolution (Moyen Terme)
+### Phase 3: Évolution (Moyen Terme) ✅ PARTIELLEMENT COMPLÉTÉE
 
-- [ ] Support React/Vue natif (wrappers)
-- [ ] Éditeur visuel de shaders (demo)
+- [x] Support React/Vue natif (wrappers) - `packages/react/` et `packages/vue/`
+- [x] Éditeur visuel de shaders (demo) - `demo/src/components/ShaderEditor.ts`
 - [ ] Marketplace de plugins communautaires
 - [ ] WebGPU support (expérimental)
 

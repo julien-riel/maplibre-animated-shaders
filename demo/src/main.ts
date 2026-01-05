@@ -12,6 +12,7 @@ import { MapView } from './components/MapView';
 import { EffectsStackPanel } from './components/EffectsStackPanel';
 import { PerformanceMonitor } from './components/PerformanceMonitor';
 import { FeaturesShowcase } from './components/FeaturesShowcase';
+import { ShaderEditor } from './components/ShaderEditor';
 import { globalRegistry, examplePlugin, ShaderManager } from '../../src';
 import type { ShaderDefinition } from '../../src/types';
 import type {
@@ -127,6 +128,7 @@ function init(): void {
         </button>
       </div>
     </nav>
+    <div id="shader-editor-container"></div>
   `;
 
   // Setup mobile navigation
@@ -139,6 +141,7 @@ function init(): void {
   const configPanel = new ConfigPanel('config-controls');
   const perfMonitor = new PerformanceMonitor('map-container');
   const featuresShowcase = new FeaturesShowcase('map-container', mapView);
+  const shaderEditor = new ShaderEditor('shader-editor-container');
 
   // Handle shader addition from gallery
   gallery.onAdd((shaderName) => {
@@ -256,6 +259,24 @@ function init(): void {
 
       // Update effect on the map (requires re-registering for data-driven changes)
       mapView.updateEffectAdvancedConfig(effect);
+    }
+  });
+
+  // Handle shader editing
+  configPanel.onEditShader((shader) => {
+    shaderEditor.show(shader);
+  });
+
+  // Handle shader editor changes
+  shaderEditor.onChange((updatedShader) => {
+    const selectedId = state.effectStack.selectedEffectId;
+    if (selectedId) {
+      const effect = findEffect(state.effectStack, selectedId);
+      if (effect) {
+        // Update the effect with the modified shader
+        // Note: This creates a custom variant of the shader
+        mapView.updateEffectWithCustomShader(effect, updatedShader);
+      }
     }
   });
 

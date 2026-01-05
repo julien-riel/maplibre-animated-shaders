@@ -157,6 +157,7 @@ type ChangeCallback = (effectId: EffectId, key: string, value: unknown) => void;
 type PlayPauseCallback = (effectId: EffectId, playing: boolean) => void;
 type AdvancedChangeCallback = (effectId: EffectId, advancedConfig: AdvancedEffectConfig) => void;
 type ExpressionPresetCallback = (effectId: EffectId, expressions: Record<string, unknown>) => void;
+type EditShaderCallback = (shader: ShaderDefinition) => void;
 
 /**
  * ConfigPanel component
@@ -167,6 +168,7 @@ export class ConfigPanel {
   private playPauseCallbacks: PlayPauseCallback[] = [];
   private advancedChangeCallbacks: AdvancedChangeCallback[] = [];
   private expressionPresetCallbacks: ExpressionPresetCallback[] = [];
+  private editShaderCallbacks: EditShaderCallback[] = [];
   private currentShader: ShaderDefinition | null = null;
   private currentEffect: StackedEffect | null = null;
   private currentConfig: Record<string, unknown> = {};
@@ -258,6 +260,13 @@ export class ConfigPanel {
   }
 
   /**
+   * Register a callback for edit shader button
+   */
+  onEditShader(callback: EditShaderCallback): void {
+    this.editShaderCallbacks.push(callback);
+  }
+
+  /**
    * Render empty state
    */
   private renderEmpty(): void {
@@ -305,6 +314,13 @@ export class ConfigPanel {
         </button>
         <button class="playback-btn" id="btn-reset">Reset</button>
       </div>
+      <button class="btn-edit-shader" id="btn-edit-shader">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+        Edit Shader Code
+      </button>
     `;
 
     if (this.activeTab === 'code') {
@@ -841,6 +857,14 @@ export class ConfigPanel {
         for (const [key, value] of Object.entries(this.currentConfig)) {
           this.notifyChange(key, value);
         }
+      }
+    });
+
+    // Edit shader button
+    const editShaderBtn = this.container.querySelector('#btn-edit-shader');
+    editShaderBtn?.addEventListener('click', () => {
+      if (this.currentShader) {
+        this.editShaderCallbacks.forEach(cb => cb(this.currentShader!));
       }
     });
 

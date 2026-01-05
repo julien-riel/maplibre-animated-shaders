@@ -328,6 +328,69 @@ export class MapView {
   }
 
   /**
+   * Update an effect with a custom shader (from visual editor)
+   */
+  updateEffectWithCustomShader(
+    effect: StackedEffect,
+    customShader: { vertexShader?: string; fragmentShader?: string; defaultConfig?: Record<string, unknown> }
+  ): void {
+    const layerId = this.effectLayers.get(effect.id);
+    if (!layerId || !this.shaderManager) {
+      return;
+    }
+
+    // Get the original shader definition
+    const originalShader = globalRegistry.get(effect.shaderName);
+    if (!originalShader) {
+      console.error(`Original shader ${effect.shaderName} not found`);
+      return;
+    }
+
+    // Create a custom shader name
+    const customShaderName = `${effect.shaderName}-custom-${effect.id}`;
+
+    // Register the custom shader variant
+    const customShaderDef = {
+      name: customShaderName,
+      displayName: `${originalShader.displayName} (Custom)`,
+      geometry: originalShader.geometry,
+      vertexShader: customShader.vertexShader || originalShader.vertexShader,
+      fragmentShader: customShader.fragmentShader || originalShader.fragmentShader,
+      defaultConfig: customShader.defaultConfig || originalShader.defaultConfig,
+    };
+
+    // Register in the global registry
+    globalRegistry.register(customShaderDef);
+
+    try {
+      // Unregister the old shader
+      this.shaderManager.unregister(layerId);
+
+      // Remove the shader custom layer
+      const shaderLayerId = `${layerId}-shader`;
+      if (this.map.getLayer(shaderLayerId)) {
+        this.map.removeLayer(shaderLayerId);
+      }
+
+      // Build full config
+      const fullConfig = this.buildFullConfig(effect);
+      const interactivityConfig = this.getInteractivityConfig(effect);
+
+      // Re-register with custom shader
+      this.shaderManager.register(layerId, customShaderName, fullConfig, interactivityConfig);
+
+      // Restore play state
+      if (!effect.isPlaying) {
+        this.shaderManager.pause(layerId);
+      }
+
+      console.log(`Applied custom shader ${customShaderName}`);
+    } catch (error) {
+      console.error(`Failed to apply custom shader:`, error);
+    }
+  }
+
+  /**
    * Set visibility for an effect
    */
   setEffectVisibility(effectId: EffectId, visible: boolean): void {

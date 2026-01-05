@@ -1,0 +1,56 @@
+{
+  "name": "@maplibre-animated-shaders/vue",
+  "version": "0.1.0",
+  "description": "Vue 3 bindings for MapLibre Animated Shaders",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --external vue",
+    "dev": "tsup src/index.ts --format esm,cjs --dts --external vue --watch",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "peerDependencies": {
+    "maplibre-animated-shaders": ">=0.1.0",
+    "maplibre-gl": ">=3.0.0",
+    "vue": ">=3.3.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vue": "^3.4.0",
+    "vue-tsc": "^1.8.0"
+  },
+  "keywords": [
+    "maplibre",
+    "vue",
+    "vue3",
+    "webgl",
+    "shaders",
+    "animation",
+    "maps"
+  ],
+  "author": "Julien Riel",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/julien-riel/maplibre-animated-shaders.git",
+    "directory": "packages/vue"
+  },
+  "bugs": {
+    "url": "https://github.com/julien-riel/maplibre-animated-shaders/issues"
+  },
+  "homepage": "https://github.com/julien-riel/maplibre-animated-shaders/tree/main/packages/vue#readme"
+}

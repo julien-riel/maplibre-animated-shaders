@@ -2144,3 +2144,339 @@ input[type="checkbox"]:checked::after {
     min-width: 150px;
   }
 }
+
+/* ============================================
+   Shader Editor Styles
+   ============================================ */
+
+.shader-editor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg-primary);
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.shader-editor.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.shader-editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.shader-editor-header h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.shader-editor-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.shader-editor-actions button {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.shader-editor-actions button:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent-primary);
+}
+
+.shader-editor-actions button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.shader-editor-actions .btn-compile {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: white;
+}
+
+.shader-editor-actions .btn-compile:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.shader-editor-actions .btn-close {
+  background: transparent;
+  border: none;
+  padding: var(--spacing-sm);
+}
+
+.shader-editor-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.shader-editor-panels {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.shader-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.shader-panel:last-child {
+  border-bottom: none;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.panel-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.panel-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.shader-textarea {
+  flex: 1;
+  width: 100%;
+  padding: var(--spacing-md);
+  background: var(--bg-primary);
+  border: none;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  resize: none;
+  outline: none;
+  tab-size: 2;
+}
+
+.shader-textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.shader-textarea:focus {
+  background: #0a0a0a;
+}
+
+.shader-editor-sidebar {
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-secondary);
+  border-left: 1px solid var(--border-color);
+}
+
+.uniforms-panel,
+.error-panel {
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.uniforms-panel h3,
+.error-panel h3 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-md);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.uniforms-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.uniform-control {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.uniform-control label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+
+.uniform-input {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.uniform-input input[type="range"] {
+  flex: 1;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--bg-tertiary);
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.uniform-input input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  background: var(--accent-primary);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.uniform-input input[type="color"] {
+  width: 40px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  cursor: pointer;
+  background: transparent;
+}
+
+.uniform-input input[type="number"] {
+  width: 60px;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.uniform-value {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  min-width: 40px;
+  text-align: right;
+}
+
+.error-panel {
+  flex: 1;
+  overflow: auto;
+}
+
+.error-display {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.error-message {
+  color: var(--accent-error);
+  padding: var(--spacing-sm);
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 4px;
+  border-left: 3px solid var(--accent-error);
+}
+
+.success-message {
+  color: var(--accent-success);
+  padding: var(--spacing-sm);
+  background: rgba(34, 197, 94, 0.1);
+  border-radius: 4px;
+  border-left: 3px solid var(--accent-success);
+}
+
+.no-errors {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Shader Editor Button in Config Panel */
+.btn-edit-shader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin-top: var(--spacing-md);
+  background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary));
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-edit-shader:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.btn-edit-shader svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .shader-editor-body {
+    flex-direction: column;
+  }
+
+  .shader-editor-sidebar {
+    width: 100%;
+    flex-direction: row;
+    border-left: none;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .uniforms-panel,
+  .error-panel {
+    flex: 1;
+    border-bottom: none;
+    border-right: 1px solid var(--border-color);
+  }
+
+  .error-panel {
+    border-right: none;
+  }
+}
