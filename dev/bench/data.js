@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1767664894927,
+  "lastUpdate": 1767665344108,
   "repoUrl": "https://github.com/julien-riel/maplibre-animated-shaders",
   "entries": {
     "Performance Benchmarks": [
@@ -3059,6 +3059,443 @@ window.BENCHMARK_DATA = {
             "range": "±1.23%",
             "unit": "ms",
             "extra": "4372.33 ops/sec (2187 samples)"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "julien.riel@gmail.com",
+            "name": "Julien Riel",
+            "username": "julien-riel"
+          },
+          "committer": {
+            "email": "julien.riel@gmail.com",
+            "name": "Julien Riel",
+            "username": "julien-riel"
+          },
+          "distinct": true,
+          "id": "8efae1377cd7b75d4f851dbb8662e0d521de9d51",
+          "message": "chore: bump version to 0.2.0 for maplibre-animated-shaders",
+          "timestamp": "2026-01-05T21:07:57-05:00",
+          "tree_id": "523f73ab6598b24abb821e7abc81b7cda27059e7",
+          "url": "https://github.com/julien-riel/maplibre-animated-shaders/commit/8efae1377cd7b75d4f851dbb8662e0d521de9d51"
+        },
+        "date": 1767665343777,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "packages/lib/benchmarks/core.bench.ts > ObjectPool - acquire 1,000 points",
+            "value": 0.01241776354154646,
+            "range": "±0.53%",
+            "unit": "ms",
+            "extra": "80529.80 ops/sec (40265 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/core.bench.ts > ObjectPool - acquire 10,000 points",
+            "value": 0.1319855357614188,
+            "range": "±0.69%",
+            "unit": "ms",
+            "extra": "7576.59 ops/sec (3789 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/core.bench.ts > ObjectPool - acquire/release cycle 1,000 points",
+            "value": 0.008119675457533785,
+            "range": "±0.07%",
+            "unit": "ms",
+            "extra": "123157.63 ops/sec (61579 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/core.bench.ts > ObjectPool - acquire 1,000 segments",
+            "value": 0.018201846559882013,
+            "range": "±0.38%",
+            "unit": "ms",
+            "extra": "54939.48 ops/sec (27470 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/core.bench.ts > ObjectPool - acquire 1,000 polygons",
+            "value": 0.05819482437151648,
+            "range": "±0.28%",
+            "unit": "ms",
+            "extra": "17183.66 ops/sec (8592 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/core.bench.ts > AnimationLoop - create and destroy",
+            "value": 0.00014823766351416815,
+            "range": "±1.04%",
+            "unit": "ms",
+            "extra": "6745923.92 ops/sec (3372962 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/core.bench.ts > AnimationLoop - add/remove 100 shaders",
+            "value": 0.010828221322299608,
+            "range": "±1.08%",
+            "unit": "ms",
+            "extra": "92351.27 ops/sec (46177 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/core.bench.ts > AnimationLoop - tick with 50 shaders",
+            "value": 0.0034486489085031546,
+            "range": "±0.41%",
+            "unit": "ms",
+            "extra": "289968.63 ops/sec (144985 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/core.bench.ts > ShaderRegistry - register 100 shaders",
+            "value": 0.010217042012348769,
+            "range": "±0.81%",
+            "unit": "ms",
+            "extra": "97875.69 ops/sec (48938 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/core.bench.ts > ShaderRegistry - get shader by name (100 shaders)",
+            "value": 0.01103602705984485,
+            "range": "±0.70%",
+            "unit": "ms",
+            "extra": "90612.32 ops/sec (45307 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/core.bench.ts > ShaderRegistry - list shaders by geometry",
+            "value": 0.02152733185516561,
+            "range": "±0.65%",
+            "unit": "ms",
+            "extra": "46452.58 ops/sec (23227 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/core.bench.ts > ConfigResolver - resolve config (simple)",
+            "value": 0.00008754893740099077,
+            "range": "±0.66%",
+            "unit": "ms",
+            "extra": "11422183.18 ops/sec (5711092 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/core.bench.ts > ConfigResolver - resolve config (full override)",
+            "value": 0.0002279016873398111,
+            "range": "±0.44%",
+            "unit": "ms",
+            "extra": "4387856.94 ops/sec (2193929 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/core.bench.ts > ConfigResolver - validate config",
+            "value": 0.000804713575501643,
+            "range": "±0.41%",
+            "unit": "ms",
+            "extra": "1242678.18 ops/sec (621340 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/core.bench.ts > ConfigResolver - resolve + validate 1,000 configs",
+            "value": 1.3107160026178157,
+            "range": "±0.42%",
+            "unit": "ms",
+            "extra": "762.94 ops/sec (382 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > TimeOffsetCalculator - fixed offset (1,000 features)",
+            "value": 0.0569562136917737,
+            "range": "±1.63%",
+            "unit": "ms",
+            "extra": "17557.35 ops/sec (8779 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > TimeOffsetCalculator - random offset (1,000 features)",
+            "value": 0.05952718583334964,
+            "range": "±1.01%",
+            "unit": "ms",
+            "extra": "16799.05 ops/sec (8400 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > TimeOffsetCalculator - range offset (1,000 features)",
+            "value": 0.06469863319963211,
+            "range": "±0.98%",
+            "unit": "ms",
+            "extra": "15456.28 ops/sec (7729 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > TimeOffsetCalculator - property-based offset (1,000 features)",
+            "value": 0.06685518772564725,
+            "range": "±1.09%",
+            "unit": "ms",
+            "extra": "14957.70 ops/sec (7479 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > TimeOffsetCalculator - hash-based offset (1,000 features)",
+            "value": 0.09090956909093008,
+            "range": "±1.09%",
+            "unit": "ms",
+            "extra": "10999.94 ops/sec (5500 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > TimeOffsetCalculator - fixed offset (10,000 features)",
+            "value": 0.731552483918118,
+            "range": "±4.51%",
+            "unit": "ms",
+            "extra": "1366.96 ops/sec (684 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > TimeOffsetCalculator - hash-based offset (10,000 features)",
+            "value": 1.0771408881719058,
+            "range": "±3.75%",
+            "unit": "ms",
+            "extra": "928.38 ops/sec (465 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > TimeOffsetCalculator - expanded offsets (1,000 features, 4 vertices)",
+            "value": 0.0639607892043719,
+            "range": "±1.18%",
+            "unit": "ms",
+            "extra": "15634.58 ops/sec (7818 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > ExpressionEvaluator - compile simple get expression",
+            "value": 0.002074146226729301,
+            "range": "±0.35%",
+            "unit": "ms",
+            "extra": "482126.08 ops/sec (241064 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > ExpressionEvaluator - compile match expression",
+            "value": 0.010342635177067402,
+            "range": "±0.42%",
+            "unit": "ms",
+            "extra": "96687.16 ops/sec (48344 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > ExpressionEvaluator - compile interpolate expression",
+            "value": 0.007673038625616932,
+            "range": "±0.45%",
+            "unit": "ms",
+            "extra": "130326.47 ops/sec (65164 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > ExpressionEvaluator - evaluate get (1,000 features)",
+            "value": 0.09302874418602834,
+            "range": "±1.18%",
+            "unit": "ms",
+            "extra": "10749.37 ops/sec (5375 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > ExpressionEvaluator - evaluate match (1,000 features)",
+            "value": 0.11378222684869962,
+            "range": "±1.30%",
+            "unit": "ms",
+            "extra": "8788.72 ops/sec (4395 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > ExpressionEvaluator - evaluate complex (1,000 features)",
+            "value": 0.15094939631753027,
+            "range": "±0.96%",
+            "unit": "ms",
+            "extra": "6624.74 ops/sec (3313 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > ExpressionEvaluator - multiple expressions (1,000 features)",
+            "value": 0.262653236344534,
+            "range": "±1.04%",
+            "unit": "ms",
+            "extra": "3807.30 ops/sec (1904 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > Color Conversion - hexToRgba (1,000 conversions)",
+            "value": 0.17253518771563958,
+            "range": "±0.83%",
+            "unit": "ms",
+            "extra": "5795.92 ops/sec (2898 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > Color Conversion - rgbaToHex (1,000 conversions)",
+            "value": 0.15291303241588514,
+            "range": "±0.36%",
+            "unit": "ms",
+            "extra": "6539.66 ops/sec (3270 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > Color Conversion - round-trip conversion (1,000 times)",
+            "value": 0.34718691741850727,
+            "range": "±0.37%",
+            "unit": "ms",
+            "extra": "2880.29 ops/sec (1441 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > Coordinate Transformation - lngLat to Mercator (10,000 points)",
+            "value": 0.14314116370921745,
+            "range": "±0.37%",
+            "unit": "ms",
+            "extra": "6986.11 ops/sec (3494 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > Coordinate Transformation - process coordinates array (1,000 lines x 10 pts)",
+            "value": 0.791734157480451,
+            "range": "±6.08%",
+            "unit": "ms",
+            "extra": "1263.05 ops/sec (635 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > Buffer Building - Float32Array allocation (1,000 points, 24 bytes each)",
+            "value": 0.0071684036931577485,
+            "range": "±3.29%",
+            "unit": "ms",
+            "extra": "139501.07 ops/sec (69751 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > Buffer Building - Float32Array allocation (10,000 points)",
+            "value": 0.07424930933646953,
+            "range": "±5.16%",
+            "unit": "ms",
+            "extra": "13468.14 ops/sec (6737 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > Buffer Building - Float32Array fill (1,000 points)",
+            "value": 0.0752360529641995,
+            "range": "±0.45%",
+            "unit": "ms",
+            "extra": "13291.50 ops/sec (6646 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > Buffer Building - Uint16Array index buffer (1,000 quads)",
+            "value": 0.0037308010296968654,
+            "range": "±0.43%",
+            "unit": "ms",
+            "extra": "268038.95 ops/sec (134020 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > PointShaderLayer - create layer",
+            "value": 0.0008226462760531698,
+            "range": "±0.90%",
+            "unit": "ms",
+            "extra": "1215589.29 ops/sec (607796 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > PointShaderLayer - onAdd with 100 points",
+            "value": 0.009866460662628373,
+            "range": "±0.73%",
+            "unit": "ms",
+            "extra": "101353.47 ops/sec (50677 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > PointShaderLayer - onAdd with 1,000 points",
+            "value": 0.05872831183932079,
+            "range": "±1.37%",
+            "unit": "ms",
+            "extra": "17027.56 ops/sec (8514 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > PointShaderLayer - onAdd with 10,000 points",
+            "value": 0.780716650546005,
+            "range": "±5.06%",
+            "unit": "ms",
+            "extra": "1280.87 ops/sec (641 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > PointShaderLayer - render cycle (1,000 points)",
+            "value": 0.0596761404702233,
+            "range": "±1.29%",
+            "unit": "ms",
+            "extra": "16757.12 ops/sec (8379 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > PointShaderLayer - updateConfig (1,000 points)",
+            "value": 0.12127928789715944,
+            "range": "±1.04%",
+            "unit": "ms",
+            "extra": "8245.43 ops/sec (4123 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > LineShaderLayer - create layer",
+            "value": 0.0008933251969340215,
+            "range": "±0.39%",
+            "unit": "ms",
+            "extra": "1119413.18 ops/sec (559707 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > LineShaderLayer - onAdd with 100 lines (10 pts each)",
+            "value": 0.023202430719256734,
+            "range": "±0.82%",
+            "unit": "ms",
+            "extra": "43098.93 ops/sec (21550 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > LineShaderLayer - onAdd with 1,000 lines (10 pts each)",
+            "value": 0.20742325922852292,
+            "range": "±1.94%",
+            "unit": "ms",
+            "extra": "4821.06 ops/sec (2411 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > LineShaderLayer - onAdd with 100 lines (100 pts each)",
+            "value": 0.17601812249208373,
+            "range": "±1.81%",
+            "unit": "ms",
+            "extra": "5681.23 ops/sec (2841 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > LineShaderLayer - render cycle (1,000 lines)",
+            "value": 0.20471134670487057,
+            "range": "±1.91%",
+            "unit": "ms",
+            "extra": "4884.93 ops/sec (2443 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > PolygonShaderLayer - create layer",
+            "value": 0.0009270993033790259,
+            "range": "±0.14%",
+            "unit": "ms",
+            "extra": "1078633.10 ops/sec (539317 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > PolygonShaderLayer - onAdd with 100 polygons (6 vertices)",
+            "value": 0.025479416887487605,
+            "range": "±0.63%",
+            "unit": "ms",
+            "extra": "39247.37 ops/sec (19624 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > PolygonShaderLayer - onAdd with 1,000 polygons (6 vertices)",
+            "value": 0.24308469275644093,
+            "range": "±1.39%",
+            "unit": "ms",
+            "extra": "4113.79 ops/sec (2057 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > PolygonShaderLayer - onAdd with 100 polygons (20 vertices)",
+            "value": 0.0692373314871169,
+            "range": "±1.10%",
+            "unit": "ms",
+            "extra": "14443.08 ops/sec (7222 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > PolygonShaderLayer - render cycle (1,000 polygons)",
+            "value": 0.2363446961247731,
+            "range": "±1.51%",
+            "unit": "ms",
+            "extra": "4231.11 ops/sec (2116 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > PolygonShaderLayer - triangulation (complex polygon 50 vertices)",
+            "value": 0.16186245307444405,
+            "range": "±1.37%",
+            "unit": "ms",
+            "extra": "6178.09 ops/sec (3090 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > Layer Comparison - 1,000 points - full lifecycle",
+            "value": 0.06462763306191056,
+            "range": "±1.48%",
+            "unit": "ms",
+            "extra": "15473.26 ops/sec (7737 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > Layer Comparison - 1,000 lines - full lifecycle",
+            "value": 0.20505393977878528,
+            "range": "±1.94%",
+            "unit": "ms",
+            "extra": "4876.77 ops/sec (2441 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > Layer Comparison - 1,000 polygons - full lifecycle",
+            "value": 0.22196688371061904,
+            "range": "±1.15%",
+            "unit": "ms",
+            "extra": "4505.18 ops/sec (2253 samples)"
           }
         ]
       }
