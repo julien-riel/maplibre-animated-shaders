@@ -62,7 +62,7 @@ jobs:
 
       - name: Test import compatibility
         run: |
-          cat > /tmp/test-import.mjs << 'EOF'
+          cat > test-import.mjs << 'EOF'
           import maplibregl from 'maplibre-gl';
           import { ShaderManager, globalRegistry } from './packages/lib/dist/index.js';
 
@@ -81,7 +81,8 @@ jobs:
 
           console.log('✓ All imports work correctly');
           EOF
-          node /tmp/test-import.mjs
+          node test-import.mjs
+          rm test-import.mjs
 
   report:
     name: Compatibility Report
