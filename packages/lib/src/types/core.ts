@@ -187,3 +187,38 @@ export interface ShaderManagerOptions {
  * MapLibre GL Map type re-export
  */
 export type MapLibreMapInstance = MapLibreMap;
+
+/**
+ * MapLibre 5.x CustomRenderMethodInput interface
+ * In MapLibre 5.0+, the render method receives an options object instead of just the matrix
+ */
+export interface CustomRenderMethodInput {
+  farZ: number;
+  nearZ: number;
+  fov: number;
+  modelViewProjectionMatrix: Float32Array | number[];
+  projectionMatrix: Float32Array | number[];
+  [key: string]: unknown;
+}
+
+/**
+ * Union type for render method second parameter
+ * Supports both MapLibre 3.x/4.x (mat4) and 5.x (CustomRenderMethodInput)
+ */
+export type RenderMatrixOrOptions = Float32Array | number[] | CustomRenderMethodInput;
+
+/**
+ * Extract projection matrix from either MapLibre 3.x/4.x mat4 or 5.x options object
+ */
+export function extractMatrix(matrixOrOptions: RenderMatrixOrOptions): Float32Array | number[] {
+  // MapLibre 5.x passes an options object with modelViewProjectionMatrix
+  if (
+    matrixOrOptions !== null &&
+    typeof matrixOrOptions === 'object' &&
+    'modelViewProjectionMatrix' in matrixOrOptions
+  ) {
+    return matrixOrOptions.modelViewProjectionMatrix;
+  }
+  // MapLibre 3.x/4.x passes the matrix directly
+  return matrixOrOptions as Float32Array | number[];
+}

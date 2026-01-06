@@ -38,13 +38,15 @@
  * ```
  */
 
-import type { CustomLayerInterface, Map as MapLibreMap } from 'maplibre-gl';
+import type { Map as MapLibreMap } from 'maplibre-gl';
 import type {
   ShaderDefinition,
   ShaderConfig,
   AnimationTimingConfig,
   InteractivityConfig,
+  RenderMatrixOrOptions,
 } from '../types';
+import { extractMatrix } from '../types';
 import type { mat4 } from 'gl-matrix';
 import { TimeOffsetCalculator } from '../timing';
 import { ExpressionEvaluator, isExpression } from '../expressions';
@@ -86,7 +88,13 @@ export interface FeatureData {
  * }
  * ```
  */
-export abstract class BaseShaderLayer implements CustomLayerInterface {
+/**
+ * Abstract base class that implements MapLibre CustomLayerInterface.
+ * Note: We don't use `implements CustomLayerInterface` due to render signature
+ * differences between MapLibre 3.x/4.x (mat4) and 5.x (CustomRenderMethodInput).
+ * The class is runtime-compatible with both versions.
+ */
+export abstract class BaseShaderLayer {
   id: string;
   type = 'custom' as const;
   renderingMode: '2d' | '3d' = '2d';
@@ -367,8 +375,9 @@ export abstract class BaseShaderLayer implements CustomLayerInterface {
 
   /**
    * Render the layer
+   * Supports both MapLibre 3.x/4.x (mat4) and 5.x (CustomRenderMethodInput) signatures
    */
-  render(gl: WebGLRenderingContext, matrix: mat4): void {
+  render(gl: WebGLRenderingContext, matrixOrOptions: RenderMatrixOrOptions): void {
     // Skip rendering if there was an initialization error
     if (this.initializationError) {
       if (!this.hasLoggedError) {
@@ -387,6 +396,9 @@ export abstract class BaseShaderLayer implements CustomLayerInterface {
     }
 
     if (!this.program || !this.map || this.vertexCount === 0) return;
+
+    // Extract matrix from either MapLibre 3.x/4.x mat4 or 5.x options object
+    const matrix = extractMatrix(matrixOrOptions) as mat4;
 
     // Update time
     const now = performance.now();

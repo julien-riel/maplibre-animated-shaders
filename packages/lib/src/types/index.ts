@@ -23,7 +23,12 @@ export type {
   ShaderController,
   ShaderManagerOptions,
   MapLibreMapInstance,
+  CustomRenderMethodInput,
+  RenderMatrixOrOptions,
 } from './core';
+
+// Core utility functions
+export { extractMatrix } from './core';
 
 // Interface types
 export type {

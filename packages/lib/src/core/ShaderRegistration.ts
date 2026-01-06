@@ -3,6 +3,7 @@
  * Handles the lifecycle of applying shaders to map layers.
  */
 
+import type { CustomLayerInterface } from 'maplibre-gl';
 import type {
   ShaderConfig,
   ShaderDefinition,
@@ -220,10 +221,11 @@ function registerWebGLShader(
 
   // Add the custom layer to the map
   // For source-based layers, add before the original layer; for global, add on top
+  // Cast to CustomLayerInterface to handle MapLibre 3.x/4.x/5.x render signature differences
   if (geometryConfig.requiresSource) {
-    state.map.addLayer(customLayer, layerId);
+    state.map.addLayer(customLayer as unknown as CustomLayerInterface, layerId);
   } else {
-    state.map.addLayer(customLayer);
+    state.map.addLayer(customLayer as unknown as CustomLayerInterface);
   }
 
   // Store the custom layer
