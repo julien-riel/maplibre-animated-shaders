@@ -14,6 +14,13 @@ import type { mat4 } from 'gl-matrix';
 import { BaseShaderLayer } from './BaseShaderLayer';
 import { getConfigNumber } from '../utils/config-helpers';
 import { PoolManager, type PointData as PooledPointData } from '../utils/object-pool';
+import {
+  InstancedRenderer,
+  createQuadGeometry,
+  type InstanceAttribute,
+  type InstanceLayout,
+} from '../webgl/InstancedRenderer';
+import type { IWebGLContext } from '../webgl/WebGLContext';
 
 /**
  * Vertex shader for point rendering
@@ -26,6 +33,10 @@ import { PoolManager, type PointData as PooledPointData } from '../utils/object-
  * Supports per-feature interactive animation:
  * - a_isPlaying: 0.0 = paused, 1.0 = playing
  * - a_localTime: Frozen time when paused
+ */
+/**
+ * Standard vertex shader for point rendering (non-instanced)
+ * Uses 4 vertices per point with duplicated position data
  */
 const POINT_VERTEX_SHADER = `
   attribute vec2 a_pos;
@@ -88,14 +99,107 @@ const POINT_VERTEX_SHADER = `
 `;
 
 /**
+ * Instanced vertex shader for point rendering
+ *
+ * Per-vertex attributes (shared quad geometry):
+ * - a_vertex: Unit quad vertex position (-0.5 to 0.5)
+ * - a_uv: Texture coordinates (0 to 1)
+ *
+ * Per-instance attributes:
+ * - a_position: Mercator coordinates of the point center
+ * - a_index: Feature index for data lookup
+ * - a_timeOffset: Time offset for desynchronized animation
+ * - a_color: Data-driven color (RGBA)
+ * - a_intensity: Data-driven intensity
+ * - a_isPlaying: Interactive play state (0.0 = paused, 1.0 = playing)
+ * - a_localTime: Frozen time when paused
+ */
+const POINT_VERTEX_SHADER_INSTANCED = `
+  // Per-vertex (shared quad geometry)
+  attribute vec2 a_vertex;
+  attribute vec2 a_uv;
+
+  // Per-instance (data for each point)
+  attribute vec2 a_position;
+  attribute float a_index;
+  attribute float a_timeOffset;
+  attribute vec4 a_color;
+  attribute float a_intensity;
+  attribute float a_isPlaying;
+  attribute float a_localTime;
+
+  uniform mat4 u_matrix;
+  uniform float u_size;
+  uniform float u_time;
+  uniform vec2 u_resolution;
+  uniform float u_useDataDrivenColor;
+  uniform float u_useDataDrivenIntensity;
+
+  varying vec2 v_pos;
+  varying float v_index;
+  varying float v_timeOffset;
+  varying float v_effectiveTime;
+  varying vec4 v_color;
+  varying float v_intensity;
+  varying float v_useDataDrivenColor;
+  varying float v_useDataDrivenIntensity;
+
+  void main() {
+    // a_position is the point center in Mercator coordinates
+    // a_vertex is the unit quad vertex (-0.5 to 0.5)
+
+    // Transform point to clip space
+    vec4 projected = u_matrix * vec4(a_position, 0.0, 1.0);
+
+    // Calculate pixel offset for the quad (scale from -0.5..0.5 to -1..1 for size)
+    vec2 pixelOffset = a_vertex * 2.0 * u_size;
+
+    // Convert pixel offset to clip space offset
+    vec2 clipOffset = pixelOffset / u_resolution * 2.0 * projected.w;
+
+    gl_Position = projected + vec4(clipOffset, 0.0, 0.0);
+
+    // Pass normalized position within quad to fragment shader (-1 to 1)
+    v_pos = a_vertex * 2.0;
+    v_index = a_index;
+    v_timeOffset = a_timeOffset;
+
+    // Calculate effective time for interactive animation
+    float globalAnimTime = u_time + a_timeOffset;
+    v_effectiveTime = mix(a_localTime, globalAnimTime, a_isPlaying);
+
+    // Pass data-driven properties
+    v_color = a_color;
+    v_intensity = a_intensity;
+    v_useDataDrivenColor = u_useDataDrivenColor;
+    v_useDataDrivenIntensity = u_useDataDrivenIntensity;
+  }
+`;
+
+/**
  * PointShaderLayer - Custom WebGL layer for point shaders
  *
  * Supports data-driven properties via MapLibre-style expressions.
  */
+/**
+ * Instance data stride for instanced rendering
+ * Layout per instance:
+ * - position (2 floats) = 8 bytes
+ * - index (1 float) = 4 bytes
+ * - timeOffset (1 float) = 4 bytes
+ * - color (4 floats) = 16 bytes
+ * - intensity (1 float) = 4 bytes
+ * - isPlaying (1 float) = 4 bytes
+ * - localTime (1 float) = 4 bytes
+ * Total: 11 floats = 44 bytes per instance
+ */
+const INSTANCE_STRIDE = 44;
+const INSTANCE_FLOATS = 11;
+
 export class PointShaderLayer extends BaseShaderLayer {
   protected readonly layerTypeName = 'PointShaderLayer';
 
-  // Attribute locations
+  // Attribute locations (standard rendering)
   private aPos: number = -1;
   private aOffset: number = -1;
   private aIndex: number = -1;
@@ -105,25 +209,56 @@ export class PointShaderLayer extends BaseShaderLayer {
   private aIsPlaying: number = -1;
   private aLocalTime: number = -1;
 
+  // Attribute locations (instanced rendering)
+  private aVertex: number = -1;
+  private aUv: number = -1;
+  private aPosition: number = -1;
+  private aIndexInstanced: number = -1;
+  private aTimeOffsetInstanced: number = -1;
+  private aColorInstanced: number = -1;
+  private aIntensityInstanced: number = -1;
+  private aIsPlayingInstanced: number = -1;
+  private aLocalTimeInstanced: number = -1;
+
   // Point data (using object pool for reduced GC pressure)
   private points: PooledPointData[] = [];
   private poolManager: PoolManager = PoolManager.getInstance();
 
+  // Instance data buffer for instanced rendering
+  private instanceData: Float32Array | null = null;
+
   protected getVertexShader(): string {
-    return POINT_VERTEX_SHADER;
+    // Return instanced shader if instancing will be used
+    return this.useInstancing ? POINT_VERTEX_SHADER_INSTANCED : POINT_VERTEX_SHADER;
   }
 
   protected initializeAttributes(gl: WebGLRenderingContext): void {
     if (!this.program) return;
 
-    this.aPos = gl.getAttribLocation(this.program, 'a_pos');
-    this.aOffset = gl.getAttribLocation(this.program, 'a_offset');
-    this.aIndex = gl.getAttribLocation(this.program, 'a_index');
-    this.aTimeOffset = gl.getAttribLocation(this.program, 'a_timeOffset');
-    this.aColor = gl.getAttribLocation(this.program, 'a_color');
-    this.aIntensity = gl.getAttribLocation(this.program, 'a_intensity');
-    this.aIsPlaying = gl.getAttribLocation(this.program, 'a_isPlaying');
-    this.aLocalTime = gl.getAttribLocation(this.program, 'a_localTime');
+    if (this.useInstancing) {
+      // Instanced rendering attributes
+      // Per-vertex (geometry)
+      this.aVertex = gl.getAttribLocation(this.program, 'a_vertex');
+      this.aUv = gl.getAttribLocation(this.program, 'a_uv');
+      // Per-instance
+      this.aPosition = gl.getAttribLocation(this.program, 'a_position');
+      this.aIndexInstanced = gl.getAttribLocation(this.program, 'a_index');
+      this.aTimeOffsetInstanced = gl.getAttribLocation(this.program, 'a_timeOffset');
+      this.aColorInstanced = gl.getAttribLocation(this.program, 'a_color');
+      this.aIntensityInstanced = gl.getAttribLocation(this.program, 'a_intensity');
+      this.aIsPlayingInstanced = gl.getAttribLocation(this.program, 'a_isPlaying');
+      this.aLocalTimeInstanced = gl.getAttribLocation(this.program, 'a_localTime');
+    } else {
+      // Standard rendering attributes
+      this.aPos = gl.getAttribLocation(this.program, 'a_pos');
+      this.aOffset = gl.getAttribLocation(this.program, 'a_offset');
+      this.aIndex = gl.getAttribLocation(this.program, 'a_index');
+      this.aTimeOffset = gl.getAttribLocation(this.program, 'a_timeOffset');
+      this.aColor = gl.getAttribLocation(this.program, 'a_color');
+      this.aIntensity = gl.getAttribLocation(this.program, 'a_intensity');
+      this.aIsPlaying = gl.getAttribLocation(this.program, 'a_isPlaying');
+      this.aLocalTime = gl.getAttribLocation(this.program, 'a_localTime');
+    }
   }
 
   protected cacheUniformLocations(gl: WebGLRenderingContext): void {
@@ -265,6 +400,7 @@ export class PointShaderLayer extends BaseShaderLayer {
 
   /**
    * Build vertex and index buffers
+   * Chooses between instanced and standard rendering based on feature count
    */
   private buildBuffers(gl: WebGLRenderingContext): void {
     if (this.points.length === 0) {
@@ -272,6 +408,27 @@ export class PointShaderLayer extends BaseShaderLayer {
       return;
     }
 
+    // Initialize interaction state manager with features (needed for both paths)
+    if (this.interactionEnabled && this.stateManager) {
+      this.stateManager.initializeFromFeatures(this.features);
+    }
+
+    // Use instanced rendering for large datasets
+    if (this.shouldUseInstancing(this.points.length)) {
+      this.buildInstanceData();
+      // For instanced rendering, vertexCount is used as instance count
+      this.vertexCount = this.points.length;
+      return;
+    }
+
+    // Standard rendering path (non-instanced)
+    this.buildStandardBuffers(gl);
+  }
+
+  /**
+   * Build standard (non-instanced) vertex and index buffers
+   */
+  private buildStandardBuffers(gl: WebGLRenderingContext): void {
     // Calculate time offsets for all features
     const timeOffsets = this.getTimeOffsets();
 
@@ -330,9 +487,8 @@ export class PointShaderLayer extends BaseShaderLayer {
       this.buildDataDrivenBuffer(gl);
     }
 
-    // Initialize interaction state manager with features
+    // Build interaction buffer if enabled
     if (this.interactionEnabled && this.stateManager) {
-      this.stateManager.initializeFromFeatures(this.features);
       this.buildInteractionBuffer(gl);
     }
 
@@ -381,13 +537,34 @@ export class PointShaderLayer extends BaseShaderLayer {
   }
 
   protected updateInteractionBufferFromState(gl: WebGLRenderingContext): void {
-    if (!this.stateManager || !this.interactionBuffer) return;
+    if (!this.stateManager) return;
 
+    // Use instanced path if applicable
+    if (this.shouldUseInstancing(this.points.length)) {
+      this.updateInstanceInteractionData();
+      return;
+    }
+
+    // Standard path
+    if (!this.interactionBuffer) return;
     const { isPlayingData, localTimeData } = this.stateManager.generateBufferData(4); // 4 vertices per point
     this.updateInteractionBuffer(gl, isPlayingData, localTimeData);
   }
 
   protected renderGeometry(gl: WebGLRenderingContext): void {
+    // Use instanced rendering if available and beneficial
+    if (this.instancedRenderer && this.shouldUseInstancing(this.points.length)) {
+      this.renderInstanced(gl);
+    } else {
+      this.renderStandard(gl);
+    }
+  }
+
+  /**
+   * Standard (non-instanced) rendering path
+   * Used when instancing is not supported or for small datasets
+   */
+  private renderStandard(gl: WebGLRenderingContext): void {
     // Bind vertex buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
 
@@ -474,5 +651,241 @@ export class PointShaderLayer extends BaseShaderLayer {
     if (this.aIntensity >= 0) gl.disableVertexAttribArray(this.aIntensity);
     if (this.aIsPlaying >= 0) gl.disableVertexAttribArray(this.aIsPlaying);
     if (this.aLocalTime >= 0) gl.disableVertexAttribArray(this.aLocalTime);
+  }
+
+  /**
+   * Instanced rendering path
+   * More efficient for large datasets as it reuses quad geometry
+   */
+  private renderInstanced(_gl: WebGLRenderingContext): void {
+    if (!this.instancedRenderer) return;
+
+    // The InstancedRenderer handles all attribute setup via VAO
+    this.instancedRenderer.draw(this.points.length);
+  }
+
+  // =========================================================================
+  // Instancing implementation
+  // =========================================================================
+
+  /**
+   * Check if this layer supports instanced rendering
+   */
+  protected supportsInstancing(): boolean {
+    return true;
+  }
+
+  /**
+   * Initialize the instanced renderer with quad geometry
+   */
+  protected initializeInstancedRenderer(ctx: IWebGLContext): void {
+    const gl = ctx.gl;
+
+    // Create the instanced renderer
+    this.instancedRenderer = new InstancedRenderer(ctx);
+
+    // Setup shared quad geometry
+    const { vertices, indices, layout, stride } = createQuadGeometry();
+
+    // Update layout with actual attribute locations
+    const updatedLayout: InstanceAttribute[] = layout.map((attr) => ({
+      ...attr,
+      location:
+        attr.name === 'a_vertex'
+          ? this.aVertex
+          : attr.name === 'a_uv'
+            ? this.aUv
+            : attr.location,
+    }));
+
+    this.instancedRenderer.setIndexedGeometry(vertices, indices, updatedLayout, stride);
+
+    // Define instance attribute layout
+    const instanceLayout: InstanceLayout = {
+      stride: INSTANCE_STRIDE,
+      attributes: [
+        {
+          name: 'a_position',
+          location: this.aPosition,
+          size: 2,
+          type: gl.FLOAT,
+          offset: 0,
+        },
+        {
+          name: 'a_index',
+          location: this.aIndexInstanced,
+          size: 1,
+          type: gl.FLOAT,
+          offset: 8,
+        },
+        {
+          name: 'a_timeOffset',
+          location: this.aTimeOffsetInstanced,
+          size: 1,
+          type: gl.FLOAT,
+          offset: 12,
+        },
+        {
+          name: 'a_color',
+          location: this.aColorInstanced,
+          size: 4,
+          type: gl.FLOAT,
+          offset: 16,
+        },
+        {
+          name: 'a_intensity',
+          location: this.aIntensityInstanced,
+          size: 1,
+          type: gl.FLOAT,
+          offset: 32,
+        },
+        {
+          name: 'a_isPlaying',
+          location: this.aIsPlayingInstanced,
+          size: 1,
+          type: gl.FLOAT,
+          offset: 36,
+        },
+        {
+          name: 'a_localTime',
+          location: this.aLocalTimeInstanced,
+          size: 1,
+          type: gl.FLOAT,
+          offset: 40,
+        },
+      ],
+    };
+
+    // Initial empty instance data
+    const emptyData = new Float32Array(0);
+    this.instancedRenderer.setInstanceData(emptyData, instanceLayout);
+    this.instancedRenderer.setupVAO();
+  }
+
+  /**
+   * Build instance data for instanced rendering
+   * Packs all per-instance attributes into a single buffer
+   */
+  private buildInstanceData(): void {
+    if (!this.instancedRenderer || this.points.length === 0) {
+      this.instanceData = null;
+      return;
+    }
+
+    const timeOffsets = this.getTimeOffsets();
+    this.evaluateDataDrivenProperties();
+
+    // Get interaction state if enabled
+    let isPlayingData: Float32Array | null = null;
+    let localTimeData: Float32Array | null = null;
+    if (this.interactionEnabled && this.stateManager) {
+      const bufferData = this.stateManager.generateBufferData(1); // 1 value per instance
+      isPlayingData = bufferData.isPlayingData;
+      localTimeData = bufferData.localTimeData;
+    }
+
+    // Allocate instance data buffer
+    this.instanceData = new Float32Array(this.points.length * INSTANCE_FLOATS);
+
+    for (let i = 0; i < this.points.length; i++) {
+      const point = this.points[i];
+      const offset = i * INSTANCE_FLOATS;
+      const featureData = this.featureData[point.index] ?? {
+        color: [1, 1, 1, 1],
+        intensity: 1.0,
+      };
+      const timeOffset = timeOffsets[point.index] ?? 0;
+      const isPlaying = isPlayingData ? isPlayingData[point.index] ?? 1.0 : 1.0;
+      const localTime = localTimeData ? localTimeData[point.index] ?? 0.0 : 0.0;
+
+      // Pack instance data
+      this.instanceData[offset + 0] = point.mercatorX; // position.x
+      this.instanceData[offset + 1] = point.mercatorY; // position.y
+      this.instanceData[offset + 2] = point.index; // index
+      this.instanceData[offset + 3] = timeOffset; // timeOffset
+      this.instanceData[offset + 4] = featureData.color[0]; // color.r
+      this.instanceData[offset + 5] = featureData.color[1]; // color.g
+      this.instanceData[offset + 6] = featureData.color[2]; // color.b
+      this.instanceData[offset + 7] = featureData.color[3]; // color.a
+      this.instanceData[offset + 8] = featureData.intensity; // intensity
+      this.instanceData[offset + 9] = isPlaying; // isPlaying
+      this.instanceData[offset + 10] = localTime; // localTime
+    }
+
+    // Update the instance buffer
+    const ctx = this.getContext();
+    if (ctx) {
+      const instanceLayout: InstanceLayout = {
+        stride: INSTANCE_STRIDE,
+        attributes: [
+          { name: 'a_position', location: this.aPosition, size: 2, type: ctx.gl.FLOAT, offset: 0 },
+          {
+            name: 'a_index',
+            location: this.aIndexInstanced,
+            size: 1,
+            type: ctx.gl.FLOAT,
+            offset: 8,
+          },
+          {
+            name: 'a_timeOffset',
+            location: this.aTimeOffsetInstanced,
+            size: 1,
+            type: ctx.gl.FLOAT,
+            offset: 12,
+          },
+          {
+            name: 'a_color',
+            location: this.aColorInstanced,
+            size: 4,
+            type: ctx.gl.FLOAT,
+            offset: 16,
+          },
+          {
+            name: 'a_intensity',
+            location: this.aIntensityInstanced,
+            size: 1,
+            type: ctx.gl.FLOAT,
+            offset: 32,
+          },
+          {
+            name: 'a_isPlaying',
+            location: this.aIsPlayingInstanced,
+            size: 1,
+            type: ctx.gl.FLOAT,
+            offset: 36,
+          },
+          {
+            name: 'a_localTime',
+            location: this.aLocalTimeInstanced,
+            size: 1,
+            type: ctx.gl.FLOAT,
+            offset: 40,
+          },
+        ],
+      };
+
+      this.instancedRenderer.setInstanceData(this.instanceData, instanceLayout);
+      this.instancedRenderer.setupVAO();
+    }
+  }
+
+  /**
+   * Update instance data for interaction state changes
+   * Only updates isPlaying and localTime fields for efficiency
+   */
+  private updateInstanceInteractionData(): void {
+    if (!this.instancedRenderer || !this.instanceData || !this.stateManager) return;
+
+    const { isPlayingData, localTimeData } = this.stateManager.generateBufferData(1);
+
+    for (let i = 0; i < this.points.length; i++) {
+      const point = this.points[i];
+      const offset = i * INSTANCE_FLOATS;
+      this.instanceData[offset + 9] = isPlayingData[point.index] ?? 1.0;
+      this.instanceData[offset + 10] = localTimeData[point.index] ?? 0.0;
+    }
+
+    // Update just the instance buffer (faster than full rebuild)
+    this.instancedRenderer.updateInstanceData(this.instanceData);
   }
 }

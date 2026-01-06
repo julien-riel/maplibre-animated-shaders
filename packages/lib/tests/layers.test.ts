@@ -77,14 +77,25 @@ function createMockWebGLContext(): WebGLRenderingContext {
     // Attribute functions
     getAttribLocation: vi.fn((program, name) => {
       const locations: Record<string, number> = {
+        // Standard point attributes
         'a_pos': 0,
         'a_offset': 1,
         'a_index': 2,
+        'a_timeOffset': 3,
+        'a_color': 4,
+        'a_intensity': 5,
+        'a_isPlaying': 6,
+        'a_localTime': 7,
+        // Instanced point attributes
+        'a_vertex': 0,
+        'a_uv': 1,
+        'a_position': 2,
+        // Line attributes
         'a_pos_start': 0,
         'a_pos_end': 1,
         'a_progress': 3,
         'a_line_index': 4,
-        'a_uv': 1,
+        // Polygon attributes
         'a_centroid': 2,
         'a_polygon_index': 3,
       };
@@ -131,6 +142,15 @@ function createMockWebGLContext(): WebGLRenderingContext {
 
     // Program validation
     validateProgram: vi.fn(),
+
+    // Extension support (needed for WebGLContext wrapper)
+    getExtension: vi.fn(() => null),
+
+    // Constant vertex attribute (for disabled attributes)
+    vertexAttrib1f: vi.fn(),
+    vertexAttrib2fv: vi.fn(),
+    vertexAttrib3fv: vi.fn(),
+    vertexAttrib4fv: vi.fn(),
 
   } as unknown as WebGLRenderingContext;
 }
