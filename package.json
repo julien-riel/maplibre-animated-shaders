@@ -1,39 +1,25 @@
 {
-  "name": "maplibre-animated-shaders",
+  "name": "maplibre-animated-shaders-monorepo",
   "version": "0.1.0",
-  "description": "Animated GLSL shaders for MapLibre GL JS",
+  "private": true,
+  "description": "Monorepo for MapLibre Animated Shaders",
   "type": "module",
-  "main": "dist/index.cjs",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
-    },
-    "./shaders/*": "./dist/shaders/*"
-  },
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE",
-    "CHANGELOG.md"
+  "workspaces": [
+    "packages/*"
   ],
-  "sideEffects": false,
   "scripts": {
-    "dev": "vite",
-    "dev:demo": "vite --config demo/vite.config.ts",
-    "build": "npm run validate:glsl && tsc && vite build --mode lib",
-    "build:lib": "npm run validate:glsl && vite build --mode lib",
-    "build:demo": "vite build --config demo/vite.config.ts",
-    "preview": "vite preview",
-    "preview:demo": "vite preview --config demo/vite.config.ts",
-    "lint": "eslint src --ext .ts,.tsx",
-    "lint:fix": "eslint src --ext .ts,.tsx --fix",
-    "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\"",
-    "typecheck": "tsc --noEmit",
+    "dev": "npm -w maplibre-animated-shaders run dev",
+    "dev:demo": "npm -w @maplibre-animated-shaders/demo run dev",
+    "build": "npm -w maplibre-animated-shaders run build",
+    "build:lib": "npm -w maplibre-animated-shaders run build:lib",
+    "build:demo": "npm -w @maplibre-animated-shaders/demo run build",
+    "build:all": "npm run build:lib && npm run build:demo",
+    "preview:demo": "npm -w @maplibre-animated-shaders/demo run preview",
+    "lint": "eslint packages/*/src --ext .ts,.tsx",
+    "lint:fix": "eslint packages/*/src --ext .ts,.tsx --fix",
+    "format": "prettier --write \"packages/*/src/**/*.{ts,tsx,vue,css}\"",
+    "format:check": "prettier --check \"packages/*/src/**/*.{ts,tsx,vue,css}\"",
+    "typecheck": "npm -w maplibre-animated-shaders run typecheck",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
@@ -50,34 +36,22 @@
     "docs:watch": "typedoc --watch",
     "changelog": "npx tsx scripts/generate-changelog.ts",
     "changelog:write": "npx tsx scripts/generate-changelog.ts --write",
-    "version": "npm run changelog:write && git add CHANGELOG.md",
-    "prepublishOnly": "npm run build:lib"
+    "size": "size-limit",
+    "size:check": "size-limit --json"
   },
-  "keywords": [
-    "maplibre",
-    "maplibre-gl",
-    "webgl",
-    "glsl",
-    "shaders",
-    "animation",
-    "maps",
-    "gis",
-    "visualization"
-  ],
   "author": "Julien Riel",
   "license": "MIT",
   "homepage": "https://github.com/julien-riel/maplibre-animated-shaders#readme",
   "bugs": {
     "url": "https://github.com/julien-riel/maplibre-animated-shaders/issues"
   },
-  "peerDependencies": {
-    "maplibre-gl": ">=3.0.0"
-  },
-  "dependencies": {
-    "@maplibre/maplibre-gl-style-spec": "^24.4.1"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/julien-riel/maplibre-animated-shaders"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",
+    "@size-limit/preset-small-lib": "^12.0.0",
     "@types/node": "^20.10.0",
     "@typescript-eslint/eslint-plugin": "^6.15.0",
     "@typescript-eslint/parser": "^6.15.0",
@@ -90,6 +64,7 @@
     "playwright": "^1.57.0",
     "pngjs": "^7.0.0",
     "prettier": "^3.2.0",
+    "size-limit": "^12.0.0",
     "tsx": "^4.7.0",
     "typedoc": "^0.28.15",
     "typescript": "^5.3.0",
@@ -97,9 +72,5 @@
     "vite-plugin-dts": "^3.7.0",
     "vite-plugin-glsl": "^1.2.0",
     "vitest": "^1.1.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/julien-riel/maplibre-animated-shaders"
   }
 }

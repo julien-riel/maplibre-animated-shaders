@@ -1,955 +1,1067 @@
-# MapLibre Animated Shaders Library — Architecture
+# Architecture Documentation
+
+This document provides a comprehensive technical overview of the MapLibre Animated Shaders library architecture.
+
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Core Architecture](#core-architecture)
+3. [MapLibre Integration](#maplibre-integration)
+4. [Shader System](#shader-system)
+5. [Plugin Architecture](#plugin-architecture)
+6. [Animation System](#animation-system)
+7. [Data-Driven Properties](#data-driven-properties)
+8. [Interaction System](#interaction-system)
+9. [WebGL Resource Management](#webgl-resource-management)
+10. [File Structure](#file-structure)
+
+---
 
 ## Overview
 
-**maplibre-animated-shaders** is a modular library of animated GLSL shaders for MapLibre GL JS. It allows adding dynamic visual effects to map layers with a declarative and configurable API.
+MapLibre Animated Shaders is a WebGL-based library that extends MapLibre GL JS with animated shader effects. It uses MapLibre's `CustomLayerInterface` to inject custom WebGL rendering into the map's render pipeline.
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                      User Application                            │
-├─────────────────────────────────────────────────────────────────┤
-│                     maplibre-animated-shaders                    │
-│  ┌───────────────┐  ┌───────────────┐  ┌───────────────────┐    │
-│  │ ShaderManager │  │ AnimationLoop │  │ ConfigResolver    │    │
-│  └───────┬───────┘  └───────┬───────┘  └─────────┬─────────┘    │
-│          │                  │                    │               │
-│  ┌───────▼──────────────────┴────────────────────┘               │
-│  │                                                               │
-│  │  ┌─────────────────┐      ┌─────────────────────────────┐    │
-│  │  │  PluginManager  │─────▶│       ShaderRegistry        │    │
-│  │  └────────┬────────┘      └─────────────────────────────┘    │
-│  │           │                                                   │
-│  │  ┌────────▼────────────────────────────────────────────┐     │
-│  │  │              Thematic Plugins                        │     │
-│  │  │  ┌──────────┐ ┌────────────┐ ┌─────────┐ ┌────────┐ │     │
-│  │  │  │ dataviz  │ │atmospheric │ │  scifi  │ │organic │ │     │
-│  │  │  │ (7)      │ │ (6)        │ │  (5)    │ │ (8)    │ │     │
-│  │  │  └──────────┘ └────────────┘ └─────────┘ └────────┘ │     │
-│  │  │                    ┌──────────────────┐              │     │
-│  │  │                    │    corePlugin    │              │     │
-│  │  │                    │   (26 shaders)   │              │     │
-│  │  │                    └──────────────────┘              │     │
-│  │  └──────────────────────────────────────────────────────┘    │
-│  │                                                               │
-├──┼───────────────────────────────────────────────────────────────┤
-│  │                     MapLibre GL JS                            │
-└──┴───────────────────────────────────────────────────────────────┘
-```
+### Key Design Principles
+
+- **Non-invasive integration** - Works alongside existing MapLibre layers
+- **Plugin-based extensibility** - Modular shader organization
+- **Type safety** - Full TypeScript with strict typing
+- **Performance focus** - Object pooling, buffer reuse, GPU-side animations
+- **MapLibre compatibility** - Supports MapLibre expressions for data-driven styling
 
 ---
 
-## Main Modules
+## Core Architecture
 
-### 1. ShaderManager
+### High-Level Component Diagram
 
-Main entry point. Manages the shader lifecycle on a MapLibre instance.
-
-```typescript
-interface ShaderManager {
-  // Plugin management
-  use(plugin: ShaderPlugin): void;
-  unuse(pluginName: string): boolean;
-  getPlugin(name: string): ShaderPlugin | undefined;
-  hasPlugin(name: string): boolean;
-  listPlugins(): string[];
-
-  // Registration
-  register(layerId: string, shaderName: string, config?: ShaderConfig): void;
-  unregister(layerId: string): void;
-
-  // Control
-  play(layerId?: string): void;
-  pause(layerId?: string): void;
-  setSpeed(layerId: string, speed: number): void;
-
-  // Runtime configuration
-  updateConfig(layerId: string, config: Partial<ShaderConfig>): void;
-
-  // Lifecycle
-  destroy(): void;
-}
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Application Layer                         │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │              ShaderManager (Facade)                  │    │
+│  │  - register/unregister shaders                       │    │
+│  │  - play/pause control                                │    │
+│  │  - configuration management                          │    │
+│  └─────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────┘
+                              │
+         ┌────────────────────┼────────────────────┐
+         ▼                    ▼                    ▼
+┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
+│  PluginManager  │  │  ShaderRegistry │  │  AnimationLoop  │
+│  - plugin       │  │  - shader       │  │  - frame timing │
+│    lifecycle    │  │    storage      │  │  - callbacks    │
+│  - namespace    │  │  - lookup       │  │  - global speed │
+│    resolution   │  │  - filtering    │  │                 │
+└─────────────────┘  └─────────────────┘  └─────────────────┘
+         │                    │                    │
+         └────────────────────┼────────────────────┘
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    Layer System                              │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │              BaseShaderLayer (Abstract)                │  │
+│  │  - WebGL program management                            │  │
+│  │  - Uniform handling                                    │  │
+│  │  - Buffer management                                   │  │
+│  │  - Animation state                                     │  │
+│  └───────────────────────────────────────────────────────┘  │
+│         │           │           │           │                │
+│         ▼           ▼           ▼           ▼                │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐       │
+│  │  Point   │ │   Line   │ │ Polygon  │ │  Global  │       │
+│  │  Shader  │ │  Shader  │ │  Shader  │ │  Shader  │       │
+│  │  Layer   │ │  Layer   │ │  Layer   │ │  Layer   │       │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘       │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    Support Systems                           │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐       │
+│  │  Expression  │  │  TimeOffset  │  │  Interaction │       │
+│  │  Evaluator   │  │  Calculator  │  │  Handler     │       │
+│  └──────────────┘  └──────────────┘  └──────────────┘       │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                 WebGL / MapLibre GL                          │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### 2. PluginManager
+### Component Responsibilities
 
-Manages shader plugin lifecycle with namespace support.
+| Component | Responsibility |
+|-----------|---------------|
+| **ShaderManager** | Main facade - orchestrates all operations |
+| **core/ShaderState** | Shared state management and factory |
+| **core/ShaderRegistration** | Shader register/unregister logic |
+| **core/ShaderPlayback** | Play/pause/speed/config control |
+| **PluginManager** | Plugin registration, validation, namespace resolution |
+| **ShaderRegistry** | Storage and lookup of shader definitions |
+| **AnimationLoop** | Global timing and frame synchronization |
+| **BaseShaderLayer** | Abstract base for WebGL rendering |
+| **ExpressionEvaluator** | MapLibre expression evaluation |
+| **TimeOffsetCalculator** | Per-feature timing offsets |
+| **InteractionHandler** | Feature click/hover handling |
+| **EventEmitter** | Centralized event system |
+| **MapLibreAdapter** | Map abstraction layer |
+| **ProgramCache** | Shader program caching |
+
+---
+
+## Core Infrastructure
+
+### Constants (`src/constants.ts`)
+
+All magic numbers and configuration defaults are centralized:
 
 ```typescript
-interface PluginManager {
-  // Plugin registration
-  use(plugin: ShaderPlugin): void;
-  unuse(pluginName: string): boolean;
+// Animation
+export const DEFAULT_TARGET_FPS = 60;
+export const DEFAULT_ANIMATION_SPEED = 1.0;
+export const MS_PER_SECOND = 1000;
 
-  // Plugin introspection
-  getPlugin(name: string): ShaderPlugin | undefined;
-  hasPlugin(name: string): boolean;
-  listPlugins(): string[];
-  getPluginState(name: string): PluginState | undefined;
+// Layer suffixes
+export const GEOMETRY_LAYER_SUFFIX = '-shader';
+export const GLOBAL_LAYER_SUFFIX = '-global-shader';
 
-  // Shader resolution
-  resolveShaderName(name: string): string | undefined;
-  getShaderPlugin(shaderName: string): ShaderPlugin | undefined;
-
-  // Presets
-  getPreset(pluginName: string, presetName: string): PresetConfig | undefined;
-  getAllPresets(): PresetInfo[];
-
-  // Statistics
-  getStats(): { pluginCount: number; shaderCount: number; presetCount: number };
-}
-
-interface ShaderPlugin {
-  name: string;                    // Unique plugin identifier
-  version: string;                 // Semver version (e.g., "1.0.0")
-  author?: string;                 // Plugin author
-  description?: string;            // Plugin description
-  shaders: ShaderDefinition[];     // Array of shader definitions
-  presets?: Record<string, {       // Optional configuration presets
-    shader: string;
-    config: Record<string, unknown>;
-  }>;
-  useNamespace?: boolean;          // Enable/disable namespacing (default: true)
-  onRegister?(manager: IShaderManager): void;    // Lifecycle hook
-  onUnregister?(manager: IShaderManager): void;  // Lifecycle hook
-}
+// Metrics thresholds
+export const METRICS_DEFAULTS = {
+  sampleWindow: 60,
+  lowFPSThreshold: 30,
+  highFrameTimeThreshold: 50,
+  // ...
+} as const;
 ```
 
-### Namespace Resolution
+### Error Hierarchy (`src/errors/`)
 
-Shaders are namespaced by plugin name using `:` separator:
-
-```typescript
-// Fully qualified name
-manager.register('layer', 'dataviz:pulse', config);
-
-// Short name (if unambiguous)
-manager.register('layer', 'pulse', config);  // Resolves to 'dataviz:pulse'
-```
-
-### 3. AnimationLoop
-
-Manages the global animation loop with `requestAnimationFrame`. Injects uniform time into all active shaders.
+Typed error classes for better error handling:
 
 ```typescript
-interface AnimationLoop {
-  start(): void;
-  stop(): void;
-  addShader(id: string, updateFn: (time: number) => void): void;
-  removeShader(id: string): void;
-  setGlobalSpeed(speed: number): void;
-}
-```
-
-### 4. ShaderRegistry
-
-Catalog of all available shaders, organized by geometry.
-
-```typescript
-interface ShaderRegistry {
-  register(name: string, definition: ShaderDefinition): void;
-  get(name: string): ShaderDefinition | undefined;
-  list(geometry?: GeometryType): string[];
-}
-
-type GeometryType = 'point' | 'line' | 'polygon' | 'global';
-```
-
-### 5. ConfigResolver
-
-Merges user configuration with shader default values.
-
-```typescript
-interface ConfigResolver {
-  resolve<T extends ShaderConfig>(
-    defaults: T,
-    userConfig?: Partial<T>
-  ): T;
-
-  validate(config: ShaderConfig, schema: ConfigSchema): ValidationResult;
-}
-```
-
-### 6. ExpressionEvaluator (Data-Driven)
-
-Wrapper around the MapLibre expression system for data-driven properties.
-
-```typescript
-interface ExpressionEvaluator {
-  // Compile a MapLibre expression
-  compile(key: string, expression: unknown, expectedType: string): CompiledExpression | null;
-
-  // Compile all expressions from a config
-  compileConfig(config: Record<string, unknown>, schema?: Record<string, { type: string }>): void;
-
-  // Evaluate an expression for a feature
-  evaluateExpression(key: string, feature: GeoJSON.Feature, zoom: number): unknown;
-
-  // Evaluate all expressions for a feature
-  evaluateForFeature(config: Record<string, unknown>, feature: GeoJSON.Feature, zoom: number): EvaluatedConfig;
-
-  // Check if a config contains expressions
-  hasExpression(key: string): boolean;
-  hasDataDrivenExpressions(): boolean;
-}
-```
-
-### 7. TimeOffsetCalculator (Animation Timing)
-
-Calculates per-feature time offsets for animations.
-
-```typescript
-interface TimeOffsetCalculator {
-  // Calculate offsets for all features
-  calculateOffsets(features: GeoJSON.Feature[], config: AnimationTimingConfig): Float32Array;
-}
-
-// Supported calculation modes
-type TimeOffsetValue =
-  | number                        // Fixed offset
-  | 'random'                      // Random [0, period]
-  | ['get', string]               // From property
-  | ['hash', string]              // Stable hash of a property
-  | { min: number; max: number }; // Random range
-```
-
-### 8. FeatureAnimationStateManager (Interactive Control)
-
-Manages per-feature animation state for interactive control (play/pause/toggle/reset).
-
-```typescript
-interface FeatureAnimationStateManager {
-  // Initialize state for all features
-  initializeFromFeatures(features: GeoJSON.Feature[]): void;
-
-  // Individual feature control
-  playFeature(featureId: string | number): void;
-  pauseFeature(featureId: string | number): void;
-  toggleFeature(featureId: string | number): void;
-  resetFeature(featureId: string | number): void;
-
-  // Global control
-  playAll(): void;
-  pauseAll(): void;
-  resetAll(): void;
-
-  // State
-  getState(featureId: string | number): FeatureAnimationState | undefined;
-
-  // Per-frame update
-  tick(globalTime: number, deltaTime: number): void;
-
-  // GPU buffer data generation
-  generateBufferData(verticesPerFeature: number): {
-    isPlayingData: Float32Array;  // 0.0 or 1.0 per vertex
-    localTimeData: Float32Array;  // Frozen time when paused
-  };
-
-  // Dirty tracking for optimization
-  isDirty(): boolean;
-  clearDirty(): void;
-}
-
-interface FeatureAnimationState {
-  featureId: string | number;
-  isPlaying: boolean;       // true = animation active
-  localTime: number;        // Local time (frozen when paused)
-  playCount: number;        // Number of complete plays
-}
-```
-
-### 9. FeatureInteractionHandler (Event Handling)
-
-Handles MapLibre events (click/hover) and dispatches to state manager.
-
-```typescript
-interface FeatureInteractionHandler {
+// Base error
+export class ShaderManagerError extends Error {
   constructor(
-    map: MapLibreMap,
-    layerId: string,  // Layer ID for events
-    stateManager: FeatureAnimationStateManager,
-    config: InteractivityConfig
-  );
-
-  // Clean up event listeners
-  dispose(): void;
+    message: string,
+    public readonly code: ErrorCode,
+    public readonly details?: Record<string, unknown>
+  ) { ... }
 }
 
-interface InteractivityConfig {
-  perFeatureControl?: boolean;
-  initialState?: 'playing' | 'paused';
-  onClick?: InteractionAction | InteractionHandler;
-  onHover?: {
-    enter?: InteractionAction | InteractionHandler;
-    leave?: InteractionAction | InteractionHandler;
-  };
-  featureIdProperty?: string;
-}
+// Specific errors
+export class ShaderNotFoundError extends ShaderManagerError { }
+export class LayerNotFoundError extends ShaderManagerError { }
+export class PluginValidationError extends ShaderManagerError { }
+export class ConfigurationError extends ShaderManagerError { }
+export class WebGLNotSupportedError extends ShaderManagerError { }
 
-type InteractionAction = 'toggle' | 'play' | 'pause' | 'reset' | 'playOnce';
-type InteractionHandler = (feature: GeoJSON.Feature, state: FeatureAnimationState) => void;
+// Type guards
+export function isShaderManagerError(error: unknown): error is ShaderManagerError;
+export function hasErrorCode(error: unknown, code: ErrorCode): boolean;
 ```
 
----
+### Event System (`src/events/`)
 
-## Data-Driven Architecture
-
-The data-driven system allows configuring shader parameters (color, intensity, etc.) from GeoJSON properties of each feature.
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                      Shader Configuration                        │
-│  {                                                               │
-│    color: ['match', ['get', 'status'], 'high', '#f00', '#00f'], │
-│    intensity: ['get', 'priority'],                              │
-│    speed: 1.5  // static value                                  │
-│  }                                                               │
-├─────────────────────────────────────────────────────────────────┤
-│                    ExpressionEvaluator                           │
-│  ┌─────────────────┐    ┌─────────────────┐                     │
-│  │ Compile via     │───▶│ CompiledExpr    │                     │
-│  │ @maplibre/...   │    │ (cached)        │                     │
-│  └─────────────────┘    └────────┬────────┘                     │
-│                                  │                               │
-│                          evaluate(feature, zoom)                 │
-│                                  ▼                               │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │ { color: [1,0,0,1], intensity: 0.8, speed: 1.5 }        │    │
-│  └─────────────────────────────────────────────────────────┘    │
-├─────────────────────────────────────────────────────────────────┤
-│                      ShaderLayer (GPU)                           │
-│  ┌─────────────────┐    ┌─────────────────┐                     │
-│  │ Main Buffer     │    │ DataDriven      │                     │
-│  │ (pos, uv, ...)  │    │ Buffer          │                     │
-│  │                 │    │ (color, intens) │                     │
-│  └─────────────────┘    └─────────────────┘                     │
-│           │                      │                               │
-│           ▼                      ▼                               │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │                    Vertex Shader                         │    │
-│  │  attribute vec4 a_color;     // per-vertex              │    │
-│  │  attribute float a_intensity; // per-vertex             │    │
-│  │  varying vec4 v_color;                                  │    │
-│  │  varying float v_intensity;                             │    │
-│  └─────────────────────────────────────────────────────────┘    │
-│                          │                                       │
-│                          ▼                                       │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │                   Fragment Shader                        │    │
-│  │  // Uses v_color and v_intensity if data-driven         │    │
-│  │  vec4 finalColor = mix(u_color, v_color, u_useDD);      │    │
-│  └─────────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### Data Flow
-
-1. **Configuration** — User provides a config with expressions or static values
-2. **Compilation** — `ExpressionEvaluator` compiles expressions via `@maplibre/maplibre-gl-style-spec`
-3. **Evaluation** — For each feature, expressions are evaluated
-4. **GPU Buffer** — Values are written to a separate buffer (dataDrivenBuffer)
-5. **Rendering** — Vertex shader reads per-vertex attributes and passes them to fragment shader
-
-### Supported Properties
-
-| Property | Type | Description |
-|----------|------|-------------|
-| `color` | `color` | Per-feature RGBA color |
-| `intensity` | `number` | Effect intensity (0-1) |
-
----
-
-## Interactive Animation Control Architecture
-
-The interactive control system allows managing each feature's animation state individually via click/hover events.
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                      Shader Configuration                        │
-│  {                                                               │
-│    perFeatureControl: true,                                      │
-│    initialState: 'paused',                                       │
-│    onClick: 'toggle',                                            │
-│    onHover: { enter: 'play', leave: 'pause' }                    │
-│  }                                                               │
-├─────────────────────────────────────────────────────────────────┤
-│               FeatureInteractionHandler                          │
-│  ┌─────────────────┐    ┌─────────────────┐                     │
-│  │ MapLibre Events │───▶│ Event Dispatch  │                     │
-│  │ click/mouseenter│    │ to StateManager │                     │
-│  │ mouseleave      │    │                 │                     │
-│  └─────────────────┘    └────────┬────────┘                     │
-│                                  │                               │
-│                          action: 'toggle' | 'play' | etc.        │
-│                                  ▼                               │
-├─────────────────────────────────────────────────────────────────┤
-│            FeatureAnimationStateManager                          │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │ states: Map<featureId, FeatureAnimationState>           │    │
-│  │                                                         │    │
-│  │ Feature 1: { isPlaying: true,  localTime: 2.5 }        │    │
-│  │ Feature 2: { isPlaying: false, localTime: 1.2 }        │    │
-│  │ Feature 3: { isPlaying: true,  localTime: 0.8 }        │    │
-│  └─────────────────────────────────────────────────────────┘    │
-│                          │                                       │
-│              tick(globalTime, deltaTime)                         │
-│              generateBufferData(verticesPerFeature)              │
-│                          ▼                                       │
-├─────────────────────────────────────────────────────────────────┤
-│                      ShaderLayer (GPU)                           │
-│  ┌─────────────────┐    ┌─────────────────┐                     │
-│  │ Main Buffer     │    │ Interaction     │                     │
-│  │ (pos, uv, ...)  │    │ Buffer          │                     │
-│  │                 │    │ (isPlaying,     │                     │
-│  │                 │    │  localTime)     │                     │
-│  └─────────────────┘    └─────────────────┘                     │
-│           │                      │                               │
-│           ▼                      ▼                               │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │                    Vertex Shader                         │    │
-│  │  attribute float a_isPlaying;   // 0.0 or 1.0           │    │
-│  │  attribute float a_localTime;   // Frozen time if paused │    │
-│  │  attribute float a_timeOffset;  // Timing offset        │    │
-│  │  varying float v_effectiveTime;                         │    │
-│  │                                                         │    │
-│  │  // Effective time calculation                          │    │
-│  │  float globalAnimTime = u_time + a_timeOffset;          │    │
-│  │  v_effectiveTime = mix(a_localTime, globalAnimTime,     │    │
-│  │                        a_isPlaying);                    │    │
-│  └─────────────────────────────────────────────────────────┘    │
-│                          │                                       │
-│                          ▼                                       │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │                   Fragment Shader                        │    │
-│  │  // Uses v_effectiveTime for animation                  │    │
-│  │  float phase = fract(v_effectiveTime * u_speed);        │    │
-│  └─────────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### Interaction Flow
-
-1. **Event** — User clicks or hovers over a feature on the map
-2. **Dispatch** — `FeatureInteractionHandler` receives event via MapLibre
-3. **Action** — Configured action (toggle/play/pause/reset) is executed
-4. **State Update** — `FeatureAnimationStateManager` updates feature state
-5. **Dirty Flag** — Buffer is marked as needing update
-6. **Buffer Update** — On next frame, data is uploaded to GPU
-7. **Rendering** — Shader uses `v_effectiveTime` for animation
-
-### Effective Time Management
-
-Effective time (`v_effectiveTime`) combines multiple components:
-
-| State | Calculation |
-|-------|-------------|
-| **Playing** | `u_time + a_timeOffset` (global time + offset) |
-| **Paused** | `a_localTime` (frozen at pause time) |
-
-GLSL formula: `mix(a_localTime, u_time + a_timeOffset, a_isPlaying)`
-
-### Optimization with Dirty Tracking
-
-To avoid unnecessary GPU updates:
-
-1. `FeatureAnimationStateManager` maintains a `dirty` flag
-2. Flag becomes `true` only on state change
-3. Buffer is updated only if `isDirty() === true`
-4. After upload, `clearDirty()` is called
-
----
-
-## Shader Structure
-
-Each shader is defined as a standalone module:
+Centralized typed event emitter:
 
 ```typescript
-interface ShaderDefinition {
-  // Metadata
-  name: string;
-  displayName: string;
-  description: string;
-  geometry: GeometryType;
-  tags: string[];
+export type ShaderEventType =
+  | 'shader:registered'
+  | 'shader:unregistered'
+  | 'shader:play'
+  | 'shader:pause'
+  | 'plugin:registered'
+  | 'error'
+  | 'performance:warning';
 
-  // GLSL code
-  vertexShader?: string;      // Optional override
-  fragmentShader: string;     // Required
+export class ShaderEventEmitter {
+  on<K extends ShaderEventType>(type: K, handler: Handler<K>): () => void;
+  once<K extends ShaderEventType>(type: K, handler: Handler<K>): void;
+  off<K extends ShaderEventType>(type: K, handler: Handler<K>): void;
+  emit<K extends ShaderEventType>(type: K, event: ShaderEventMap[K]): void;
+}
 
-  // Configuration
-  defaultConfig: ShaderConfig;
-  configSchema: ConfigSchema;
+// Global instance
+export const globalEventEmitter = new ShaderEventEmitter();
+```
 
-  // Dynamic uniforms
-  getUniforms(config: ShaderConfig, time: number): Record<string, any>;
+### Map Adapter (`src/adapters/`)
 
-  // Required MapLibre style
-  requiredPaint?: Record<string, any>;
-  requiredLayout?: Record<string, any>;
+Abstraction layer for MapLibre decoupling:
+
+```typescript
+export interface IMapAdapter {
+  getLayer(id: string): unknown | undefined;
+  addLayer(layer: CustomLayerInterface, beforeId?: string): void;
+  removeLayer(id: string): void;
+  setPaintProperty(layerId: string, property: string, value: unknown): void;
+  triggerRepaint(): void;
+  getCanvas(): HTMLCanvasElement;
+  on(event: string, handler: MapEventHandler): void;
+  // ...
+}
+
+export class MapLibreAdapter implements IMapAdapter {
+  constructor(private readonly map: maplibregl.Map) {}
+  // Wraps all MapLibre-specific calls
 }
 ```
 
-### Shader Configuration
+### Program Cache (`src/utils/program-cache.ts`)
+
+Reference-counted shader program cache:
 
 ```typescript
-interface ShaderConfig {
-  // Common to all shaders
-  speed?: number;           // Speed multiplier (default: 1.0)
-  intensity?: number;       // Effect intensity (default: 1.0)
-  enabled?: boolean;        // Enable/disable (default: true)
+export class ProgramCache {
+  // Get or create a compiled program
+  getOrCreate(
+    gl: WebGLRenderingContext,
+    vertexSource: string,
+    fragmentSource: string,
+    layerId?: string
+  ): WebGLProgram;
 
-  // Shader-specific (examples)
-  color?: string | [number, number, number, number];
-  frequency?: number;
-  amplitude?: number;
-  // ... other parameters per shader
+  // Release when layer is removed
+  release(vertexSource: string, fragmentSource: string, gl: WebGLRenderingContext): void;
+
+  // Clear all on context loss
+  clear(gl: WebGLRenderingContext): void;
 }
-```
 
----
-
-## Plugin System Architecture
-
-The plugin system provides a modular way to organize and distribute shaders.
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                      ShaderManager                               │
-│  manager.use(datavizPlugin)                                      │
-├─────────────────────────────────────────────────────────────────┤
-│                      PluginManager                               │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │ 1. Validate plugin (name, version, shaders)             │    │
-│  │ 2. Register shaders with namespace (dataviz:pulse)      │    │
-│  │ 3. Track shader→plugin mapping                          │    │
-│  │ 4. Execute lifecycle hooks (onRegister)                 │    │
-│  └─────────────────────────────────────────────────────────┘    │
-│                          │                                       │
-│                          ▼                                       │
-├─────────────────────────────────────────────────────────────────┤
-│                      ShaderRegistry                              │
-│  ┌───────────────────────────────────────────────────────┐      │
-│  │ 'dataviz:pulse'     → ShaderDefinition                │      │
-│  │ 'dataviz:flow'      → ShaderDefinition                │      │
-│  │ 'scifi:neon'        → ShaderDefinition                │      │
-│  │ 'atmospheric:rain'  → ShaderDefinition                │      │
-│  └───────────────────────────────────────────────────────┘      │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### Built-in Plugins
-
-| Plugin | Shaders | Theme | Use Cases |
-|--------|---------|-------|-----------|
-| **datavizPlugin** | 7 | Data Visualization | Alerts, progress, traffic flow, selections |
-| **atmosphericPlugin** | 6 | Weather & Environment | Rain, snow, fog, heat, water ripples |
-| **scifiPlugin** | 5 | Sci-Fi & Tech | Holograms, neon, radar, electric effects |
-| **organicPlugin** | 8 | Natural & Organic | Heartbeat, breathing, particles, dissolve |
-| **corePlugin** | 26 | All Shaders | Backwards compatibility bundle |
-
-### Plugin Lifecycle
-
-```
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│   Created    │────▶│  Registered  │────▶│ Unregistered │
-│              │     │              │     │              │
-│ ShaderPlugin │     │ use(plugin)  │     │unuse(name)   │
-│  definition  │     │              │     │              │
-└──────────────┘     └──────┬───────┘     └──────────────┘
-                           │
-                    ┌──────▼───────┐
-                    │ Lifecycle    │
-                    │ Hooks        │
-                    │ - onRegister │
-                    │ - onUnregister│
-                    └──────────────┘
-```
-
-### Creating Custom Plugins
-
-```typescript
-import type { ShaderPlugin, ShaderDefinition } from 'maplibre-animated-shaders';
-
-const myCustomShader: ShaderDefinition = {
-  name: 'myEffect',
-  geometry: 'point',
-  description: 'Custom animated effect',
-  fragmentShader: `
-    precision mediump float;
-    uniform float u_time;
-    uniform vec3 u_color;
-    void main() {
-      float pulse = sin(u_time * 3.0) * 0.5 + 0.5;
-      gl_FragColor = vec4(u_color * pulse, 1.0);
-    }
-  `,
-  defaultConfig: { color: '#ff0000', speed: 1.0 },
-  getUniforms(config, time) {
-    return { u_time: time * config.speed, u_color: hexToRgb(config.color) };
-  }
-};
-
-export const myPlugin: ShaderPlugin = {
-  name: 'mycompany',
-  version: '1.0.0',
-  author: 'My Company',
-  description: 'Custom shader effects',
-  shaders: [myCustomShader],
-  presets: {
-    'alert-red': { shader: 'myEffect', config: { color: '#ff0000', speed: 2.0 } }
-  }
-};
-
-// Usage
-manager.use(myPlugin);
-manager.register('layer', 'mycompany:myEffect', { color: '#00ff00' });
-```
-
----
-
-## File Organization
-
-```
-maplibre-animated-shaders/
-├── src/
-│   ├── index.ts                    # Main export
-│   ├── ShaderManager.ts
-│   ├── AnimationLoop.ts
-│   ├── ShaderRegistry.ts
-│   ├── ConfigResolver.ts
-│   │
-│   ├── expressions/                # Data-driven expressions
-│   │   ├── index.ts                # Module exports
-│   │   ├── ExpressionEvaluator.ts  # MapLibre expression wrapper
-│   │   └── FeatureDataBuffer.ts    # Per-feature GPU buffer
-│   │
-│   ├── timing/                     # Animation timing
-│   │   ├── index.ts                # Module exports
-│   │   └── TimeOffsetCalculator.ts # Offset calculation
-│   │
-│   ├── interaction/                # Interactive control
-│   │   ├── index.ts                # Module exports
-│   │   ├── FeatureAnimationStateManager.ts  # Per-feature state
-│   │   └── InteractionHandler.ts   # Click/hover event handling
-│   │
-│   ├── layers/                     # WebGL Custom Layers
-│   │   ├── index.ts
-│   │   ├── BaseShaderLayer.ts      # Abstract base class
-│   │   ├── PointShaderLayer.ts     # Points with data-driven
-│   │   ├── LineShaderLayer.ts      # Lines with data-driven
-│   │   └── PolygonShaderLayer.ts   # Polygons with data-driven
-│   │
-│   ├── plugins/                    # Plugin system
-│   │   ├── index.ts
-│   │   ├── PluginManager.ts
-│   │   ├── loaders.ts              # Lazy loading
-│   │   └── builtin/                # Built-in plugins
-│   │       ├── dataviz.ts          # Data visualization (7 shaders)
-│   │       ├── atmospheric.ts      # Weather effects (6 shaders)
-│   │       ├── scifi.ts            # Sci-fi/tech (5 shaders)
-│   │       ├── organic.ts          # Natural effects (8 shaders)
-│   │       ├── core.ts             # All shaders bundle (26 shaders)
-│   │       └── shaders/            # Shader implementations
-│   │           ├── points/         # Point shaders (pulse, heartbeat, etc.)
-│   │           ├── lines/          # Line shaders (flow, neon, etc.)
-│   │           ├── polygons/       # Polygon shaders (ripple, noise, etc.)
-│   │           └── global/         # Global effects (weather, fog, etc.)
-│   │
-│   ├── glsl/
-│   │   ├── common/
-│   │   │   ├── noise.glsl          # Noise functions (simplex, perlin)
-│   │   │   ├── easing.glsl         # Easing functions
-│   │   │   ├── shapes.glsl         # SDF for geometric shapes
-│   │   │   └── colors.glsl         # Color manipulation
-│   │   │
-│   │   └── includes/
-│   │       └── ... (reusable fragments)
-│   │
-│   ├── utils/
-│   │   ├── color.ts                # Color conversion
-│   │   ├── glsl-loader.ts          # GLSL loading/compilation
-│   │   ├── metrics-collector.ts    # Performance metrics
-│   │   ├── object-pool.ts          # Object pooling
-│   │   └── maplibre-helpers.ts     # MapLibre utilities
-│   │
-│   └── types/
-│       ├── index.ts                # Type re-exports
-│       ├── core.ts                 # Core types
-│       ├── interfaces.ts           # Service interfaces
-│       ├── animation.ts            # Animation timing types
-│       ├── data-driven.ts          # Expression types
-│       ├── interaction.ts          # Interactive animation types
-│       ├── plugin.ts               # Plugin system types
-│       └── metrics.ts              # Observability types
-│
-├── demo/
-│   ├── index.html
-│   ├── demo.ts
-│   └── styles.css
-│
-├── tests/
-│   └── ...
-│
-├── e2e/
-│   ├── shader-rendering.spec.ts
-│   └── visual-regression.spec.ts
-│
-├── benchmarks/
-│   ├── core.bench.ts
-│   ├── layers.bench.ts
-│   └── data-processing.bench.ts
-│
-├── package.json
-├── tsconfig.json
-├── vite.config.ts
-├── ARCHITECTURE.md
-└── README.md
-```
-
----
-
-## Public API
-
-The API is designed to be **easy to integrate** into any existing MapLibre project. No modification of existing code is needed.
-
-### Installation
-
-```bash
-npm install maplibre-animated-shaders
-```
-
-### Integration in 3 Lines
-
-```typescript
-import { applyShader } from 'maplibre-animated-shaders';
-
-const map = new maplibregl.Map({ container: 'map', style: '...' });
-
-// Apply a shader to an existing layer
-applyShader(map, 'my-layer', 'pulse');
-```
-
-That's it! The shader is active and animated.
-
-### Usage with Configuration
-
-```typescript
-import { applyShader } from 'maplibre-animated-shaders';
-
-applyShader(map, 'traffic-layer', 'flow', {
-  speed: 2.0,
-  color: '#ff6b6b',
-  dashLength: 15,
-  direction: 'forward'
-});
-```
-
-### Advanced Usage with Control
-
-```typescript
-import { createShaderManager } from 'maplibre-animated-shaders';
-
-const shaders = createShaderManager(map);
-
-// Register multiple shaders
-shaders.register('alerts', 'pulse', { speed: 1.5, rings: 3 });
-shaders.register('roads', 'flow', { speed: 2.0 });
-shaders.register('zones', 'ripple');
-
-// Runtime control
-shaders.pause('alerts');
-shaders.play('alerts');
-shaders.setSpeed('roads', 3.0);
-
-// Config update
-shaders.updateConfig('alerts', { color: '#22c55e' });
-
-// Remove a shader
-shaders.unregister('zones');
-
-// Complete cleanup
-shaders.destroy();
-```
-
-### Functional API (One-Liners)
-
-```typescript
-import { applyShader, listShaders } from 'maplibre-animated-shaders';
-
-// Apply
-const controller = applyShader(map, 'layer', 'heartbeat', { speed: 1.2 });
-
-// Control
-controller.pause();
-controller.play();
-controller.update({ speed: 2.0 });
-
-// Remove
-controller.remove();
-
-// List available shaders
-console.log(listShaders());          // all
-console.log(listShaders('point'));   // by geometry
-```
-
-### With React
-
-```tsx
-import { useShader } from 'maplibre-animated-shaders/react';
-
-function MapComponent() {
-  const mapRef = useRef(null);
-
-  useShader(mapRef, 'my-layer', 'pulse', {
-    speed: 1.5,
-    color: '#3b82f6'
-  });
-
-  return <Map ref={mapRef} />;
-}
-```
-
-### Lazy Loading Plugins
-
-```typescript
-import { createShaderManager } from 'maplibre-animated-shaders';
-
-const shaders = createShaderManager(map);
-
-// Load plugins on demand (code splitting)
-await shaders.useAsync('dataviz');
-await shaders.useAsync('atmospheric');
-
-// Or load multiple in parallel
-await shaders.useAsyncAll(['dataviz', 'scifi', 'organic']);
-```
-
-### Thematic Presets
-
-```typescript
-import { applyShader, presets } from 'maplibre-animated-shaders';
-
-// Predefined presets for common use cases
-applyShader(map, 'traffic', 'flow', presets.traffic.congestion);
-applyShader(map, 'alerts', 'pulse', presets.alerts.critical);
-applyShader(map, 'selection', 'ripple', presets.ui.selection);
-```
-
-### Custom Shader Creation
-
-```typescript
-import { defineShader, registerShader, applyShader } from 'maplibre-animated-shaders';
-
-const myShader = defineShader({
-  name: 'my-custom-effect',
-  geometry: 'point',
-  fragmentShader: `
-    uniform float u_time;
-    uniform float u_intensity;
-
-    void main() {
-      // Custom GLSL...
-    }
-  `,
-  defaultConfig: {
-    intensity: 1.0
-  },
-  getUniforms: (config, time) => ({
-    u_time: time,
-    u_intensity: config.intensity
-  })
-});
-
-registerShader(myShader);
-
-// Use like any other shader
-applyShader(map, 'layer', 'my-custom-effect', { intensity: 0.8 });
-```
-
-### Performance Metrics
-
-```typescript
-const shaders = createShaderManager(map, {
-  enableMetrics: true
-});
-
-// Get current metrics
-const metrics = shaders.getMetrics();
-console.log(`FPS: ${metrics.currentFPS}`);
-console.log(`Dropped frames: ${metrics.droppedFrames}`);
-
-// Listen for performance warnings
-const unsubscribe = shaders.onPerformanceWarning((warning) => {
-  console.warn(`Performance issue: ${warning.message}`);
-  if (warning.type === 'low_fps') {
-    shaders.setGlobalSpeed(0.5); // Reduce complexity
-  }
-});
+// Global instance for sharing programs across layers
+export const globalProgramCache = new ProgramCache();
 ```
 
 ---
 
 ## MapLibre Integration
 
-The library integrates with MapLibre via several mechanisms:
+### CustomLayerInterface Implementation
 
-### 1. Custom Layers (Global Effects)
-
-For post-processing effects and global overlays.
+The library uses MapLibre's `CustomLayerInterface` to inject custom WebGL rendering:
 
 ```typescript
-map.addLayer({
-  id: 'shader-overlay',
-  type: 'custom',
-  onAdd: (map, gl) => { /* init WebGL */ },
-  render: (gl, matrix) => { /* render */ }
+// src/layers/BaseShaderLayer.ts
+export abstract class BaseShaderLayer implements CustomLayerInterface {
+  id: string;
+  type = 'custom' as const;
+  renderingMode: '2d' | '3d' = '2d';
+
+  // Called when layer is added to map
+  onAdd(map: MapLibreMap, gl: WebGLRenderingContext): void {
+    this.map = map;
+    this.gl = gl;
+    this.program = this.createProgram(gl);
+    this.cacheUniformLocations(gl);
+    this.buildBuffers(gl);
+  }
+
+  // Called every frame
+  render(gl: WebGLRenderingContext, matrix: mat4): void {
+    this.updateTime();
+    this.bindProgram(gl);
+    this.setUniforms(gl, matrix);
+    this.renderGeometry(gl);
+  }
+
+  // Called when layer is removed
+  onRemove(map: MapLibreMap, gl: WebGLRenderingContext): void {
+    this.cleanup(gl);
+  }
+}
+```
+
+### Layer Registration Flow
+
+```
+1. User calls: shaderManager.register('my-layer', 'example:point', config)
+                                      │
+2. Resolve shader name via PluginManager
+                                      │
+3. Get shader definition from ShaderRegistry
+                                      │
+4. Determine geometry type (point/line/polygon/global)
+                                      │
+5. Get source ID from original MapLibre layer
+                                      │
+6. Create appropriate CustomLayer (PointShaderLayer, etc.)
+                                      │
+7. Add custom layer to map: map.addLayer(customLayer, originalLayerId)
+                                      │
+8. Hide original layer: map.setPaintProperty(layerId, 'circle-opacity', 0)
+                                      │
+9. Register with AnimationLoop
+```
+
+### Geometry Type Mapping
+
+| Shader Geometry | MapLibre Layer Type | Custom Layer Class |
+|-----------------|--------------------|--------------------|
+| `point` | `circle` | `PointShaderLayer` |
+| `line` | `line` | `LineShaderLayer` |
+| `polygon` | `fill` | `PolygonShaderLayer` |
+| `global` | N/A (full screen) | `GlobalShaderLayer` |
+
+---
+
+## Shader System
+
+### Shader Definition Structure
+
+```typescript
+// src/types/core.ts
+interface ShaderDefinition<T extends ShaderConfig = ShaderConfig> {
+  // Identification
+  name: string;                        // Unique identifier
+  displayName: string;                 // Human-readable name
+  description: string;                 // Description
+  geometry: GeometryType;              // 'point' | 'line' | 'polygon' | 'global'
+  tags: string[];                      // Categories for filtering
+
+  // GLSL code
+  fragmentShader: string;              // Required
+  vertexShader?: string;               // Optional (uses default)
+
+  // Configuration
+  defaultConfig: T;                    // Default values
+  configSchema: ConfigSchema;          // Validation schema
+
+  // Runtime
+  getUniforms: (config: T, time: number, deltaTime: number) => Uniforms;
+
+  // MapLibre integration
+  requiredPaint?: Record<string, unknown>;
+  requiredLayout?: Record<string, unknown>;
+}
+```
+
+### Shader Pipeline
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     Shader Pipeline                          │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  1. Configuration Resolution                                 │
+│     ┌──────────────┐                                        │
+│     │ User Config  │──┐                                     │
+│     └──────────────┘  │    ┌──────────────────┐            │
+│                       ├───►│ ConfigResolver   │            │
+│     ┌──────────────┐  │    │ - merge defaults │            │
+│     │ Default      │──┘    │ - validate       │            │
+│     │ Config       │       └────────┬─────────┘            │
+│     └──────────────┘                │                       │
+│                                     ▼                       │
+│  2. Uniform Calculation                                     │
+│     ┌──────────────────────────────────────┐               │
+│     │ ShaderDefinition.getUniforms()       │               │
+│     │ - config values → GPU uniforms       │               │
+│     │ - time → u_time                      │               │
+│     │ - colors → vec4                      │               │
+│     └────────────────────┬─────────────────┘               │
+│                          │                                  │
+│                          ▼                                  │
+│  3. Data-Driven Evaluation (if expressions present)        │
+│     ┌──────────────────────────────────────┐               │
+│     │ ExpressionEvaluator                  │               │
+│     │ - ['get', 'property'] → value        │               │
+│     │ - ['match', ...] → value             │               │
+│     │ → Per-feature attribute buffers      │               │
+│     └────────────────────┬─────────────────┘               │
+│                          │                                  │
+│                          ▼                                  │
+│  4. WebGL Rendering                                         │
+│     ┌──────────────────────────────────────┐               │
+│     │ Vertex Shader                        │               │
+│     │ - Transform positions                │               │
+│     │ - Pass varyings                      │               │
+│     └────────────────────┬─────────────────┘               │
+│                          │                                  │
+│     ┌──────────────────────────────────────┐               │
+│     │ Fragment Shader                      │               │
+│     │ - Calculate final color              │               │
+│     │ - Apply animation effects            │               │
+│     └──────────────────────────────────────┘               │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Built-in GLSL Libraries
+
+Located in `src/glsl/common/`:
+
+| File | Functions | Description |
+|------|-----------|-------------|
+| `noise.glsl` | `snoise()`, `fbm()`, `random()` | Noise generation |
+| `easing.glsl` | `easeOutQuad()`, `easeInOutCubic()`, etc. | Animation easing |
+| `colors.glsl` | `rgb2hsl()`, `blendOverlay()`, etc. | Color manipulation |
+| `shapes.glsl` | `sdCircle()`, `sdBox()`, `opUnion()` | SDF primitives |
+
+---
+
+## Plugin Architecture
+
+### Plugin Structure
+
+```typescript
+// src/types/plugin.ts
+interface ShaderPlugin extends PluginMetadata, PluginHooks {
+  // Required metadata
+  name: string;                        // Unique identifier (no ':')
+  version: string;                     // Semver format
+  shaders: ShaderDefinition[];         // At least one shader
+
+  // Optional metadata
+  author?: string;
+  description?: string;
+  homepage?: string;
+  license?: string;
+  keywords?: string[];
+
+  // Optional configuration
+  presets?: Record<string, { shader: string; config: Partial<ShaderConfig> }>;
+  useNamespace?: boolean;              // Default: true
+
+  // Lifecycle hooks
+  onRegister?: (manager: IShaderManager) => void;
+  onUnregister?: (manager: IShaderManager) => void;
+  onBeforeApply?: (layerId: string, shaderName: string, config: ShaderConfig) => ShaderConfig | void;
+  onAfterApply?: (layerId: string, shaderName: string, config: ShaderConfig) => void;
+}
+```
+
+### Plugin Registration Flow
+
+```
+shaderManager.use(plugin)
+        │
+        ▼
+┌──────────────────────────────────────┐
+│         PluginManager.use()          │
+├──────────────────────────────────────┤
+│ 1. Validate plugin                   │
+│    - name present and valid          │
+│    - version is semver               │
+│    - at least one shader             │
+│    - no duplicate shader names       │
+├──────────────────────────────────────┤
+│ 2. Register shaders                  │
+│    - Apply namespace: 'plugin:shader'│
+│    - Add to ShaderRegistry           │
+│    - Create name mapping             │
+├──────────────────────────────────────┤
+│ 3. Store plugin state                │
+│    - registeredAt timestamp          │
+│    - registeredShaders list          │
+│    - active = true                   │
+├──────────────────────────────────────┤
+│ 4. Call onRegister hook (if defined) │
+└──────────────────────────────────────┘
+```
+
+### Namespace Resolution
+
+Shaders can be referenced by short name (if unambiguous) or full qualified name:
+
+```typescript
+// Full qualified name (always works)
+'example:point'
+
+// Short name (works if only one 'point' shader registered)
+'point'
+
+// Resolution in PluginManager.resolveShaderName():
+function resolveShaderName(name: string): string | undefined {
+  // Check if already qualified
+  if (this.registry.get(name)) return name;
+
+  // Look up in short name mapping
+  const qualified = this.shaderToPlugin.get(name);
+  return qualified;
+}
+```
+
+### Lazy Loading
+
+Plugins can be loaded on-demand to reduce initial bundle size:
+
+```typescript
+// src/plugins/loaders.ts
+export async function loadPlugin(name: BuiltinPluginName): Promise<ShaderPlugin> {
+  const loader = pluginLoaders[name];
+  if (!loader) throw new Error(`Unknown plugin: "${name}"`);
+  return loader();
+}
+
+export const pluginLoaders: Record<BuiltinPluginName, PluginLoader> = {
+  example: async () => {
+    const module = await import('./builtin/example');
+    return module.examplePlugin;
+  },
+};
+
+// Usage
+await shaderManager.useAsync('example');
+```
+
+---
+
+## Animation System
+
+### AnimationLoop
+
+Central timing coordinator using `requestAnimationFrame`:
+
+```typescript
+// src/AnimationLoop.ts
+class AnimationLoop {
+  private shaders: Map<string, UpdateCallback>;
+  private running: boolean = false;
+  private globalSpeed: number = 1.0;
+  private currentTime: number = 0;
+  private lastFrameTime: number = 0;
+  private frameInterval: number;  // Based on maxFPS
+
+  start(): void {
+    if (this.running) return;
+    this.running = true;
+    this.lastFrameTime = performance.now();
+    this.tick();
+  }
+
+  private tick = (): void => {
+    if (!this.running) return;
+
+    const now = performance.now();
+    const elapsed = now - this.lastFrameTime;
+
+    // Throttle to target FPS
+    if (elapsed >= this.frameInterval) {
+      const deltaTime = (elapsed * this.globalSpeed) / 1000;
+      this.currentTime += deltaTime;
+      this.lastFrameTime = now;
+
+      // Update all registered shaders
+      this.shaders.forEach((callback) => {
+        callback(this.currentTime, deltaTime);
+      });
+    }
+
+    requestAnimationFrame(this.tick);
+  };
+}
+```
+
+### Per-Layer Timing
+
+Each layer maintains its own time state:
+
+```typescript
+// In BaseShaderLayer
+protected time: number = 0;
+protected speed: number = 1.0;
+protected isPlaying: boolean = true;
+protected lastFrameTime: number = 0;
+
+render(gl: WebGLRenderingContext, matrix: mat4): void {
+  const now = performance.now();
+  const deltaTime = (now - this.lastFrameTime) / 1000;
+  this.lastFrameTime = now;
+
+  if (this.isPlaying) {
+    this.time += deltaTime * this.speed;
+  }
+
+  // Pass time to shader
+  gl.uniform1f(this.u_time, this.time);
+
+  // Request next frame if playing
+  if (this.isPlaying) {
+    this.map.triggerRepaint();
+  }
+}
+```
+
+### Per-Feature Timing
+
+Features can have individual time offsets for staggered animations:
+
+```typescript
+// TimeOffsetValue types
+type TimeOffsetValue =
+  | number                           // Fixed offset
+  | 'random'                         // Random in [0, period]
+  | ['get', string]                  // From feature property
+  | ['hash', string]                 // Stable hash of property
+  | { min: number; max: number };    // Random range
+
+// In vertex shader
+attribute float a_timeOffset;
+uniform float u_time;
+
+void main() {
+  float effectiveTime = u_time + a_timeOffset;
+  // Use effectiveTime for animation
+}
+```
+
+---
+
+## Data-Driven Properties
+
+### Expression Support
+
+The library supports MapLibre expressions for per-feature values:
+
+```typescript
+// Configuration with expressions
+shaderManager.register('layer', 'shader', {
+  color: ['get', 'status_color'],
+  intensity: ['match', ['get', 'priority'],
+    'high', 1.0,
+    'medium', 0.6,
+    0.3  // default
+  ]
 });
 ```
 
-### 2. Paint Properties Animation
+### ExpressionEvaluator
 
-For animatable properties of standard layers.
+Wraps `@maplibre/maplibre-gl-style-spec` for expression evaluation:
 
 ```typescript
-// Interpolation via requestAnimationFrame
-map.setPaintProperty('layer', 'circle-radius', animatedValue);
+// src/expressions/ExpressionEvaluator.ts
+class ExpressionEvaluator {
+  private expressions: Map<string, CompiledExpression>;
+
+  compile(key: string, expression: unknown, expectedType: string): void {
+    const compiled = createExpression(expression, { type: expectedType });
+    if (compiled.result === 'success') {
+      this.expressions.set(key, compiled.value);
+    }
+  }
+
+  evaluate(key: string, feature: GeoJSON.Feature, zoom: number): unknown {
+    const expr = this.expressions.get(key);
+    if (!expr) return undefined;
+
+    return expr.evaluate(
+      { zoom },
+      feature,
+      {},  // featureState
+      []   // canonical
+    );
+  }
+}
 ```
 
-### 3. Expressions with Feature-State (Advanced)
+### Data Buffer Flow
 
-For per-feature individual animations.
+```
+Features from GeoJSON Source
+           │
+           ▼
+┌─────────────────────────────────────┐
+│    ExpressionEvaluator.evaluate()   │
+│    Per feature, per property        │
+└─────────────────┬───────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────┐
+│    FeatureDataBuffer                │
+│    Interleaved attribute data       │
+│    [color.r, color.g, color.b,      │
+│     color.a, intensity, ...]        │
+└─────────────────┬───────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────┐
+│    WebGL Attribute Buffer           │
+│    gl.bufferData(gl.ARRAY_BUFFER,   │
+│                  data, STATIC_DRAW) │
+└─────────────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────┐
+│    Vertex Shader                    │
+│    attribute vec4 a_color;          │
+│    attribute float a_intensity;     │
+└─────────────────────────────────────┘
+```
+
+---
+
+## Interaction System
+
+### Feature Animation State Management
 
 ```typescript
-map.setFeatureState({ source: 'src', id: featureId }, { phase: 0.5 });
+// src/interaction/FeatureAnimationStateManager.ts
+interface FeatureAnimationState {
+  playing: boolean;
+  localTime: number;
+  frozenTime: number;
+}
+
+class FeatureAnimationStateManager {
+  private states: Map<string | number, FeatureAnimationState>;
+
+  playFeature(id: string | number): void {
+    const state = this.getState(id);
+    if (!state.playing) {
+      state.playing = true;
+      // Resume from frozen time
+    }
+  }
+
+  pauseFeature(id: string | number): void {
+    const state = this.getState(id);
+    if (state.playing) {
+      state.playing = false;
+      state.frozenTime = state.localTime;
+    }
+  }
+
+  tick(globalTime: number, deltaTime: number): void {
+    this.states.forEach((state) => {
+      if (state.playing) {
+        state.localTime += deltaTime;
+      }
+    });
+  }
+
+  generateBufferData(verticesPerFeature: number): InteractionBufferData {
+    // Returns Float32Array for WebGL buffer
+    // [isPlaying, localTime] per vertex
+  }
+}
+```
+
+### Interaction Configuration
+
+```typescript
+interface InteractivityConfig {
+  perFeatureControl?: boolean;
+  initialState?: { playing: boolean };
+  featureIdProperty?: string;
+
+  onClick?: (
+    feature: GeoJSON.Feature,
+    state: FeatureAnimationState,
+    controller: FeatureController
+  ) => void;
+
+  onHover?: (
+    feature: GeoJSON.Feature,
+    state: FeatureAnimationState
+  ) => void;
+
+  onLeave?: () => void;
+}
+```
+
+### Vertex Shader Integration
+
+```glsl
+// Per-feature animation attributes
+attribute float a_isPlaying;   // 0.0 = paused, 1.0 = playing
+attribute float a_localTime;   // Frozen time when paused
+
+uniform float u_time;          // Global time
+
+varying float v_effectiveTime;
+
+void main() {
+  // When paused, use frozen localTime
+  // When playing, use global time with offset
+  float globalAnimTime = u_time + a_timeOffset;
+  v_effectiveTime = mix(a_localTime, globalAnimTime, a_isPlaying);
+
+  // Pass to fragment shader
+}
+```
+
+---
+
+## WebGL Resource Management
+
+### Buffer Management
+
+Each geometry type manages its own buffers:
+
+```typescript
+// PointShaderLayer buffers
+private vertexBuffer: WebGLBuffer | null;     // Positions, offsets
+private indexBuffer: WebGLBuffer | null;      // Triangle indices
+private dataDrivenBuffer: WebGLBuffer | null; // Per-feature colors, etc.
+private interactionBuffer: WebGLBuffer | null; // Play/pause states
+
+// Buffer layout for points (stride = 24 bytes)
+// [x, y, offsetX, offsetY, featureIndex, timeOffset]
+```
+
+### Shader Compilation
+
+```typescript
+protected createProgram(gl: WebGLRenderingContext): WebGLProgram | null {
+  // Compile vertex shader
+  const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+  gl.shaderSource(vertexShader, this.getVertexShader());
+  gl.compileShader(vertexShader);
+
+  // Check for errors
+  if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+    throw new ShaderCompilationError(gl.getShaderInfoLog(vertexShader));
+  }
+
+  // Compile fragment shader
+  const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(fragmentShader, this.definition.fragmentShader);
+  gl.compileShader(fragmentShader);
+
+  // Link program
+  const program = gl.createProgram();
+  gl.attachShader(program, vertexShader);
+  gl.attachShader(program, fragmentShader);
+  gl.linkProgram(program);
+
+  // Cleanup shader objects (program keeps them)
+  gl.deleteShader(vertexShader);
+  gl.deleteShader(fragmentShader);
+
+  return program;
+}
+```
+
+### Uniform Location Caching
+
+```typescript
+protected cacheUniformLocations(gl: WebGLRenderingContext): void {
+  this.u_matrix = gl.getUniformLocation(this.program, 'u_matrix');
+  this.u_time = gl.getUniformLocation(this.program, 'u_time');
+  this.u_resolution = gl.getUniformLocation(this.program, 'u_resolution');
+  // ... shader-specific uniforms
+}
+```
+
+### Resource Cleanup
+
+```typescript
+onRemove(map: MapLibreMap, gl: WebGLRenderingContext): void {
+  // Delete buffers
+  if (this.vertexBuffer) gl.deleteBuffer(this.vertexBuffer);
+  if (this.indexBuffer) gl.deleteBuffer(this.indexBuffer);
+  if (this.dataDrivenBuffer) gl.deleteBuffer(this.dataDrivenBuffer);
+  if (this.interactionBuffer) gl.deleteBuffer(this.interactionBuffer);
+
+  // Delete program
+  if (this.program) gl.deleteProgram(this.program);
+
+  // Clear references
+  this.vertexBuffer = null;
+  this.indexBuffer = null;
+  this.program = null;
+
+  // Remove event listeners
+  this.map.off('sourcedata', this.onSourceData);
+}
+```
+
+---
+
+## File Structure
+
+```
+src/
+├── index.ts                    # Public exports
+├── constants.ts                # Centralized constants
+├── ShaderManager.ts            # Main facade (316 lines)
+├── AnimationLoop.ts            # Frame timing (128 lines)
+├── ShaderRegistry.ts           # Shader storage (94 lines)
+├── ConfigResolver.ts           # Config validation
+│
+├── core/                       # ShaderManager internal modules
+│   ├── index.ts                # Module exports
+│   ├── ShaderState.ts          # Shared state management (204 lines)
+│   ├── ShaderRegistration.ts   # Register/unregister logic (408 lines)
+│   └── ShaderPlayback.ts       # Play/pause/speed control (229 lines)
+│
+├── adapters/
+│   └── index.ts                # IMapAdapter, MapLibreAdapter
+│
+├── errors/
+│   └── index.ts                # Error hierarchy
+│
+├── events/
+│   └── index.ts                # ShaderEventEmitter
+│
+├── layers/
+│   ├── index.ts
+│   ├── BaseShaderLayer.ts      # Abstract base (661 lines)
+│   ├── PointShaderLayer.ts     # Points (478 lines)
+│   ├── LineShaderLayer.ts      # Lines (594 lines)
+│   ├── PolygonShaderLayer.ts   # Polygons (716 lines)
+│   └── GlobalShaderLayer.ts    # Full-screen (411 lines)
+│
+├── types/
+│   ├── index.ts
+│   ├── core.ts                 # ShaderDefinition, ShaderConfig
+│   ├── interfaces.ts           # IShaderManager, etc.
+│   ├── plugin.ts               # Plugin types
+│   ├── animation.ts            # Timing types
+│   ├── interaction.ts          # Interaction types
+│   ├── data-driven.ts          # Expression types
+│   └── metrics.ts              # Performance types
+│
+├── plugins/
+│   ├── index.ts
+│   ├── PluginManager.ts        # Plugin lifecycle (433 lines)
+│   ├── loaders.ts              # Lazy loading (119 lines)
+│   └── builtin/
+│       ├── index.ts
+│       └── example/
+│           ├── index.ts        # Plugin definition
+│           └── shaders/
+│               ├── index.ts
+│               ├── point.ts    # Pulse Marker
+│               ├── line.ts     # Flow Line
+│               ├── polygon.ts  # Wave Polygon
+│               └── global.ts   # Grid Overlay
+│
+├── expressions/
+│   ├── index.ts
+│   ├── ExpressionEvaluator.ts  # MapLibre expression eval
+│   └── FeatureDataBuffer.ts    # Per-feature data buffers
+│
+├── interaction/
+│   ├── index.ts
+│   ├── FeatureAnimationStateManager.ts
+│   └── InteractionHandler.ts
+│
+├── timing/
+│   ├── index.ts
+│   └── TimeOffsetCalculator.ts
+│
+├── glsl/
+│   ├── index.ts
+│   └── common/
+│       ├── noise.glsl          # Noise functions
+│       ├── easing.glsl         # Easing functions
+│       ├── colors.glsl         # Color manipulation
+│       └── shapes.glsl         # SDF primitives
+│
+└── utils/
+    ├── index.ts
+    ├── color.ts                # Color conversion
+    ├── config-helpers.ts       # Config utilities
+    ├── glsl-loader.ts          # GLSL preprocessing
+    ├── glsl-uniform-extractor.ts
+    ├── maplibre-helpers.ts
+    ├── metrics-collector.ts    # Performance metrics
+    ├── object-pool.ts          # Memory optimization
+    ├── program-cache.ts        # Shader program caching
+    ├── throttle.ts
+    ├── webgl-capabilities.ts   # WebGL feature detection
+    └── webgl-error-handler.ts  # Error handling
 ```
 
 ---
 
 ## Performance Considerations
 
-1. **Update Batching** — Uniforms are updated once per frame, not per shader
-2. **Shader Compilation Cache** — WebGL programs are compiled once and reused
-3. **Lazy Loading** — Shaders are loaded on demand
-4. **Object Pooling** — Reduces GC pressure by 90% for 10k+ features
-5. **Configurable Throttling** — FPS limiting to save resources
-6. **Metrics Collection** — Runtime performance monitoring with warnings
+### Object Pooling
+
+The library uses object pools to reduce garbage collection:
+
+```typescript
+// src/utils/object-pool.ts
+class ObjectPool<T> {
+  private pool: T[] = [];
+  private factory: () => T;
+
+  acquire(): T {
+    return this.pool.pop() || this.factory();
+  }
+
+  release(obj: T): void {
+    this.pool.push(obj);
+  }
+}
+```
+
+### Buffer Reuse
+
+Vertex buffers are reused when data changes:
+
+```typescript
+// Update existing buffer instead of recreating
+gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+gl.bufferSubData(gl.ARRAY_BUFFER, 0, newData);
+```
+
+### Throttled Updates
+
+Expensive operations are throttled:
+
+```typescript
+// src/utils/throttle.ts
+const throttledUpdate = throttle((gl, data) => {
+  gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+}, 16); // ~60fps
+```
+
+### Metrics Collection
+
+Optional performance metrics for debugging:
+
+```typescript
+const metrics = shaderManager.getMetrics();
+// { fps, frameTime, drawCalls, triangles, shaderSwitches }
+
+shaderManager.onPerformanceWarning((warning) => {
+  console.warn(`Performance warning: ${warning.type}`);
+});
+```
 
 ---
 
-## Compatibility
+## Testing Architecture
 
-- MapLibre GL JS >= 3.0
-- Browsers with WebGL 2.0+
-- TypeScript >= 5.0 (types included)
-- ESM and CommonJS
+### Unit Tests
 
----
+Located in `tests/`:
 
-## Extensibility
+```
+tests/
+├── ShaderManager.test.ts       # Manager tests
+├── plugin-system.test.ts       # Plugin validation
+├── builtin-plugins.test.ts     # Built-in shader tests
+├── shaders.test.ts             # Shader definition tests
+├── expressions.test.ts         # Expression evaluation
+└── setup.ts                    # Test setup
+```
 
-The library is designed to be extended:
+### E2E Tests
 
-- **Plugins** — Plugin system for adding shader categories
-- **Themes** — Thematic configuration presets
-- **Hooks** — Callbacks on animation events
-- **Adapters** — Future support for deck.gl or other renderers
-- **Lazy Loading** — Dynamic import for code splitting
+Playwright tests in `e2e/`:
+
+```
+e2e/
+├── shader-rendering.spec.ts    # Rendering tests
+├── visual-regression.spec.ts   # Visual comparison
+└── test-app/                   # Test application
+```
+
+### Benchmarks
+
+Performance benchmarks in `benchmarks/`:
+
+```
+benchmarks/
+├── core.bench.ts               # Core operations
+├── data-processing.bench.ts    # Data handling
+└── layers.bench.ts             # Layer rendering
+```

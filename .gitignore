@@ -34,7 +34,7 @@ coverage
 e2e/test-results/
 
 # Generated files
-docs/
+generated-docs/
 *.tgz
 benchmark-results.json
 

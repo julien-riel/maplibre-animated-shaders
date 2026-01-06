@@ -12,7 +12,8 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': resolve(__dirname, '../../src'),
+      '@': resolve(__dirname, '../../packages/lib/src'),
+      'maplibre-animated-shaders': resolve(__dirname, '../../packages/lib/src'),
     },
   },
   server: {

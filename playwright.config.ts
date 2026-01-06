@@ -41,6 +41,7 @@ export default defineConfig({
   },
 
   /* Configure projects for major browsers */
+  /* Note: Firefox and WebKit have issues with WebGL in headless mode */
   projects: [
     {
       name: 'chromium',
@@ -56,14 +57,6 @@ export default defineConfig({
           ],
         },
       },
-    },
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
     },
   ],
 
@@ -81,12 +74,5 @@ export default defineConfig({
   /* Expect timeout */
   expect: {
     timeout: 30000,
-    /* Tolerance for visual comparisons - WebGL content can have minor variations */
-    toHaveScreenshot: {
-      maxDiffPixelRatio: 0.1,
-      threshold: 0.3,
-      // Allow animations to complete - WebGL may have minor frame differences
-      animations: 'disabled',
-    },
   },
 });

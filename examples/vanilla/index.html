@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MapLibre Animated Shaders - Vanilla JS Example</title>
+  <link href="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.css" rel="stylesheet" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    #map {
+      width: 100vw;
+      height: 100vh;
+    }
+    .controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      z-index: 1000;
+      max-width: 300px;
+    }
+    .controls h3 {
+      margin-bottom: 10px;
+      color: #333;
+    }
+    .control-group {
+      margin-bottom: 10px;
+    }
+    .control-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #666;
+    }
+    .control-group input[type="range"] {
+      width: 100%;
+    }
+    .control-group select {
+      width: 100%;
+      padding: 5px;
+    }
+    .value-display {
+      font-size: 12px;
+      color: #999;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <div class="controls">
+    <h3>Shader Controls</h3>
+    <div class="control-group">
+      <label for="shader-select">Effect</label>
+      <select id="shader-select">
+        <option value="plasma">Plasma</option>
+        <option value="water-ripples">Water Ripples</option>
+        <option value="electric-field">Electric Field</option>
+        <option value="heat-distortion">Heat Distortion</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label for="speed">Animation Speed</label>
+      <input type="range" id="speed" min="0.1" max="3" step="0.1" value="1">
+      <div class="value-display" id="speed-value">1.0x</div>
+    </div>
+    <div class="control-group">
+      <label for="intensity">Intensity</label>
+      <input type="range" id="intensity" min="0.1" max="2" step="0.1" value="1">
+      <div class="value-display" id="intensity-value">1.0</div>
+    </div>
+  </div>
+
+  <script type="module">
+    import maplibregl from 'https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.esm.js';
+    // In a real project, you would import from the installed package:
+    // import { ShaderManager, globalRegistry, examplePlugin, PluginManager } from 'maplibre-animated-shaders';
+
+    // For this example, we'll import from the built library
+    import { ShaderManager, globalRegistry, examplePlugin, PluginManager } from '../../dist/index.js';
+
+    // Register built-in shaders
+    const pluginManager = new PluginManager(globalRegistry);
+    pluginManager.use(examplePlugin);
+
+    // Initialize map
+    const map = new maplibregl.Map({
+      container: 'map',
+      style: 'https://demotiles.maplibre.org/style.json',
+      center: [-74.5, 40],
+      zoom: 9
+    });
+
+    let currentLayer = null;
+    let shaderManager = null;
+
+    /**
+     * Add or update shader effect on the map
+     */
+    function applyShader(shaderName, config = {}) {
+      // Remove existing layer if any
+      if (currentLayer && map.getLayer(currentLayer)) {
+        map.removeLayer(currentLayer);
+      }
+      if (map.getSource('shader-source')) {
+        map.removeSource('shader-source');
+      }
+
+      // Get shader definition
+      const shader = globalRegistry.get(shaderName);
+      if (!shader) {
+        console.error(`Shader "${shaderName}" not found`);
+        return;
+      }
+
+      // Create shader manager if not exists
+      if (!shaderManager) {
+        shaderManager = new ShaderManager(globalRegistry);
+      }
+
+      // Register shader with MapLibre
+      const layerId = `shader-${shaderName}`;
+      currentLayer = layerId;
+
+      // Add source
+      map.addSource('shader-source', {
+        type: 'geojson',
+        data: {
+          type: 'FeatureCollection',
+          features: [{
+            type: 'Feature',
+            geometry: {
+              type: 'Polygon',
+              coordinates: [[
+                [-180, -85],
+                [180, -85],
+                [180, 85],
+                [-180, 85],
+                [-180, -85]
+              ]]
+            },
+            properties: {}
+          }]
+        }
+      });
+
+      // Create the layer with shader
+      const mergedConfig = { ...shader.defaultConfig, ...config };
+
+      // Add fill layer
+      map.addLayer({
+        id: layerId,
+        type: 'fill',
+        source: 'shader-source',
+        paint: {
+          'fill-color': mergedConfig.color || '#3388ff',
+          'fill-opacity': mergedConfig.opacity || 0.7
+        }
+      });
+
+      // Apply shader effect
+      shaderManager.register(shaderName, shader);
+
+      console.log(`Applied shader: ${shaderName}`, mergedConfig);
+    }
+
+    // Wait for map to load
+    map.on('load', () => {
+      // Apply initial shader
+      applyShader('plasma');
+
+      // Setup controls
+      const shaderSelect = document.getElementById('shader-select');
+      const speedInput = document.getElementById('speed');
+      const intensityInput = document.getElementById('intensity');
+
+      shaderSelect.addEventListener('change', (e) => {
+        const config = {
+          speed: parseFloat(speedInput.value),
+          intensity: parseFloat(intensityInput.value)
+        };
+        applyShader(e.target.value, config);
+      });
+
+      speedInput.addEventListener('input', (e) => {
+        document.getElementById('speed-value').textContent = `${e.target.value}x`;
+        applyShader(shaderSelect.value, {
+          speed: parseFloat(e.target.value),
+          intensity: parseFloat(intensityInput.value)
+        });
+      });
+
+      intensityInput.addEventListener('input', (e) => {
+        document.getElementById('intensity-value').textContent = e.target.value;
+        applyShader(shaderSelect.value, {
+          speed: parseFloat(speedInput.value),
+          intensity: parseFloat(e.target.value)
+        });
+      });
+    });
+  </script>
+</body>
+</html>

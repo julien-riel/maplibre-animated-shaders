@@ -147,24 +147,17 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dist
-          path: dist/
+          path: packages/lib/dist/
           retention-days: 7
 
       - name: Check bundle size
+        run: npm run size
+
+      - name: Report bundle size
         run: |
           echo "## Bundle Size Report" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| File | Size | Gzipped |" >> $GITHUB_STEP_SUMMARY
-          echo "|------|------|---------|" >> $GITHUB_STEP_SUMMARY
-          for file in dist/*.js dist/*.cjs; do
-            if [ -f "$file" ]; then
-              size=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file")
-              gzip_size=$(gzip -c "$file" | wc -c)
-              size_kb=$(echo "scale=2; $size/1024" | bc)
-              gzip_kb=$(echo "scale=2; $gzip_size/1024" | bc)
-              echo "| $(basename $file) | ${size_kb} KB | ${gzip_kb} KB |" >> $GITHUB_STEP_SUMMARY
-            fi
-          done
+          npm run size:check 2>/dev/null | jq -r '.[] | "| \(.name) | \(.size / 1024 | floor) KB |"' >> $GITHUB_STEP_SUMMARY || true
 
   build-demo:
     name: Build Demo
@@ -191,5 +184,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: demo
-          path: demo/dist/
+          path: dist-demo/
           retention-days: 7
