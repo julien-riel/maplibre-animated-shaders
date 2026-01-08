@@ -342,12 +342,7 @@ export function linkProgramWithGeometry(
     const missingVaryings = parseVaryingErrors(infoLog);
 
     // Format enhanced error message
-    const errorMessage = formatVaryingErrorMessage(
-      infoLog,
-      missingVaryings,
-      geometryType,
-      layerId
-    );
+    const errorMessage = formatVaryingErrorMessage(infoLog, missingVaryings, geometryType, layerId);
 
     throw new ShaderError(errorMessage, 'program', undefined, infoLog);
   }

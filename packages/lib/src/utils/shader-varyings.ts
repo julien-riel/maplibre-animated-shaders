@@ -251,14 +251,13 @@ export function suggestVaryingReplacement(
       global: "Use 'v_uv' for normalized viewport position (0 to 1).",
     },
     v_screen_pos: {
-      point:
-        "Screen position is not available for points. Use 'v_pos' for local quad position.",
+      point: "Screen position is not available for points. Use 'v_pos' for local quad position.",
       line: "Screen position is not available for lines. Use 'v_pos' for local segment position.",
       polygon: null, // v_screen_pos is available for polygon
       global: null, // v_screen_pos is available for global
     },
     v_centroid: {
-      point: "Centroid is not available for points. The point center is at v_pos = (0, 0).",
+      point: 'Centroid is not available for points. The point center is at v_pos = (0, 0).',
       line: "Centroid is not available for lines. Use 'v_progress' for position along the line.",
       polygon: null, // v_centroid is available for polygon
       global: "Centroid is not available for global shaders. Use 'v_map_center' for map center.",

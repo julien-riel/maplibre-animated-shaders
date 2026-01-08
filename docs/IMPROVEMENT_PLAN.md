@@ -619,20 +619,20 @@ async function loadTexture(
 
 ## Plan d'exécution
 
-### Phase 1 : Documentation (priorité haute, 1-2 jours)
-1. [ ] Ajouter tableau des varyings dans PLUGIN_PERFORMANCE_GUIDE.md
-2. [ ] Clarifier mediump vs highp
-3. [ ] Ajouter section textures
+### Phase 1 : Documentation (priorité haute, 1-2 jours) ✅
+1. [x] Ajouter tableau des varyings dans PLUGIN_PERFORMANCE_GUIDE.md
+2. [x] Clarifier mediump vs highp
+3. [x] Ajouter section textures
 
-### Phase 2 : Erreurs améliorées (priorité haute, 2-3 jours)
-1. [ ] Créer constante AVAILABLE_VARYINGS
-2. [ ] Améliorer messages d'erreur shader
-3. [ ] Ajouter mode debug optionnel
+### Phase 2 : Erreurs améliorées (priorité haute, 2-3 jours) ✅
+1. [x] Créer constante AVAILABLE_VARYINGS
+2. [x] Améliorer messages d'erreur shader
+3. [x] Ajouter mode debug optionnel
 
-### Phase 3 : Préprocesseur GLSL (priorité moyenne, 2-3 jours)
-1. [ ] Créer preprocessor.ts
-2. [ ] Intégrer dans defineShader()
-3. [ ] Documenter la syntaxe #include
+### Phase 3 : Préprocesseur GLSL (priorité moyenne, 2-3 jours) ✅
+1. [x] Créer preprocessor.ts
+2. [x] Intégrer dans defineShader()
+3. [x] Documenter la syntaxe #include
 
 ### Phase 4 : Validation schema (priorité moyenne, 1-2 jours)
 1. [ ] Créer schema-validator.ts

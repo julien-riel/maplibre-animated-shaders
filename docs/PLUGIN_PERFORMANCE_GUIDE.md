@@ -5,18 +5,19 @@ Ce guide explique comment écrire des plugins performants pour MapLibre Animated
 ## Table des matières
 
 1. [Concepts GLSL fondamentaux](#concepts-glsl-fondamentaux)
-2. [Varyings disponibles par géométrie](#varyings-disponibles-par-géométrie)
-3. [Précision float : mediump vs highp](#précision-float--mediump-vs-highp)
-4. [Comprendre le pipeline de rendu](#comprendre-le-pipeline-de-rendu)
-5. [Flux de données : per-feature et data-driven](#flux-de-données--per-feature-et-data-driven)
-6. [Optimisations automatiques](#optimisations-automatiques)
-7. [Configurer un shader (ConfigSchema)](#configurer-un-shader-configschema)
-8. [Écrire des shaders performants](#écrire-des-shaders-performants)
-9. [Utiliser des textures](#utiliser-des-textures)
-10. [Gérer les données efficacement](#gérer-les-données-efficacement)
-11. [Utiliser les presets](#utiliser-les-presets)
-12. [Instanced Rendering](#instanced-rendering)
-13. [Diagnostiquer les problèmes](#diagnostiquer-les-problèmes)
+2. [Inclure des utilitaires GLSL](#inclure-des-utilitaires-glsl)
+3. [Varyings disponibles par géométrie](#varyings-disponibles-par-géométrie)
+4. [Précision float : mediump vs highp](#précision-float--mediump-vs-highp)
+5. [Comprendre le pipeline de rendu](#comprendre-le-pipeline-de-rendu)
+6. [Flux de données : per-feature et data-driven](#flux-de-données--per-feature-et-data-driven)
+7. [Optimisations automatiques](#optimisations-automatiques)
+8. [Configurer un shader (ConfigSchema)](#configurer-un-shader-configschema)
+9. [Écrire des shaders performants](#écrire-des-shaders-performants)
+10. [Utiliser des textures](#utiliser-des-textures)
+11. [Gérer les données efficacement](#gérer-les-données-efficacement)
+12. [Utiliser les presets](#utiliser-les-presets)
+13. [Instanced Rendering](#instanced-rendering)
+14. [Diagnostiquer les problèmes](#diagnostiquer-les-problèmes)
 
 ---
 
@@ -172,6 +173,156 @@ void main() {
 | `uniform` | Par frame ou rarement | `u_time`, `u_color`, `u_speed` | Très rapide |
 | `attribute` | Par vertex/feature | `a_position`, `a_color`, `a_timeOffset` | Upload unique |
 | `varying` | Interpolé automatiquement | `v_pos`, `v_color`, `v_effectiveTime` | Gratuit |
+
+---
+
+## Inclure des utilitaires GLSL
+
+La bibliothèque fournit des utilitaires GLSL pré-construits (noise, easing, shapes, colors) que vous pouvez inclure dans vos shaders. Il existe deux méthodes pour les utiliser.
+
+### Méthode 1 : Template literals (classique)
+
+Utilisez les template literals JavaScript avec l'objet `glsl` :
+
+```typescript
+import { defineShader, glsl } from 'maplibre-animated-shaders';
+
+const myShader = defineShader({
+  name: 'fire',
+  geometry: 'point',
+  fragmentShader: `
+    precision highp float;
+
+    ${glsl.noise}
+    ${glsl.shapes}
+
+    varying vec2 v_pos;
+    uniform float u_time;
+
+    void main() {
+      float n = fbm(v_pos * 4.0 + u_time, 4);
+      float circle = sdCircle(v_pos, 0.5);
+      gl_FragColor = vec4(vec3(n), fillAA(circle, 0.01));
+    }
+  `,
+  defaultConfig: { /* ... */ },
+  getUniforms: (config, time) => ({ u_time: time }),
+});
+```
+
+**Avantages** : Contrôle total, pas de magic string
+**Inconvénients** : Verbeux, facile d'oublier une virgule
+
+### Méthode 2 : Directives `#include` (recommandée)
+
+Utilisez la syntaxe `#include <library>` avec l'option `preprocess: true` :
+
+```typescript
+import { defineShader } from 'maplibre-animated-shaders';
+
+const myShader = defineShader({
+  name: 'fire',
+  geometry: 'point',
+  fragmentShader: `
+    precision highp float;
+
+    #include <noise>
+    #include <shapes>
+
+    varying vec2 v_pos;
+    uniform float u_time;
+
+    void main() {
+      float n = fbm(v_pos * 4.0 + u_time, 4);
+      float circle = sdCircle(v_pos, 0.5);
+      gl_FragColor = vec4(vec3(n), fillAA(circle, 0.01));
+    }
+  `,
+  defaultConfig: { /* ... */ },
+  getUniforms: (config, time) => ({ u_time: time }),
+}, { preprocess: true });  // <-- Active le préprocesseur
+```
+
+**Avantages** : Syntaxe familière (style C/C++), plus lisible, détection automatique des doublons
+**Inconvénients** : Nécessite `preprocess: true`
+
+### Bibliothèques GLSL disponibles
+
+| Bibliothèque | Directive | Description | Fonctions principales |
+|--------------|-----------|-------------|----------------------|
+| **noise** | `#include <noise>` | Fonctions de bruit | `snoise(vec2)`, `snoise(vec3)`, `fbm(vec2, int)`, `random(vec2)`, `voronoi(vec2)` |
+| **easing** | `#include <easing>` | Fonctions d'interpolation | `easeInQuad`, `easeOutQuad`, `easeInOutQuad`, `easeInElastic`, `easeOutBounce`, etc. |
+| **shapes** | `#include <shapes>` | SDF (Signed Distance Functions) | `sdCircle`, `sdBox`, `sdRing`, `sdTriangle`, `sdPolygon`, `sdStar`, `fillAA`, `strokeAA` |
+| **colors** | `#include <colors>` | Manipulation de couleurs | `rgb2hsl`, `hsl2rgb`, `rgb2hsv`, `hsv2rgb`, `blendMultiply`, `blendScreen`, `palette` |
+| **all** | `#include <all>` | Toutes les bibliothèques | Combine noise + easing + shapes + colors |
+
+### Utilisation avancée du préprocesseur
+
+Vous pouvez également utiliser le préprocesseur directement :
+
+```typescript
+import { preprocessGLSL, processGLSL, getAvailableLibraries } from 'maplibre-animated-shaders';
+
+// Obtenir la liste des bibliothèques disponibles
+console.log(getAvailableLibraries());
+// ['noise', 'easing', 'shapes', 'colors', 'all']
+
+// Préprocesser avec métadonnées
+const result = preprocessGLSL(`
+  #include <noise>
+  #include <unknown>
+  void main() {}
+`);
+
+console.log(result.includedLibraries);  // ['noise']
+console.log(result.warnings);            // ["Unknown GLSL library: 'unknown'..."]
+console.log(result.source);              // Le code GLSL avec noise inclus
+
+// Préprocesser simplement (retourne juste le source)
+const source = processGLSL(`
+  #include <shapes>
+  void main() { float d = sdCircle(vec2(0.0), 1.0); }
+`);
+```
+
+### Options du préprocesseur
+
+```typescript
+preprocessGLSL(source, {
+  // Ajouter des commentaires de début/fin autour du code inclus (défaut: true)
+  addComments: true,
+
+  // Avertir en cas de bibliothèque inconnue (défaut: true)
+  warnUnknown: true,
+
+  // Ajouter des bibliothèques personnalisées
+  customLibraries: {
+    myUtils: `
+      float myHelper(float x) { return x * 2.0; }
+    `,
+  },
+});
+```
+
+### Prévention des doublons
+
+Le préprocesseur détecte automatiquement les inclusions dupliquées :
+
+```glsl
+#include <noise>
+#include <noise>  // → "// #include <noise> (already included)"
+```
+
+Cela évite les erreurs de redéfinition de fonctions GLSL.
+
+### Syntaxe supportée
+
+Les deux formats sont acceptés :
+
+```glsl
+#include <noise>   // Style angle brackets (recommandé)
+#include "noise"   // Style guillemets (compatible C/C++)
+```
 
 ---
 

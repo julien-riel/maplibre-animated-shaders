@@ -144,6 +144,16 @@ export * from './utils';
 // GLSL common functions
 export { glsl, noiseGLSL, easingGLSL, shapesGLSL, colorsGLSL } from './glsl';
 
+// GLSL preprocessor
+export {
+  preprocessGLSL,
+  processGLSL,
+  getAvailableLibraries,
+  isLibraryAvailable,
+  getLibrarySource,
+} from './glsl';
+export type { GLSLLibraryName, PreprocessResult, PreprocessOptions } from './glsl';
+
 // Custom WebGL layers
 export { PointShaderLayer } from './layers';
 
@@ -196,15 +206,73 @@ export * from './workers';
 
 // Re-import for use in helper functions
 import { globalRegistry as registry } from './ShaderRegistry';
+import { processGLSL } from './glsl';
 import type { GeometryType, ShaderConfig, ShaderDefinition } from './types';
 
 /**
- * Helper to define a custom shader with type safety
+ * Options for defineShader
+ */
+export interface DefineShaderOptions {
+  /**
+   * Whether to preprocess the shader source with #include directive support.
+   * When true, the shader source will be processed to resolve #include directives.
+   * @default false
+   */
+  preprocess?: boolean;
+}
+
+/**
+ * Helper to define a custom shader with type safety.
+ *
+ * @param definition - The shader definition
+ * @param options - Optional configuration for shader definition
+ * @returns The shader definition (potentially with preprocessed sources)
+ *
+ * @example
+ * ```typescript
+ * // Without preprocessing (default)
+ * const shader = defineShader({
+ *   name: 'myShader',
+ *   geometry: 'point',
+ *   fragmentShader: `
+ *     precision highp float;
+ *     ${glsl.noise}  // Manual template literal
+ *     void main() { ... }
+ *   `
+ * });
+ *
+ * // With preprocessing - supports #include directives
+ * const shader = defineShader({
+ *   name: 'myShader',
+ *   geometry: 'point',
+ *   fragmentShader: `
+ *     precision highp float;
+ *     #include <noise>
+ *     #include <shapes>
+ *     void main() {
+ *       float n = fbm(v_pos * 4.0, 4);
+ *       float circle = sdCircle(v_pos, 0.5);
+ *     }
+ *   `
+ * }, { preprocess: true });
+ * ```
  */
 export function defineShader<T extends ShaderConfig>(
-  definition: ShaderDefinition<T>
+  definition: ShaderDefinition<T>,
+  options: DefineShaderOptions = {}
 ): ShaderDefinition<T> {
-  return definition;
+  const { preprocess = false } = options;
+
+  if (!preprocess) {
+    return definition;
+  }
+
+  // Preprocess shader sources
+  return {
+    ...definition,
+    fragmentShader: processGLSL(definition.fragmentShader),
+    vertexShader: definition.vertexShader ? processGLSL(definition.vertexShader) : undefined,
+  };
 }
 
 /**
