@@ -45,6 +45,7 @@ import type {
   AnimationTimingConfig,
   InteractivityConfig,
   RenderMatrixOrOptions,
+  GeometryType,
 } from '../types';
 import { extractMatrix } from '../types';
 import type { mat4 } from 'gl-matrix';
@@ -55,7 +56,7 @@ import { hexToRgba } from '../utils/color';
 import {
   ShaderError,
   compileShaderWithErrorHandling,
-  linkProgramWithErrorHandling,
+  linkProgramWithGeometry,
   createBufferWithErrorHandling,
   safeCleanup,
   isContextLost,
@@ -146,6 +147,12 @@ export abstract class BaseShaderLayer {
   // Layer name for logging
   protected abstract readonly layerTypeName: string;
 
+  // Geometry type for this layer (used for error messages)
+  protected abstract readonly geometryType: GeometryType;
+
+  // Debug mode for shader compilation
+  protected debug: boolean = false;
+
   // WebGL context wrapper for unified WebGL 1/2 API
   protected ctx: IWebGLContext | null = null;
 
@@ -156,17 +163,27 @@ export abstract class BaseShaderLayer {
   // Minimum feature count to enable instancing (small datasets don't benefit)
   protected static readonly INSTANCING_MIN_FEATURES = 100;
 
+  /**
+   * Options for BaseShaderLayer constructor
+   */
+  public static Options: {
+    interactivityConfig?: InteractivityConfig;
+    debug?: boolean;
+  };
+
   constructor(
     id: string,
     sourceId: string,
     definition: ShaderDefinition,
     config: ShaderConfig,
-    interactivityConfig?: InteractivityConfig
+    interactivityConfig?: InteractivityConfig,
+    debug?: boolean
   ) {
     this.id = id;
     this.sourceId = sourceId;
     this.definition = definition;
     this.config = { ...definition.defaultConfig, ...config };
+    this.debug = debug ?? false;
 
     // Initialize interaction if enabled
     if (interactivityConfig?.perFeatureControl) {
@@ -489,6 +506,9 @@ export abstract class BaseShaderLayer {
 
   /**
    * Create the shader program with comprehensive error handling
+   *
+   * Uses geometry-aware error messages that suggest correct varyings
+   * when a varying mismatch is detected.
    */
   protected createProgram(gl: WebGLRenderingContext): WebGLProgram | null {
     let vertexShader: WebGLShader | null = null;
@@ -510,8 +530,12 @@ export abstract class BaseShaderLayer {
         this.id
       );
 
-      // Link program using error handling utilities
-      const program = linkProgramWithErrorHandling(gl, vertexShader, fragmentShader, this.id);
+      // Link program using geometry-aware error handling
+      const program = linkProgramWithGeometry(gl, vertexShader, fragmentShader, {
+        layerId: this.id,
+        geometryType: this.geometryType,
+        debug: this.debug,
+      });
 
       // Clean up shaders (they're now part of the program)
       gl.deleteShader(vertexShader);

@@ -12,7 +12,7 @@ import type { mat4 } from 'gl-matrix';
 import {
   ShaderError,
   compileShaderWithErrorHandling,
-  linkProgramWithErrorHandling,
+  linkProgramWithGeometry,
   createBufferWithErrorHandling,
   safeCleanup,
   isContextLost,
@@ -283,6 +283,9 @@ export class GlobalShaderLayer {
 
   /**
    * Create the shader program with comprehensive error handling
+   *
+   * Uses geometry-aware error messages that suggest correct varyings
+   * when a varying mismatch is detected.
    */
   private createProgram(gl: WebGLRenderingContext): WebGLProgram | null {
     let vertexShader: WebGLShader | null = null;
@@ -305,7 +308,10 @@ export class GlobalShaderLayer {
         this.id
       );
 
-      const program = linkProgramWithErrorHandling(gl, vertexShader, fragmentShader, this.id);
+      const program = linkProgramWithGeometry(gl, vertexShader, fragmentShader, {
+        layerId: this.id,
+        geometryType: 'global',
+      });
 
       gl.deleteShader(vertexShader);
       gl.deleteShader(fragmentShader);

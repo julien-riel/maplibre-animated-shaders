@@ -6,7 +6,15 @@
  * - Descriptive error messages
  * - WebGL 2 detection and fallback
  * - Context loss handling
+ * - Improved shader error diagnostics with varying suggestions
  */
+
+import type { GeometryType } from '../types';
+import {
+  formatAvailableVaryings,
+  suggestVaryingReplacement,
+  getVaryingNames,
+} from './shader-varyings';
 
 /**
  * WebGL error codes and their descriptions
@@ -184,7 +192,93 @@ export function compileShaderWithErrorHandling(
 }
 
 /**
+ * Options for shader linking with geometry context
+ */
+export interface LinkProgramOptions {
+  /** Layer ID for error messages */
+  layerId: string;
+  /** Geometry type for varying suggestions */
+  geometryType?: GeometryType;
+  /** Enable debug mode for additional logging */
+  debug?: boolean;
+}
+
+/**
+ * Parse varying errors from program info log
+ * Returns an array of missing varying names
+ */
+function parseVaryingErrors(infoLog: string): string[] {
+  const missingVaryings: string[] = [];
+
+  // Match different driver error formats for varying mismatches
+  // Format 1: "FRAGMENT varying v_uv does not match any VERTEX varying"
+  // Format 2: "varying 'v_uv' has not been declared in the vertex shader"
+  // Format 3: "undeclared varying v_uv"
+  const patterns = [
+    /varying\s+(\w+)\s+does not match/gi,
+    /varying\s+'(\w+)'\s+has not been declared/gi,
+    /undeclared\s+varying\s+(\w+)/gi,
+    /FRAGMENT\s+varying\s+(\w+)/gi,
+    /varying\s+(\w+)\s+used\s+but\s+not\s+declared/gi,
+  ];
+
+  for (const pattern of patterns) {
+    let match;
+    while ((match = pattern.exec(infoLog)) !== null) {
+      const varyingName = match[1];
+      if (!missingVaryings.includes(varyingName)) {
+        missingVaryings.push(varyingName);
+      }
+    }
+  }
+
+  return missingVaryings;
+}
+
+/**
+ * Format enhanced error message with varying suggestions
+ */
+function formatVaryingErrorMessage(
+  infoLog: string,
+  missingVaryings: string[],
+  geometryType: GeometryType | undefined,
+  layerId: string
+): string {
+  const lines: string[] = [];
+  lines.push(`Shader program linking failed for layer "${layerId}":`);
+  lines.push('');
+  lines.push('Error: ' + infoLog.trim());
+
+  if (missingVaryings.length > 0 && geometryType) {
+    lines.push('');
+    lines.push('--- Varying Mismatch Detected ---');
+    lines.push('');
+
+    for (const varying of missingVaryings) {
+      lines.push(`Missing varying: '${varying}'`);
+
+      // Check if this varying exists in another geometry type
+      const suggestion = suggestVaryingReplacement(geometryType, varying);
+      if (suggestion) {
+        lines.push(`  Hint: ${suggestion}`);
+      }
+    }
+
+    lines.push('');
+    lines.push(`Available varyings for '${geometryType}' geometry:`);
+    lines.push(formatAvailableVaryings(geometryType));
+  } else if (missingVaryings.length > 0) {
+    lines.push('');
+    lines.push('Tip: Missing varyings detected. Specify geometryType in options for suggestions.');
+  }
+
+  return lines.join('\n');
+}
+
+/**
  * Link a program with detailed error reporting
+ *
+ * @deprecated Use linkProgramWithGeometry for enhanced error messages with varying suggestions
  */
 export function linkProgramWithErrorHandling(
   gl: WebGLRenderingContext,
@@ -192,6 +286,44 @@ export function linkProgramWithErrorHandling(
   fragmentShader: WebGLShader,
   layerId: string
 ): WebGLProgram {
+  return linkProgramWithGeometry(gl, vertexShader, fragmentShader, { layerId });
+}
+
+/**
+ * Link a program with detailed error reporting and geometry-aware varying suggestions
+ *
+ * @param gl - WebGL rendering context
+ * @param vertexShader - Compiled vertex shader
+ * @param fragmentShader - Compiled fragment shader
+ * @param options - Options including layerId, geometryType, and debug flag
+ * @returns Linked WebGL program
+ * @throws ShaderError if linking fails
+ *
+ * @example
+ * ```typescript
+ * const program = linkProgramWithGeometry(gl, vertexShader, fragmentShader, {
+ *   layerId: 'my-layer',
+ *   geometryType: 'point',
+ *   debug: true
+ * });
+ * ```
+ */
+export function linkProgramWithGeometry(
+  gl: WebGLRenderingContext,
+  vertexShader: WebGLShader,
+  fragmentShader: WebGLShader,
+  options: LinkProgramOptions
+): WebGLProgram {
+  const { layerId, geometryType, debug } = options;
+
+  // Debug logging: show available varyings before compilation
+  if (debug && geometryType) {
+    // eslint-disable-next-line no-console
+    console.log(`[ShaderDebug] Compiling shader for '${geometryType}' geometry`);
+    // eslint-disable-next-line no-console
+    console.log(`[ShaderDebug] Available varyings:`, getVaryingNames(geometryType));
+  }
+
   const program = gl.createProgram();
   if (!program) {
     throw new ShaderError(`Failed to create shader program for layer "${layerId}"`, 'program');
@@ -206,12 +338,18 @@ export function linkProgramWithErrorHandling(
     const infoLog = gl.getProgramInfoLog(program) || 'Unknown error';
     gl.deleteProgram(program);
 
-    throw new ShaderError(
-      `Shader program linking failed for layer "${layerId}":\n${infoLog}`,
-      'program',
-      undefined,
-      infoLog
+    // Parse for varying errors
+    const missingVaryings = parseVaryingErrors(infoLog);
+
+    // Format enhanced error message
+    const errorMessage = formatVaryingErrorMessage(
+      infoLog,
+      missingVaryings,
+      geometryType,
+      layerId
     );
+
+    throw new ShaderError(errorMessage, 'program', undefined, infoLog);
   }
 
   // Validate program
@@ -219,6 +357,11 @@ export function linkProgramWithErrorHandling(
   if (!gl.getProgramParameter(program, gl.VALIDATE_STATUS)) {
     const infoLog = gl.getProgramInfoLog(program) || 'Validation failed';
     console.warn(`[WebGL] Program validation warning for layer "${layerId}": ${infoLog}`);
+  }
+
+  if (debug) {
+    // eslint-disable-next-line no-console
+    console.log(`[ShaderDebug] Shader program linked successfully for layer "${layerId}"`);
   }
 
   return program;
