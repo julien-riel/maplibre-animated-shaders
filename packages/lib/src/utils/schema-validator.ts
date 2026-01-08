@@ -104,7 +104,9 @@ export function isValidRgbaArray(value: unknown): value is [number, number, numb
   if (!Array.isArray(value) || value.length !== 4) {
     return false;
   }
-  return value.every((component) => typeof component === 'number' && component >= 0 && component <= 1);
+  return value.every(
+    (component) => typeof component === 'number' && component >= 0 && component <= 1
+  );
 }
 
 /**

@@ -640,7 +640,7 @@ async function loadTexture(
 3. [x] Générer types TypeScript
 
 ### Phase 5 : Hot-reload et Playground (priorité basse, optionnel)
-1. [ ] Implémenter hot-reload basique
+1. [x] Implémenter hot-reload basique
 2. [ ] Créer structure playground
 3. [ ] MVP fonctionnel
 

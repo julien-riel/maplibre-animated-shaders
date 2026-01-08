@@ -99,6 +99,70 @@ export class GlobalShaderLayer {
   }
 
   /**
+   * Update shader source code and recompile (hot-reload)
+   *
+   * @param fragmentShader - New fragment shader source code
+   * @param vertexShader - Optional new vertex shader source code
+   * @returns true if recompilation succeeded, false otherwise
+   */
+  updateShaderSource(fragmentShader: string, vertexShader?: string): boolean {
+    if (!this.map || !this.program) {
+      console.warn('[GlobalShaderLayer] Cannot update shader: WebGL context not available');
+      return false;
+    }
+
+    // Get WebGL context from canvas
+    const canvas = this.map.getCanvas();
+    const gl = (canvas.getContext('webgl') ||
+      canvas.getContext('experimental-webgl')) as WebGLRenderingContext | null;
+    if (!gl) {
+      console.warn('[GlobalShaderLayer] Cannot update shader: WebGL context not available');
+      return false;
+    }
+
+    // Store old program in case compilation fails
+    const oldProgram = this.program;
+    const oldDefinition = this.definition;
+
+    try {
+      // Update definition with new shader sources
+      this.definition = {
+        ...this.definition,
+        fragmentShader,
+        ...(vertexShader && { vertexShader }),
+      };
+
+      // Create new program
+      const newProgram = this.createProgram(gl);
+
+      if (!newProgram) {
+        // Revert to old definition
+        this.definition = oldDefinition;
+        console.error('[GlobalShaderLayer] Hot-reload failed: program creation returned null');
+        return false;
+      }
+
+      // Success - delete old program and use new one
+      gl.deleteProgram(oldProgram);
+      this.program = newProgram;
+
+      // Re-cache attribute and uniform locations
+      this.aPos = gl.getAttribLocation(this.program, 'a_pos');
+      this.cacheUniformLocations(gl);
+
+      // Trigger repaint
+      this.map.triggerRepaint();
+
+      return true;
+    } catch (error) {
+      // Revert to old definition on error
+      this.definition = oldDefinition;
+      console.error('[GlobalShaderLayer] Hot-reload failed:', error);
+      return false;
+    }
+  }
+
+  /**
    * Play animation
    */
   play(): void {

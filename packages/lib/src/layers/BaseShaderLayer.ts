@@ -243,6 +243,67 @@ export abstract class BaseShaderLayer {
   }
 
   /**
+   * Update shader source code and recompile (hot-reload)
+   *
+   * @param fragmentShader - New fragment shader source code
+   * @param vertexShader - Optional new vertex shader source code
+   * @returns true if recompilation succeeded, false otherwise
+   */
+  updateShaderSource(fragmentShader: string, vertexShader?: string): boolean {
+    if (!this.ctx || !this.program) {
+      console.warn(`[${this.layerTypeName}] Cannot update shader: WebGL context not available`);
+      return false;
+    }
+
+    const gl = this.ctx.gl;
+
+    // Store old program in case compilation fails
+    const oldProgram = this.program;
+    const oldDefinition = this.definition;
+
+    try {
+      // Update definition with new shader sources
+      this.definition = {
+        ...this.definition,
+        fragmentShader,
+        ...(vertexShader && { vertexShader }),
+      };
+
+      // Create new program
+      const newProgram = this.createProgram(gl);
+
+      if (!newProgram) {
+        // Revert to old definition
+        this.definition = oldDefinition;
+        console.error(`[${this.layerTypeName}] Hot-reload failed: program creation returned null`);
+        return false;
+      }
+
+      // Success - delete old program and use new one
+      gl.deleteProgram(oldProgram);
+      this.program = newProgram;
+
+      // Re-cache uniform locations for new program
+      this.cacheUniformLocations(gl);
+
+      // Trigger repaint
+      this.map?.triggerRepaint();
+
+      if (this.debug) {
+        // eslint-disable-next-line no-console
+        console.log(`[${this.layerTypeName}] Hot-reload successful for layer "${this.id}"`);
+      }
+
+      return true;
+    } catch (error) {
+      // Revert to old definition on error
+      this.definition = oldDefinition;
+      console.error(`[${this.layerTypeName}] Hot-reload failed:`, error);
+      return false;
+    }
+  }
+
+  /**
    * Play animation
    */
   play(): void {

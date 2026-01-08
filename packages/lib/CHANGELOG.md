@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **glsl:** add preprocessor with `#include` directive support for modular shader composition ([d2d0ba3])
+- **hot-reload:** add `updateShaderSource()` method for live shader editing without page reload
 - **utils:** add shader varyings reference for debugging and documentation ([022fba3])
 - **utils:** add schema validator for runtime config validation
 - **utils:** improve WebGL error diagnostics with better error messages
