@@ -102,7 +102,7 @@ export function preprocessGLSL(source: string, options: PreprocessOptions = {}):
   const warnings: string[] = [];
   const alreadyIncluded = new Set<string>();
 
-  const processedSource = source.replace(INCLUDE_PATTERN, (match, libraryName: string) => {
+  const processedSource = source.replace(INCLUDE_PATTERN, (_match, libraryName: string) => {
     // Check if already included (prevent duplicates)
     if (alreadyIncluded.has(libraryName)) {
       return `// #include <${libraryName}> (already included)`;

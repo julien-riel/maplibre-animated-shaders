@@ -634,10 +634,10 @@ async function loadTexture(
 2. [x] Intégrer dans defineShader()
 3. [x] Documenter la syntaxe #include
 
-### Phase 4 : Validation schema (priorité moyenne, 1-2 jours)
-1. [ ] Créer schema-validator.ts
-2. [ ] Ajouter validation automatique
-3. [ ] Générer types TypeScript
+### Phase 4 : Validation schema (priorité moyenne, 1-2 jours) ✅
+1. [x] Créer schema-validator.ts
+2. [x] Ajouter validation automatique
+3. [x] Générer types TypeScript
 
 ### Phase 5 : Hot-reload et Playground (priorité basse, optionnel)
 1. [ ] Implémenter hot-reload basique

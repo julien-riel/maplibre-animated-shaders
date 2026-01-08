@@ -12,6 +12,7 @@ Ce guide explique comment écrire des plugins performants pour MapLibre Animated
 6. [Flux de données : per-feature et data-driven](#flux-de-données--per-feature-et-data-driven)
 7. [Optimisations automatiques](#optimisations-automatiques)
 8. [Configurer un shader (ConfigSchema)](#configurer-un-shader-configschema)
+   - [Utilitaires de validation](#utilitaires-de-validation)
 9. [Écrire des shaders performants](#écrire-des-shaders-performants)
 10. [Utiliser des textures](#utiliser-des-textures)
 11. [Gérer les données efficacement](#gérer-les-données-efficacement)
@@ -995,6 +996,95 @@ const myShader: ShaderDefinition<MyShaderConfig> = {
 | `string` | Text input | - | Labels, identifiants |
 | `select` | Dropdown | `options: string[]` | Mode, type d'easing |
 | `array` | Custom | - | Coordonnées, vecteurs |
+
+### Utilitaires de validation
+
+La bibliothèque fournit des utilitaires pour valider les configurations et générer des types TypeScript.
+
+```typescript
+import {
+  validateConfig,
+  getSchemaDefaults,
+  mergeWithDefaults,
+  generateTypeDefinition,
+  generateSchemaDocumentation,
+  createSchemaFromDefaults,
+  isValidColor,
+} from 'maplibre-animated-shaders';
+
+// Valider une configuration utilisateur
+const result = validateConfig(userConfig, configSchema);
+if (!result.valid) {
+  console.error('Erreurs de validation:', result.errors);
+  result.errors.forEach(error => {
+    console.error(`  ${error.field}: ${error.message}`);
+    if (error.suggestion) {
+      console.error(`    Suggestion: ${error.suggestion}`);
+    }
+  });
+}
+
+// Extraire les valeurs par défaut d'un schema
+const defaults = getSchemaDefaults(configSchema);
+
+// Fusionner config utilisateur avec les valeurs par défaut
+const fullConfig = mergeWithDefaults(userConfig, configSchema);
+
+// Générer une définition TypeScript depuis un schema
+const typeDef = generateTypeDefinition(configSchema, 'MyShaderConfig');
+console.log(typeDef);
+// interface MyShaderConfig {
+//   /** Couleur des anneaux (default: '#3b82f6') */
+//   color: string | [number, number, number, number];
+//   /** Multiplicateur de vitesse (default: 1) [min: 0.1, max: 5] */
+//   speed: number;
+//   ...
+// }
+
+// Générer de la documentation markdown
+const docs = generateSchemaDocumentation(configSchema, 'Options de configuration');
+
+// Créer un schema à partir de valeurs par défaut (pour prototypage rapide)
+const quickSchema = createSchemaFromDefaults({
+  speed: 1.0,
+  color: '#3b82f6',
+  enabled: true,
+});
+
+// Vérifier si une valeur est une couleur valide
+isValidColor('#ff6600');        // true
+isValidColor([1, 0.4, 0, 1]);   // true
+isValidColor('red');            // false
+```
+
+#### Structure du résultat de validation
+
+```typescript
+interface SchemaValidationResult {
+  valid: boolean;
+  errors: SchemaValidationError[];
+  warnings: SchemaValidationWarning[];
+}
+
+interface SchemaValidationError {
+  field: string;      // Nom du champ en erreur
+  message: string;    // Message d'erreur
+  value: unknown;     // Valeur invalide
+  expected?: string;  // Type/format attendu
+  suggestion?: string; // Suggestion de correction
+}
+```
+
+Les expressions MapLibre (data-driven) sont automatiquement ignorées lors de la validation :
+
+```typescript
+// Ces valeurs sont valides (expressions MapLibre)
+const config = {
+  color: ['get', 'status_color'],
+  speed: ['match', ['get', 'priority'], 'high', 2.0, 1.0],
+};
+validateConfig(config, configSchema).valid; // true
+```
 
 ### Conversion config → uniforms
 
