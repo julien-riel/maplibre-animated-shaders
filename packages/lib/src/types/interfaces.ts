@@ -32,11 +32,7 @@ export interface IShaderManager {
   updateConfig(layerId: string, config: Partial<ShaderConfig>): void;
 
   /** Update shader source code at runtime (hot-reload) */
-  updateShaderSource(
-    layerId: string,
-    fragmentShader: string,
-    vertexShader?: string
-  ): boolean;
+  updateShaderSource(layerId: string, fragmentShader: string, vertexShader?: string): boolean;
 
   /** Clean up all resources */
   destroy(): void;

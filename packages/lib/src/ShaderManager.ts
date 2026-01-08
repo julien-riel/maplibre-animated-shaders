@@ -183,11 +183,7 @@ export class ShaderManager implements IShaderManager {
    * shaderManager.updateShaderSource('my-layer', newFragmentShader);
    * ```
    */
-  updateShaderSource(
-    layerId: string,
-    fragmentShader: string,
-    vertexShader?: string
-  ): boolean {
+  updateShaderSource(layerId: string, fragmentShader: string, vertexShader?: string): boolean {
     const customLayer = this.state.customLayers.get(layerId);
     if (!customLayer) {
       log(this.state, `Cannot update shader source: layer "${layerId}" not found`);
