@@ -61,6 +61,8 @@ import {
   isContextLost,
 } from '../utils/webgl-error-handler';
 import { throttle, DEFAULT_UPDATE_THROTTLE_MS } from '../utils/throttle';
+import { WebGLContext, type IWebGLContext } from '../webgl/WebGLContext';
+import { InstancedRenderer } from '../webgl/InstancedRenderer';
 
 /**
  * Per-feature evaluated data for data-driven properties
@@ -143,6 +145,16 @@ export abstract class BaseShaderLayer {
 
   // Layer name for logging
   protected abstract readonly layerTypeName: string;
+
+  // WebGL context wrapper for unified WebGL 1/2 API
+  protected ctx: IWebGLContext | null = null;
+
+  // Instanced renderer (optional, for layers that support instancing)
+  protected instancedRenderer: InstancedRenderer | null = null;
+  protected useInstancing: boolean = false;
+
+  // Minimum feature count to enable instancing (small datasets don't benefit)
+  protected static readonly INSTANCING_MIN_FEATURES = 100;
 
   constructor(
     id: string,
@@ -262,6 +274,12 @@ export abstract class BaseShaderLayer {
         throw new Error('WebGL context is lost');
       }
 
+      // Initialize WebGL context wrapper for unified WebGL 1/2 API
+      this.ctx = new WebGLContext(gl);
+
+      // Check if instancing is supported
+      this.useInstancing = this.ctx.supportsInstancing && this.supportsInstancing();
+
       // Compile shaders and create program
       this.program = this.createProgram(gl);
       if (!this.program) {
@@ -282,6 +300,11 @@ export abstract class BaseShaderLayer {
       // Create interaction buffer if interaction is enabled
       if (this.interactionEnabled) {
         this.interactionBuffer = createBufferWithErrorHandling(gl, 'interaction', this.id);
+      }
+
+      // Initialize instanced renderer if supported
+      if (this.useInstancing && this.ctx) {
+        this.initializeInstancedRenderer(this.ctx);
       }
     } catch (error) {
       this.initializationError = error as Error;
@@ -352,6 +375,12 @@ export abstract class BaseShaderLayer {
       this.interactionHandler = null;
     }
 
+    // Dispose instanced renderer
+    if (this.instancedRenderer) {
+      this.instancedRenderer.dispose();
+      this.instancedRenderer = null;
+    }
+
     // Release geometry-specific pooled objects
     this.releasePooledData();
     this.featureData = [];
@@ -368,8 +397,10 @@ export abstract class BaseShaderLayer {
     this.dataDrivenBuffer = null;
     this.interactionBuffer = null;
     this.map = null;
+    this.ctx = null;
     this.initializationError = null;
     this.stateManager = null;
+    this.useInstancing = false;
     this.expressionEvaluator.clear();
   }
 
@@ -713,4 +744,57 @@ export abstract class BaseShaderLayer {
    * Update interaction buffer from state manager (geometry-specific expansion)
    */
   protected abstract updateInteractionBufferFromState(gl: WebGLRenderingContext): void;
+
+  // =========================================================================
+  // Instancing hooks - Override in subclasses to enable instanced rendering
+  // =========================================================================
+
+  /**
+   * Check if this layer type supports instanced rendering.
+   * Override in subclasses that implement instancing.
+   *
+   * @returns true if instancing is supported
+   */
+  protected supportsInstancing(): boolean {
+    return false;
+  }
+
+  /**
+   * Initialize the instanced renderer with geometry.
+   * Override in subclasses that implement instancing.
+   *
+   * @param ctx - WebGL context wrapper
+   */
+  protected initializeInstancedRenderer(_ctx: IWebGLContext): void {
+    // Default: no-op. Override in subclasses.
+  }
+
+  /**
+   * Check if instancing should be used for the current feature count.
+   * Uses the INSTANCING_MIN_FEATURES threshold.
+   *
+   * @param featureCount - Number of features to render
+   * @returns true if instancing should be used
+   */
+  protected shouldUseInstancing(featureCount: number): boolean {
+    return this.useInstancing && featureCount >= BaseShaderLayer.INSTANCING_MIN_FEATURES;
+  }
+
+  /**
+   * Get the WebGL context wrapper.
+   *
+   * @returns WebGL context or null if not initialized
+   */
+  protected getContext(): IWebGLContext | null {
+    return this.ctx;
+  }
+
+  /**
+   * Check if instancing is currently enabled.
+   *
+   * @returns true if instancing is enabled
+   */
+  isInstancingEnabled(): boolean {
+    return this.useInstancing && this.instancedRenderer !== null;
+  }
 }

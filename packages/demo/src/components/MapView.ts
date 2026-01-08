@@ -387,8 +387,6 @@ export class MapView {
       if (!effect.isPlaying) {
         this.shaderManager.pause(layerId);
       }
-
-      console.log(`Applied custom shader ${customShaderName}`);
     } catch (error) {
       console.error(`Failed to apply custom shader:`, error);
     }

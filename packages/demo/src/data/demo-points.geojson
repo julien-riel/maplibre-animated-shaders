@@ -1,55 +1,3005 @@
 {
   "type": "FeatureCollection",
   "features": [
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.2945, 48.8584] }, "properties": { "id": 1, "name": "Eiffel Tower", "category": "landmark", "priority": "high", "speed": 1.2, "intensity": 1.0, "color": "#f59e0b", "delay": 0.0 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3376, 48.8606] }, "properties": { "id": 2, "name": "Louvre Museum", "category": "museum", "priority": "high", "speed": 0.8, "intensity": 0.9, "color": "#8b5cf6", "delay": 0.3 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3499, 48.8530] }, "properties": { "id": 3, "name": "Notre-Dame", "category": "landmark", "priority": "high", "speed": 1.0, "intensity": 0.95, "color": "#f59e0b", "delay": 0.6 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3522, 48.8738] }, "properties": { "id": 4, "name": "Sacre-Coeur", "category": "landmark", "priority": "high", "speed": 0.9, "intensity": 0.85, "color": "#f59e0b", "delay": 0.9 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.2950, 48.8738] }, "properties": { "id": 5, "name": "Arc de Triomphe", "category": "landmark", "priority": "high", "speed": 1.1, "intensity": 1.0, "color": "#f59e0b", "delay": 1.2 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3200, 48.8656] }, "properties": { "id": 6, "name": "Galeries Lafayette", "category": "shopping", "priority": "medium", "speed": 1.5, "intensity": 0.7, "color": "#ec4899", "delay": 0.2 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3272, 48.8604] }, "properties": { "id": 7, "name": "Palais Royal", "category": "landmark", "priority": "medium", "speed": 0.7, "intensity": 0.8, "color": "#f59e0b", "delay": 0.5 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3317, 48.8612] }, "properties": { "id": 8, "name": "Opera Garnier", "category": "culture", "priority": "high", "speed": 0.6, "intensity": 0.9, "color": "#ef4444", "delay": 0.8 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3461, 48.8534] }, "properties": { "id": 9, "name": "Centre Pompidou", "category": "museum", "priority": "high", "speed": 1.3, "intensity": 0.85, "color": "#8b5cf6", "delay": 1.1 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3275, 48.8443] }, "properties": { "id": 10, "name": "Luxembourg Gardens", "category": "park", "priority": "medium", "speed": 0.5, "intensity": 0.6, "color": "#22c55e", "delay": 1.4 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3596, 48.8529] }, "properties": { "id": 11, "name": "Place des Vosges", "category": "landmark", "priority": "medium", "speed": 0.8, "intensity": 0.75, "color": "#f59e0b", "delay": 0.1 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3730, 48.8566] }, "properties": { "id": 12, "name": "Place de la Bastille", "category": "landmark", "priority": "medium", "speed": 1.0, "intensity": 0.7, "color": "#f59e0b", "delay": 0.4 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3387, 48.8467] }, "properties": { "id": 13, "name": "Pantheon", "category": "landmark", "priority": "high", "speed": 0.7, "intensity": 0.9, "color": "#f59e0b", "delay": 0.7 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3126, 48.8574] }, "properties": { "id": 14, "name": "Musee d'Orsay", "category": "museum", "priority": "high", "speed": 0.9, "intensity": 0.95, "color": "#8b5cf6", "delay": 1.0 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3000, 48.8650] }, "properties": { "id": 15, "name": "Champs-Elysees", "category": "shopping", "priority": "high", "speed": 1.4, "intensity": 0.8, "color": "#ec4899", "delay": 1.3 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3100, 48.8670] }, "properties": { "id": 16, "name": "Grand Palais", "category": "museum", "priority": "medium", "speed": 0.8, "intensity": 0.7, "color": "#8b5cf6", "delay": 1.6 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.2870, 48.8560] }, "properties": { "id": 17, "name": "Trocadero", "category": "landmark", "priority": "medium", "speed": 1.1, "intensity": 0.75, "color": "#f59e0b", "delay": 1.9 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3560, 48.8690] }, "properties": { "id": 18, "name": "Gare du Nord", "category": "transport", "priority": "high", "speed": 1.8, "intensity": 0.65, "color": "#3b82f6", "delay": 0.15 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3650, 48.8490] }, "properties": { "id": 19, "name": "Gare de Lyon", "category": "transport", "priority": "high", "speed": 1.7, "intensity": 0.6, "color": "#3b82f6", "delay": 0.45 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3190, 48.8760] }, "properties": { "id": 20, "name": "Moulin Rouge", "category": "culture", "priority": "high", "speed": 2.0, "intensity": 1.0, "color": "#ef4444", "delay": 0.75 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3090, 48.8420] }, "properties": { "id": 21, "name": "Tour Montparnasse", "category": "landmark", "priority": "medium", "speed": 0.9, "intensity": 0.65, "color": "#f59e0b", "delay": 1.05 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3770, 48.8630] }, "properties": { "id": 22, "name": "Pere Lachaise", "category": "landmark", "priority": "low", "speed": 0.4, "intensity": 0.5, "color": "#f59e0b", "delay": 1.35 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.2770, 48.8630] }, "properties": { "id": 23, "name": "Bois de Boulogne", "category": "park", "priority": "low", "speed": 0.3, "intensity": 0.4, "color": "#22c55e", "delay": 1.65 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3950, 48.8440] }, "properties": { "id": 24, "name": "Bois de Vincennes", "category": "park", "priority": "low", "speed": 0.35, "intensity": 0.45, "color": "#22c55e", "delay": 1.95 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3370, 48.8390] }, "properties": { "id": 25, "name": "Jardin des Plantes", "category": "park", "priority": "medium", "speed": 0.6, "intensity": 0.55, "color": "#22c55e", "delay": 0.25 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3210, 48.8530] }, "properties": { "id": 26, "name": "Saint-Germain-des-Pres", "category": "landmark", "priority": "medium", "speed": 0.75, "intensity": 0.7, "color": "#f59e0b", "delay": 0.55 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3450, 48.8640] }, "properties": { "id": 27, "name": "Le Marais", "category": "shopping", "priority": "medium", "speed": 1.3, "intensity": 0.75, "color": "#ec4899", "delay": 0.85 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.2810, 48.8730] }, "properties": { "id": 28, "name": "La Defense", "category": "landmark", "priority": "high", "speed": 1.6, "intensity": 0.8, "color": "#f59e0b", "delay": 1.15 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3530, 48.8520] }, "properties": { "id": 29, "name": "Hotel de Ville", "category": "landmark", "priority": "medium", "speed": 0.85, "intensity": 0.8, "color": "#f59e0b", "delay": 1.45 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3350, 48.8610] }, "properties": { "id": 30, "name": "Cafe de la Paix", "category": "restaurant", "priority": "low", "speed": 0.5, "intensity": 0.6, "color": "#f97316", "delay": 1.75 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3420, 48.8550] }, "properties": { "id": 31, "name": "Les Halles", "category": "shopping", "priority": "medium", "speed": 1.4, "intensity": 0.7, "color": "#ec4899", "delay": 0.05 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3250, 48.8680] }, "properties": { "id": 32, "name": "Printemps Haussmann", "category": "shopping", "priority": "medium", "speed": 1.35, "intensity": 0.65, "color": "#ec4899", "delay": 0.35 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3480, 48.8450] }, "properties": { "id": 33, "name": "Grande Mosquee", "category": "landmark", "priority": "medium", "speed": 0.55, "intensity": 0.7, "color": "#f59e0b", "delay": 0.65 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3380, 48.8700] }, "properties": { "id": 34, "name": "Folies Bergere", "category": "culture", "priority": "medium", "speed": 1.8, "intensity": 0.9, "color": "#ef4444", "delay": 0.95 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.2980, 48.8490] }, "properties": { "id": 35, "name": "Les Invalides", "category": "museum", "priority": "high", "speed": 0.7, "intensity": 0.85, "color": "#8b5cf6", "delay": 1.25 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3060, 48.8550] }, "properties": { "id": 36, "name": "Pont Alexandre III", "category": "landmark", "priority": "high", "speed": 0.8, "intensity": 0.9, "color": "#f59e0b", "delay": 1.55 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3570, 48.8550] }, "properties": { "id": 37, "name": "Pont Neuf", "category": "landmark", "priority": "medium", "speed": 0.65, "intensity": 0.75, "color": "#f59e0b", "delay": 1.85 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.2920, 48.8620] }, "properties": { "id": 38, "name": "Palais de Tokyo", "category": "museum", "priority": "medium", "speed": 1.1, "intensity": 0.8, "color": "#8b5cf6", "delay": 0.12 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3160, 48.8730] }, "properties": { "id": 39, "name": "Place de Clichy", "category": "landmark", "priority": "low", "speed": 0.95, "intensity": 0.55, "color": "#f59e0b", "delay": 0.42 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3430, 48.8800] }, "properties": { "id": 40, "name": "Montmartre Cemetery", "category": "landmark", "priority": "low", "speed": 0.4, "intensity": 0.45, "color": "#f59e0b", "delay": 0.72 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3080, 48.8360] }, "properties": { "id": 41, "name": "Catacombs", "category": "museum", "priority": "medium", "speed": 0.5, "intensity": 0.6, "color": "#8b5cf6", "delay": 1.02 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3870, 48.8530] }, "properties": { "id": 42, "name": "Nation", "category": "transport", "priority": "medium", "speed": 1.5, "intensity": 0.55, "color": "#3b82f6", "delay": 1.32 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3150, 48.8490] }, "properties": { "id": 43, "name": "Rodin Museum", "category": "museum", "priority": "medium", "speed": 0.6, "intensity": 0.75, "color": "#8b5cf6", "delay": 1.62 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3620, 48.8770] }, "properties": { "id": 44, "name": "Buttes Chaumont", "category": "park", "priority": "medium", "speed": 0.45, "intensity": 0.5, "color": "#22c55e", "delay": 1.92 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3550, 48.8590] }, "properties": { "id": 45, "name": "Republique", "category": "landmark", "priority": "medium", "speed": 1.0, "intensity": 0.65, "color": "#f59e0b", "delay": 0.22 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3360, 48.8330] }, "properties": { "id": 46, "name": "Place d'Italie", "category": "landmark", "priority": "low", "speed": 0.9, "intensity": 0.5, "color": "#f59e0b", "delay": 0.52 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3030, 48.8600] }, "properties": { "id": 47, "name": "Place de la Concorde", "category": "landmark", "priority": "high", "speed": 0.95, "intensity": 0.9, "color": "#f59e0b", "delay": 0.82 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3270, 48.8590] }, "properties": { "id": 48, "name": "Sainte-Chapelle", "category": "landmark", "priority": "high", "speed": 0.6, "intensity": 0.95, "color": "#f59e0b", "delay": 1.12 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3320, 48.8520] }, "properties": { "id": 49, "name": "Shakespeare & Company", "category": "shopping", "priority": "low", "speed": 0.7, "intensity": 0.5, "color": "#ec4899", "delay": 1.42 } },
-    { "type": "Feature", "geometry": { "type": "Point", "coordinates": [2.3470, 48.8650] }, "properties": { "id": 50, "name": "Musee Picasso", "category": "museum", "priority": "medium", "speed": 0.85, "intensity": 0.8, "color": "#8b5cf6", "delay": 1.72 } }
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.299,
+          48.8614
+        ]
+      },
+      "properties": {
+        "id": 1,
+        "name": "Point 1",
+        "category": "landmark",
+        "priority": "low",
+        "speed": 0.92,
+        "intensity": 0.99,
+        "color": "#f59e0b",
+        "delay": 1.66
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.4018,
+          48.861
+        ]
+      },
+      "properties": {
+        "id": 2,
+        "name": "Point 2",
+        "category": "shopping",
+        "priority": "medium",
+        "speed": 0.85,
+        "intensity": 0.98,
+        "color": "#ec4899",
+        "delay": 0.17
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.34,
+          48.8889
+        ]
+      },
+      "properties": {
+        "id": 3,
+        "name": "Point 3",
+        "category": "culture",
+        "priority": "low",
+        "speed": 0.81,
+        "intensity": 0.95,
+        "color": "#ef4444",
+        "delay": 0.07
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.4017,
+          48.8318
+        ]
+      },
+      "properties": {
+        "id": 4,
+        "name": "Point 4",
+        "category": "museum",
+        "priority": "medium",
+        "speed": 1.41,
+        "intensity": 0.71,
+        "color": "#8b5cf6",
+        "delay": 0.18
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3309,
+          48.8816
+        ]
+      },
+      "properties": {
+        "id": 5,
+        "name": "Point 5",
+        "category": "shopping",
+        "priority": "high",
+        "speed": 0.83,
+        "intensity": 0.57,
+        "color": "#ec4899",
+        "delay": 0.59
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.367,
+          48.7989
+        ]
+      },
+      "properties": {
+        "id": 6,
+        "name": "Point 6",
+        "category": "museum",
+        "priority": "high",
+        "speed": 0.35,
+        "intensity": 0.41,
+        "color": "#8b5cf6",
+        "delay": 1.79
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3134,
+          48.888
+        ]
+      },
+      "properties": {
+        "id": 7,
+        "name": "Point 7",
+        "category": "landmark",
+        "priority": "low",
+        "speed": 1.19,
+        "intensity": 0.42,
+        "color": "#f59e0b",
+        "delay": 0.32
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3945,
+          48.8934
+        ]
+      },
+      "properties": {
+        "id": 8,
+        "name": "Point 8",
+        "category": "restaurant",
+        "priority": "medium",
+        "speed": 0.81,
+        "intensity": 0.71,
+        "color": "#f97316",
+        "delay": 0.58
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3154,
+          48.8188
+        ]
+      },
+      "properties": {
+        "id": 9,
+        "name": "Point 9",
+        "category": "restaurant",
+        "priority": "high",
+        "speed": 1.05,
+        "intensity": 0.58,
+        "color": "#f97316",
+        "delay": 0.91
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3533,
+          48.862
+        ]
+      },
+      "properties": {
+        "id": 10,
+        "name": "Point 10",
+        "category": "landmark",
+        "priority": "high",
+        "speed": 0.95,
+        "intensity": 0.69,
+        "color": "#f59e0b",
+        "delay": 0.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3523,
+          48.8655
+        ]
+      },
+      "properties": {
+        "id": 11,
+        "name": "Point 11",
+        "category": "culture",
+        "priority": "medium",
+        "speed": 1.94,
+        "intensity": 0.91,
+        "color": "#ef4444",
+        "delay": 1.74
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3069,
+          48.8605
+        ]
+      },
+      "properties": {
+        "id": 12,
+        "name": "Point 12",
+        "category": "museum",
+        "priority": "high",
+        "speed": 0.33,
+        "intensity": 0.95,
+        "color": "#8b5cf6",
+        "delay": 0.73
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.332,
+          48.8929
+        ]
+      },
+      "properties": {
+        "id": 13,
+        "name": "Point 13",
+        "category": "culture",
+        "priority": "high",
+        "speed": 1.37,
+        "intensity": 0.79,
+        "color": "#ef4444",
+        "delay": 0.83
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3325,
+          48.8025
+        ]
+      },
+      "properties": {
+        "id": 14,
+        "name": "Point 14",
+        "category": "landmark",
+        "priority": "medium",
+        "speed": 1.24,
+        "intensity": 0.61,
+        "color": "#f59e0b",
+        "delay": 0.51
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3463,
+          48.8144
+        ]
+      },
+      "properties": {
+        "id": 15,
+        "name": "Point 15",
+        "category": "transport",
+        "priority": "high",
+        "speed": 1.4,
+        "intensity": 0.86,
+        "color": "#3b82f6",
+        "delay": 1.19
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3018,
+          48.8529
+        ]
+      },
+      "properties": {
+        "id": 16,
+        "name": "Point 16",
+        "category": "landmark",
+        "priority": "high",
+        "speed": 1.86,
+        "intensity": 0.82,
+        "color": "#f59e0b",
+        "delay": 1.78
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.307,
+          48.831
+        ]
+      },
+      "properties": {
+        "id": 17,
+        "name": "Point 17",
+        "category": "transport",
+        "priority": "high",
+        "speed": 1.74,
+        "intensity": 0.64,
+        "color": "#3b82f6",
+        "delay": 0.02
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3864,
+          48.8764
+        ]
+      },
+      "properties": {
+        "id": 18,
+        "name": "Point 18",
+        "category": "culture",
+        "priority": "high",
+        "speed": 1.16,
+        "intensity": 0.72,
+        "color": "#ef4444",
+        "delay": 1.32
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3408,
+          48.8889
+        ]
+      },
+      "properties": {
+        "id": 19,
+        "name": "Point 19",
+        "category": "park",
+        "priority": "medium",
+        "speed": 1.89,
+        "intensity": 0.42,
+        "color": "#22c55e",
+        "delay": 1.23
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3426,
+          48.9124
+        ]
+      },
+      "properties": {
+        "id": 20,
+        "name": "Point 20",
+        "category": "restaurant",
+        "priority": "medium",
+        "speed": 0.75,
+        "intensity": 0.43,
+        "color": "#f97316",
+        "delay": 1.07
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3871,
+          48.8432
+        ]
+      },
+      "properties": {
+        "id": 21,
+        "name": "Point 21",
+        "category": "culture",
+        "priority": "low",
+        "speed": 1.36,
+        "intensity": 0.51,
+        "color": "#ef4444",
+        "delay": 0.91
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3359,
+          48.9082
+        ]
+      },
+      "properties": {
+        "id": 22,
+        "name": "Point 22",
+        "category": "shopping",
+        "priority": "low",
+        "speed": 0.92,
+        "intensity": 0.55,
+        "color": "#ec4899",
+        "delay": 0.12
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.4064,
+          48.858
+        ]
+      },
+      "properties": {
+        "id": 23,
+        "name": "Point 23",
+        "category": "shopping",
+        "priority": "low",
+        "speed": 0.78,
+        "intensity": 0.85,
+        "color": "#ec4899",
+        "delay": 0.7
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3307,
+          48.8413
+        ]
+      },
+      "properties": {
+        "id": 24,
+        "name": "Point 24",
+        "category": "landmark",
+        "priority": "medium",
+        "speed": 0.57,
+        "intensity": 0.51,
+        "color": "#f59e0b",
+        "delay": 0.68
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3402,
+          48.8782
+        ]
+      },
+      "properties": {
+        "id": 25,
+        "name": "Point 25",
+        "category": "shopping",
+        "priority": "medium",
+        "speed": 0.85,
+        "intensity": 0.53,
+        "color": "#ec4899",
+        "delay": 0.69
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3074,
+          48.8551
+        ]
+      },
+      "properties": {
+        "id": 26,
+        "name": "Point 26",
+        "category": "restaurant",
+        "priority": "low",
+        "speed": 0.48,
+        "intensity": 0.63,
+        "color": "#f97316",
+        "delay": 1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.2952,
+          48.8637
+        ]
+      },
+      "properties": {
+        "id": 27,
+        "name": "Point 27",
+        "category": "landmark",
+        "priority": "low",
+        "speed": 0.48,
+        "intensity": 0.53,
+        "color": "#f59e0b",
+        "delay": 0.84
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3243,
+          48.8971
+        ]
+      },
+      "properties": {
+        "id": 28,
+        "name": "Point 28",
+        "category": "landmark",
+        "priority": "low",
+        "speed": 1.92,
+        "intensity": 0.69,
+        "color": "#f59e0b",
+        "delay": 1.32
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3147,
+          48.8752
+        ]
+      },
+      "properties": {
+        "id": 29,
+        "name": "Point 29",
+        "category": "shopping",
+        "priority": "high",
+        "speed": 1.36,
+        "intensity": 0.79,
+        "color": "#ec4899",
+        "delay": 0.6
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3455,
+          48.8297
+        ]
+      },
+      "properties": {
+        "id": 30,
+        "name": "Point 30",
+        "category": "shopping",
+        "priority": "low",
+        "speed": 1.49,
+        "intensity": 0.89,
+        "color": "#ec4899",
+        "delay": 0.77
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3228,
+          48.907
+        ]
+      },
+      "properties": {
+        "id": 31,
+        "name": "Point 31",
+        "category": "park",
+        "priority": "high",
+        "speed": 0.74,
+        "intensity": 0.76,
+        "color": "#22c55e",
+        "delay": 0.22
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.4005,
+          48.8914
+        ]
+      },
+      "properties": {
+        "id": 32,
+        "name": "Point 32",
+        "category": "transport",
+        "priority": "high",
+        "speed": 1.08,
+        "intensity": 0.92,
+        "color": "#3b82f6",
+        "delay": 0.88
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3771,
+          48.9061
+        ]
+      },
+      "properties": {
+        "id": 33,
+        "name": "Point 33",
+        "category": "landmark",
+        "priority": "high",
+        "speed": 1.25,
+        "intensity": 0.62,
+        "color": "#f59e0b",
+        "delay": 1.59
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3927,
+          48.8331
+        ]
+      },
+      "properties": {
+        "id": 34,
+        "name": "Point 34",
+        "category": "transport",
+        "priority": "high",
+        "speed": 1.04,
+        "intensity": 0.73,
+        "color": "#3b82f6",
+        "delay": 0.8
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3437,
+          48.8389
+        ]
+      },
+      "properties": {
+        "id": 35,
+        "name": "Point 35",
+        "category": "transport",
+        "priority": "high",
+        "speed": 1.38,
+        "intensity": 0.75,
+        "color": "#3b82f6",
+        "delay": 0.81
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3401,
+          48.8473
+        ]
+      },
+      "properties": {
+        "id": 36,
+        "name": "Point 36",
+        "category": "shopping",
+        "priority": "medium",
+        "speed": 0.79,
+        "intensity": 0.64,
+        "color": "#ec4899",
+        "delay": 1.41
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3949,
+          48.8649
+        ]
+      },
+      "properties": {
+        "id": 37,
+        "name": "Point 37",
+        "category": "transport",
+        "priority": "medium",
+        "speed": 0.49,
+        "intensity": 0.92,
+        "color": "#3b82f6",
+        "delay": 0.81
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3369,
+          48.885
+        ]
+      },
+      "properties": {
+        "id": 38,
+        "name": "Point 38",
+        "category": "shopping",
+        "priority": "medium",
+        "speed": 1.72,
+        "intensity": 0.53,
+        "color": "#ec4899",
+        "delay": 0.31
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.347,
+          48.8761
+        ]
+      },
+      "properties": {
+        "id": 39,
+        "name": "Point 39",
+        "category": "culture",
+        "priority": "low",
+        "speed": 1.42,
+        "intensity": 0.84,
+        "color": "#ef4444",
+        "delay": 0.31
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3222,
+          48.8975
+        ]
+      },
+      "properties": {
+        "id": 40,
+        "name": "Point 40",
+        "category": "restaurant",
+        "priority": "low",
+        "speed": 0.84,
+        "intensity": 0.56,
+        "color": "#f97316",
+        "delay": 1.87
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3118,
+          48.8498
+        ]
+      },
+      "properties": {
+        "id": 41,
+        "name": "Point 41",
+        "category": "museum",
+        "priority": "low",
+        "speed": 1.12,
+        "intensity": 0.47,
+        "color": "#8b5cf6",
+        "delay": 0.87
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3474,
+          48.8879
+        ]
+      },
+      "properties": {
+        "id": 42,
+        "name": "Point 42",
+        "category": "restaurant",
+        "priority": "low",
+        "speed": 1.34,
+        "intensity": 0.8,
+        "color": "#f97316",
+        "delay": 1.75
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3646,
+          48.8073
+        ]
+      },
+      "properties": {
+        "id": 43,
+        "name": "Point 43",
+        "category": "transport",
+        "priority": "low",
+        "speed": 1.42,
+        "intensity": 0.67,
+        "color": "#3b82f6",
+        "delay": 0.66
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.2975,
+          48.8421
+        ]
+      },
+      "properties": {
+        "id": 44,
+        "name": "Point 44",
+        "category": "landmark",
+        "priority": "medium",
+        "speed": 1.26,
+        "intensity": 0.51,
+        "color": "#f59e0b",
+        "delay": 1.91
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3852,
+          48.8192
+        ]
+      },
+      "properties": {
+        "id": 45,
+        "name": "Point 45",
+        "category": "landmark",
+        "priority": "medium",
+        "speed": 1.37,
+        "intensity": 0.58,
+        "color": "#f59e0b",
+        "delay": 0.69
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3033,
+          48.8255
+        ]
+      },
+      "properties": {
+        "id": 46,
+        "name": "Point 46",
+        "category": "restaurant",
+        "priority": "high",
+        "speed": 1.13,
+        "intensity": 0.83,
+        "color": "#f97316",
+        "delay": 1.78
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.396,
+          48.8261
+        ]
+      },
+      "properties": {
+        "id": 47,
+        "name": "Point 47",
+        "category": "landmark",
+        "priority": "low",
+        "speed": 1.09,
+        "intensity": 0.96,
+        "color": "#f59e0b",
+        "delay": 1.41
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.37,
+          48.863
+        ]
+      },
+      "properties": {
+        "id": 48,
+        "name": "Point 48",
+        "category": "museum",
+        "priority": "high",
+        "speed": 1.24,
+        "intensity": 0.7,
+        "color": "#8b5cf6",
+        "delay": 0.09
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3802,
+          48.8821
+        ]
+      },
+      "properties": {
+        "id": 49,
+        "name": "Point 49",
+        "category": "park",
+        "priority": "low",
+        "speed": 0.48,
+        "intensity": 0.53,
+        "color": "#22c55e",
+        "delay": 1.62
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3109,
+          48.8323
+        ]
+      },
+      "properties": {
+        "id": 50,
+        "name": "Point 50",
+        "category": "culture",
+        "priority": "high",
+        "speed": 1.99,
+        "intensity": 0.98,
+        "color": "#ef4444",
+        "delay": 0.33
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3832,
+          48.8137
+        ]
+      },
+      "properties": {
+        "id": 51,
+        "name": "Point 51",
+        "category": "museum",
+        "priority": "medium",
+        "speed": 0.79,
+        "intensity": 0.71,
+        "color": "#8b5cf6",
+        "delay": 0.46
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3382,
+          48.8705
+        ]
+      },
+      "properties": {
+        "id": 52,
+        "name": "Point 52",
+        "category": "restaurant",
+        "priority": "high",
+        "speed": 1.43,
+        "intensity": 0.74,
+        "color": "#f97316",
+        "delay": 1.23
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3645,
+          48.8456
+        ]
+      },
+      "properties": {
+        "id": 53,
+        "name": "Point 53",
+        "category": "park",
+        "priority": "high",
+        "speed": 1.41,
+        "intensity": 0.4,
+        "color": "#22c55e",
+        "delay": 0.97
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3363,
+          48.8141
+        ]
+      },
+      "properties": {
+        "id": 54,
+        "name": "Point 54",
+        "category": "park",
+        "priority": "low",
+        "speed": 0.97,
+        "intensity": 0.91,
+        "color": "#22c55e",
+        "delay": 0.25
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3628,
+          48.8792
+        ]
+      },
+      "properties": {
+        "id": 55,
+        "name": "Point 55",
+        "category": "museum",
+        "priority": "low",
+        "speed": 0.84,
+        "intensity": 0.78,
+        "color": "#8b5cf6",
+        "delay": 0.12
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3714,
+          48.8313
+        ]
+      },
+      "properties": {
+        "id": 56,
+        "name": "Point 56",
+        "category": "transport",
+        "priority": "medium",
+        "speed": 0.32,
+        "intensity": 0.93,
+        "color": "#3b82f6",
+        "delay": 0.27
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3136,
+          48.8764
+        ]
+      },
+      "properties": {
+        "id": 57,
+        "name": "Point 57",
+        "category": "culture",
+        "priority": "medium",
+        "speed": 0.36,
+        "intensity": 0.96,
+        "color": "#ef4444",
+        "delay": 0.96
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3412,
+          48.8593
+        ]
+      },
+      "properties": {
+        "id": 58,
+        "name": "Point 58",
+        "category": "culture",
+        "priority": "medium",
+        "speed": 0.79,
+        "intensity": 0.44,
+        "color": "#ef4444",
+        "delay": 0.82
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.374,
+          48.8476
+        ]
+      },
+      "properties": {
+        "id": 59,
+        "name": "Point 59",
+        "category": "museum",
+        "priority": "low",
+        "speed": 0.92,
+        "intensity": 0.78,
+        "color": "#8b5cf6",
+        "delay": 1.13
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3489,
+          48.8299
+        ]
+      },
+      "properties": {
+        "id": 60,
+        "name": "Point 60",
+        "category": "culture",
+        "priority": "medium",
+        "speed": 0.63,
+        "intensity": 0.61,
+        "color": "#ef4444",
+        "delay": 1.43
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3503,
+          48.8862
+        ]
+      },
+      "properties": {
+        "id": 61,
+        "name": "Point 61",
+        "category": "restaurant",
+        "priority": "low",
+        "speed": 1.91,
+        "intensity": 0.56,
+        "color": "#f97316",
+        "delay": 0.55
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.342,
+          48.86
+        ]
+      },
+      "properties": {
+        "id": 62,
+        "name": "Point 62",
+        "category": "museum",
+        "priority": "low",
+        "speed": 1.01,
+        "intensity": 0.55,
+        "color": "#8b5cf6",
+        "delay": 1.53
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3541,
+          48.7996
+        ]
+      },
+      "properties": {
+        "id": 63,
+        "name": "Point 63",
+        "category": "restaurant",
+        "priority": "high",
+        "speed": 1.95,
+        "intensity": 0.6,
+        "color": "#f97316",
+        "delay": 1.95
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3556,
+          48.8257
+        ]
+      },
+      "properties": {
+        "id": 64,
+        "name": "Point 64",
+        "category": "restaurant",
+        "priority": "high",
+        "speed": 0.68,
+        "intensity": 0.94,
+        "color": "#f97316",
+        "delay": 1.53
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3229,
+          48.896
+        ]
+      },
+      "properties": {
+        "id": 65,
+        "name": "Point 65",
+        "category": "transport",
+        "priority": "high",
+        "speed": 1.84,
+        "intensity": 0.48,
+        "color": "#3b82f6",
+        "delay": 0.17
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3779,
+          48.9066
+        ]
+      },
+      "properties": {
+        "id": 66,
+        "name": "Point 66",
+        "category": "landmark",
+        "priority": "high",
+        "speed": 1.16,
+        "intensity": 0.61,
+        "color": "#f59e0b",
+        "delay": 0.1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3897,
+          48.8944
+        ]
+      },
+      "properties": {
+        "id": 67,
+        "name": "Point 67",
+        "category": "landmark",
+        "priority": "high",
+        "speed": 1.74,
+        "intensity": 0.53,
+        "color": "#f59e0b",
+        "delay": 1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3311,
+          48.8831
+        ]
+      },
+      "properties": {
+        "id": 68,
+        "name": "Point 68",
+        "category": "landmark",
+        "priority": "high",
+        "speed": 1.86,
+        "intensity": 0.71,
+        "color": "#f59e0b",
+        "delay": 0.04
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.31,
+          48.8568
+        ]
+      },
+      "properties": {
+        "id": 69,
+        "name": "Point 69",
+        "category": "transport",
+        "priority": "high",
+        "speed": 1.79,
+        "intensity": 0.82,
+        "color": "#3b82f6",
+        "delay": 0.72
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3253,
+          48.8945
+        ]
+      },
+      "properties": {
+        "id": 70,
+        "name": "Point 70",
+        "category": "culture",
+        "priority": "high",
+        "speed": 1.47,
+        "intensity": 0.54,
+        "color": "#ef4444",
+        "delay": 0.79
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3417,
+          48.9141
+        ]
+      },
+      "properties": {
+        "id": 71,
+        "name": "Point 71",
+        "category": "culture",
+        "priority": "high",
+        "speed": 0.97,
+        "intensity": 0.52,
+        "color": "#ef4444",
+        "delay": 0.03
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3028,
+          48.8483
+        ]
+      },
+      "properties": {
+        "id": 72,
+        "name": "Point 72",
+        "category": "museum",
+        "priority": "low",
+        "speed": 1.82,
+        "intensity": 0.69,
+        "color": "#8b5cf6",
+        "delay": 1.98
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3972,
+          48.8219
+        ]
+      },
+      "properties": {
+        "id": 73,
+        "name": "Point 73",
+        "category": "museum",
+        "priority": "low",
+        "speed": 0.49,
+        "intensity": 0.69,
+        "color": "#8b5cf6",
+        "delay": 1.54
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3761,
+          48.8637
+        ]
+      },
+      "properties": {
+        "id": 74,
+        "name": "Point 74",
+        "category": "transport",
+        "priority": "medium",
+        "speed": 0.81,
+        "intensity": 0.78,
+        "color": "#3b82f6",
+        "delay": 0.16
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3738,
+          48.8372
+        ]
+      },
+      "properties": {
+        "id": 75,
+        "name": "Point 75",
+        "category": "museum",
+        "priority": "high",
+        "speed": 1.54,
+        "intensity": 0.49,
+        "color": "#8b5cf6",
+        "delay": 0.46
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.321,
+          48.823
+        ]
+      },
+      "properties": {
+        "id": 76,
+        "name": "Point 76",
+        "category": "landmark",
+        "priority": "low",
+        "speed": 0.82,
+        "intensity": 0.41,
+        "color": "#f59e0b",
+        "delay": 0.17
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.302,
+          48.8497
+        ]
+      },
+      "properties": {
+        "id": 77,
+        "name": "Point 77",
+        "category": "landmark",
+        "priority": "high",
+        "speed": 0.71,
+        "intensity": 0.76,
+        "color": "#f59e0b",
+        "delay": 1.54
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3746,
+          48.8493
+        ]
+      },
+      "properties": {
+        "id": 78,
+        "name": "Point 78",
+        "category": "landmark",
+        "priority": "medium",
+        "speed": 1.68,
+        "intensity": 0.91,
+        "color": "#f59e0b",
+        "delay": 0.25
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3681,
+          48.8934
+        ]
+      },
+      "properties": {
+        "id": 79,
+        "name": "Point 79",
+        "category": "museum",
+        "priority": "medium",
+        "speed": 0.83,
+        "intensity": 0.58,
+        "color": "#8b5cf6",
+        "delay": 0.11
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3239,
+          48.9001
+        ]
+      },
+      "properties": {
+        "id": 80,
+        "name": "Point 80",
+        "category": "museum",
+        "priority": "medium",
+        "speed": 1.79,
+        "intensity": 0.91,
+        "color": "#8b5cf6",
+        "delay": 1.09
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3667,
+          48.8315
+        ]
+      },
+      "properties": {
+        "id": 81,
+        "name": "Point 81",
+        "category": "museum",
+        "priority": "medium",
+        "speed": 0.32,
+        "intensity": 0.87,
+        "color": "#8b5cf6",
+        "delay": 1.18
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3164,
+          48.8218
+        ]
+      },
+      "properties": {
+        "id": 82,
+        "name": "Point 82",
+        "category": "restaurant",
+        "priority": "low",
+        "speed": 0.4,
+        "intensity": 0.52,
+        "color": "#f97316",
+        "delay": 1.02
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3704,
+          48.8415
+        ]
+      },
+      "properties": {
+        "id": 83,
+        "name": "Point 83",
+        "category": "transport",
+        "priority": "high",
+        "speed": 1.71,
+        "intensity": 0.59,
+        "color": "#3b82f6",
+        "delay": 0.38
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3293,
+          48.8579
+        ]
+      },
+      "properties": {
+        "id": 84,
+        "name": "Point 84",
+        "category": "restaurant",
+        "priority": "low",
+        "speed": 0.99,
+        "intensity": 0.63,
+        "color": "#f97316",
+        "delay": 1.55
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3945,
+          48.8358
+        ]
+      },
+      "properties": {
+        "id": 85,
+        "name": "Point 85",
+        "category": "museum",
+        "priority": "low",
+        "speed": 0.32,
+        "intensity": 0.87,
+        "color": "#8b5cf6",
+        "delay": 1.54
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3933,
+          48.8586
+        ]
+      },
+      "properties": {
+        "id": 86,
+        "name": "Point 86",
+        "category": "landmark",
+        "priority": "high",
+        "speed": 0.42,
+        "intensity": 0.68,
+        "color": "#f59e0b",
+        "delay": 0.73
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.346,
+          48.8226
+        ]
+      },
+      "properties": {
+        "id": 87,
+        "name": "Point 87",
+        "category": "culture",
+        "priority": "medium",
+        "speed": 1.33,
+        "intensity": 0.9,
+        "color": "#ef4444",
+        "delay": 0.11
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3114,
+          48.8573
+        ]
+      },
+      "properties": {
+        "id": 88,
+        "name": "Point 88",
+        "category": "shopping",
+        "priority": "low",
+        "speed": 0.4,
+        "intensity": 0.93,
+        "color": "#ec4899",
+        "delay": 1.09
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.4012,
+          48.8471
+        ]
+      },
+      "properties": {
+        "id": 89,
+        "name": "Point 89",
+        "category": "transport",
+        "priority": "medium",
+        "speed": 0.77,
+        "intensity": 0.51,
+        "color": "#3b82f6",
+        "delay": 1.33
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3436,
+          48.8017
+        ]
+      },
+      "properties": {
+        "id": 90,
+        "name": "Point 90",
+        "category": "restaurant",
+        "priority": "high",
+        "speed": 1.35,
+        "intensity": 0.66,
+        "color": "#f97316",
+        "delay": 0.26
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3663,
+          48.803
+        ]
+      },
+      "properties": {
+        "id": 91,
+        "name": "Point 91",
+        "category": "restaurant",
+        "priority": "high",
+        "speed": 1.81,
+        "intensity": 0.44,
+        "color": "#f97316",
+        "delay": 0.12
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.4096,
+          48.8401
+        ]
+      },
+      "properties": {
+        "id": 92,
+        "name": "Point 92",
+        "category": "transport",
+        "priority": "low",
+        "speed": 1.92,
+        "intensity": 0.72,
+        "color": "#3b82f6",
+        "delay": 1.41
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3389,
+          48.8025
+        ]
+      },
+      "properties": {
+        "id": 93,
+        "name": "Point 93",
+        "category": "museum",
+        "priority": "medium",
+        "speed": 0.68,
+        "intensity": 0.9,
+        "color": "#8b5cf6",
+        "delay": 1.07
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3808,
+          48.8808
+        ]
+      },
+      "properties": {
+        "id": 94,
+        "name": "Point 94",
+        "category": "restaurant",
+        "priority": "high",
+        "speed": 1.66,
+        "intensity": 0.7,
+        "color": "#f97316",
+        "delay": 1.74
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3095,
+          48.8789
+        ]
+      },
+      "properties": {
+        "id": 95,
+        "name": "Point 95",
+        "category": "landmark",
+        "priority": "high",
+        "speed": 1.56,
+        "intensity": 0.75,
+        "color": "#f59e0b",
+        "delay": 0.86
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3437,
+          48.844
+        ]
+      },
+      "properties": {
+        "id": 96,
+        "name": "Point 96",
+        "category": "museum",
+        "priority": "medium",
+        "speed": 1.99,
+        "intensity": 0.52,
+        "color": "#8b5cf6",
+        "delay": 0.82
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3604,
+          48.8176
+        ]
+      },
+      "properties": {
+        "id": 97,
+        "name": "Point 97",
+        "category": "shopping",
+        "priority": "medium",
+        "speed": 1.38,
+        "intensity": 0.99,
+        "color": "#ec4899",
+        "delay": 1.12
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.375,
+          48.8213
+        ]
+      },
+      "properties": {
+        "id": 98,
+        "name": "Point 98",
+        "category": "transport",
+        "priority": "low",
+        "speed": 1.33,
+        "intensity": 0.44,
+        "color": "#3b82f6",
+        "delay": 1.36
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3155,
+          48.8393
+        ]
+      },
+      "properties": {
+        "id": 99,
+        "name": "Point 99",
+        "category": "shopping",
+        "priority": "low",
+        "speed": 0.57,
+        "intensity": 0.42,
+        "color": "#ec4899",
+        "delay": 0.39
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3737,
+          48.814
+        ]
+      },
+      "properties": {
+        "id": 100,
+        "name": "Point 100",
+        "category": "landmark",
+        "priority": "low",
+        "speed": 1.26,
+        "intensity": 1,
+        "color": "#f59e0b",
+        "delay": 1.41
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3579,
+          48.8506
+        ]
+      },
+      "properties": {
+        "id": 101,
+        "name": "Point 101",
+        "category": "shopping",
+        "priority": "low",
+        "speed": 1.38,
+        "intensity": 0.81,
+        "color": "#ec4899",
+        "delay": 0.28
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3834,
+          48.8918
+        ]
+      },
+      "properties": {
+        "id": 102,
+        "name": "Point 102",
+        "category": "culture",
+        "priority": "medium",
+        "speed": 1.39,
+        "intensity": 0.56,
+        "color": "#ef4444",
+        "delay": 0.88
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3815,
+          48.8045
+        ]
+      },
+      "properties": {
+        "id": 103,
+        "name": "Point 103",
+        "category": "landmark",
+        "priority": "medium",
+        "speed": 0.33,
+        "intensity": 0.83,
+        "color": "#f59e0b",
+        "delay": 0.04
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3716,
+          48.8192
+        ]
+      },
+      "properties": {
+        "id": 104,
+        "name": "Point 104",
+        "category": "museum",
+        "priority": "high",
+        "speed": 0.31,
+        "intensity": 0.43,
+        "color": "#8b5cf6",
+        "delay": 1.11
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.315,
+          48.9019
+        ]
+      },
+      "properties": {
+        "id": 105,
+        "name": "Point 105",
+        "category": "landmark",
+        "priority": "high",
+        "speed": 0.36,
+        "intensity": 0.76,
+        "color": "#f59e0b",
+        "delay": 0.9
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3399,
+          48.8641
+        ]
+      },
+      "properties": {
+        "id": 106,
+        "name": "Point 106",
+        "category": "transport",
+        "priority": "low",
+        "speed": 1.47,
+        "intensity": 0.58,
+        "color": "#3b82f6",
+        "delay": 1.93
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.306,
+          48.862
+        ]
+      },
+      "properties": {
+        "id": 107,
+        "name": "Point 107",
+        "category": "landmark",
+        "priority": "medium",
+        "speed": 1.14,
+        "intensity": 0.95,
+        "color": "#f59e0b",
+        "delay": 0.17
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3111,
+          48.8596
+        ]
+      },
+      "properties": {
+        "id": 108,
+        "name": "Point 108",
+        "category": "museum",
+        "priority": "low",
+        "speed": 1.81,
+        "intensity": 0.7,
+        "color": "#8b5cf6",
+        "delay": 0.42
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3202,
+          48.8822
+        ]
+      },
+      "properties": {
+        "id": 109,
+        "name": "Point 109",
+        "category": "culture",
+        "priority": "medium",
+        "speed": 0.8,
+        "intensity": 0.71,
+        "color": "#ef4444",
+        "delay": 0.98
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3639,
+          48.8168
+        ]
+      },
+      "properties": {
+        "id": 110,
+        "name": "Point 110",
+        "category": "museum",
+        "priority": "low",
+        "speed": 1.33,
+        "intensity": 0.53,
+        "color": "#8b5cf6",
+        "delay": 1.48
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3735,
+          48.879
+        ]
+      },
+      "properties": {
+        "id": 111,
+        "name": "Point 111",
+        "category": "culture",
+        "priority": "low",
+        "speed": 0.97,
+        "intensity": 0.67,
+        "color": "#ef4444",
+        "delay": 0.82
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3741,
+          48.8861
+        ]
+      },
+      "properties": {
+        "id": 112,
+        "name": "Point 112",
+        "category": "museum",
+        "priority": "medium",
+        "speed": 1.06,
+        "intensity": 0.49,
+        "color": "#8b5cf6",
+        "delay": 1.41
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3233,
+          48.8054
+        ]
+      },
+      "properties": {
+        "id": 113,
+        "name": "Point 113",
+        "category": "museum",
+        "priority": "high",
+        "speed": 1.42,
+        "intensity": 0.62,
+        "color": "#8b5cf6",
+        "delay": 0.41
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3832,
+          48.8792
+        ]
+      },
+      "properties": {
+        "id": 114,
+        "name": "Point 114",
+        "category": "museum",
+        "priority": "high",
+        "speed": 0.7,
+        "intensity": 0.77,
+        "color": "#8b5cf6",
+        "delay": 0.91
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.4044,
+          48.8647
+        ]
+      },
+      "properties": {
+        "id": 115,
+        "name": "Point 115",
+        "category": "transport",
+        "priority": "low",
+        "speed": 1.36,
+        "intensity": 0.58,
+        "color": "#3b82f6",
+        "delay": 0.28
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3638,
+          48.9086
+        ]
+      },
+      "properties": {
+        "id": 116,
+        "name": "Point 116",
+        "category": "museum",
+        "priority": "medium",
+        "speed": 1.73,
+        "intensity": 0.43,
+        "color": "#8b5cf6",
+        "delay": 1.77
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3597,
+          48.8091
+        ]
+      },
+      "properties": {
+        "id": 117,
+        "name": "Point 117",
+        "category": "shopping",
+        "priority": "low",
+        "speed": 0.37,
+        "intensity": 0.45,
+        "color": "#ec4899",
+        "delay": 1.25
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3228,
+          48.8169
+        ]
+      },
+      "properties": {
+        "id": 118,
+        "name": "Point 118",
+        "category": "transport",
+        "priority": "low",
+        "speed": 0.67,
+        "intensity": 0.43,
+        "color": "#3b82f6",
+        "delay": 0.33
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3071,
+          48.8877
+        ]
+      },
+      "properties": {
+        "id": 119,
+        "name": "Point 119",
+        "category": "museum",
+        "priority": "high",
+        "speed": 1.84,
+        "intensity": 0.86,
+        "color": "#8b5cf6",
+        "delay": 0.27
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3704,
+          48.8558
+        ]
+      },
+      "properties": {
+        "id": 120,
+        "name": "Point 120",
+        "category": "transport",
+        "priority": "low",
+        "speed": 1.27,
+        "intensity": 0.4,
+        "color": "#3b82f6",
+        "delay": 1.31
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3888,
+          48.8995
+        ]
+      },
+      "properties": {
+        "id": 121,
+        "name": "Point 121",
+        "category": "park",
+        "priority": "high",
+        "speed": 1.58,
+        "intensity": 0.61,
+        "color": "#22c55e",
+        "delay": 0.35
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3174,
+          48.8837
+        ]
+      },
+      "properties": {
+        "id": 122,
+        "name": "Point 122",
+        "category": "landmark",
+        "priority": "high",
+        "speed": 0.88,
+        "intensity": 0.79,
+        "color": "#f59e0b",
+        "delay": 0.55
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3247,
+          48.8652
+        ]
+      },
+      "properties": {
+        "id": 123,
+        "name": "Point 123",
+        "category": "museum",
+        "priority": "high",
+        "speed": 1.83,
+        "intensity": 0.67,
+        "color": "#8b5cf6",
+        "delay": 0.18
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3073,
+          48.8407
+        ]
+      },
+      "properties": {
+        "id": 124,
+        "name": "Point 124",
+        "category": "restaurant",
+        "priority": "high",
+        "speed": 0.4,
+        "intensity": 0.8,
+        "color": "#f97316",
+        "delay": 1.65
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3206,
+          48.8744
+        ]
+      },
+      "properties": {
+        "id": 125,
+        "name": "Point 125",
+        "category": "shopping",
+        "priority": "low",
+        "speed": 1.56,
+        "intensity": 0.84,
+        "color": "#ec4899",
+        "delay": 1.03
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3929,
+          48.8548
+        ]
+      },
+      "properties": {
+        "id": 126,
+        "name": "Point 126",
+        "category": "shopping",
+        "priority": "high",
+        "speed": 1.61,
+        "intensity": 0.73,
+        "color": "#ec4899",
+        "delay": 0.8
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3459,
+          48.8683
+        ]
+      },
+      "properties": {
+        "id": 127,
+        "name": "Point 127",
+        "category": "restaurant",
+        "priority": "high",
+        "speed": 1.64,
+        "intensity": 0.42,
+        "color": "#f97316",
+        "delay": 0.54
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3703,
+          48.8885
+        ]
+      },
+      "properties": {
+        "id": 128,
+        "name": "Point 128",
+        "category": "restaurant",
+        "priority": "medium",
+        "speed": 1.61,
+        "intensity": 0.72,
+        "color": "#f97316",
+        "delay": 0.58
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3112,
+          48.8911
+        ]
+      },
+      "properties": {
+        "id": 129,
+        "name": "Point 129",
+        "category": "shopping",
+        "priority": "high",
+        "speed": 1.01,
+        "intensity": 0.94,
+        "color": "#ec4899",
+        "delay": 1.66
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3374,
+          48.8451
+        ]
+      },
+      "properties": {
+        "id": 130,
+        "name": "Point 130",
+        "category": "transport",
+        "priority": "high",
+        "speed": 1.94,
+        "intensity": 0.97,
+        "color": "#3b82f6",
+        "delay": 0.35
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3168,
+          48.8878
+        ]
+      },
+      "properties": {
+        "id": 131,
+        "name": "Point 131",
+        "category": "landmark",
+        "priority": "high",
+        "speed": 1.79,
+        "intensity": 0.63,
+        "color": "#f59e0b",
+        "delay": 1.07
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3359,
+          48.8645
+        ]
+      },
+      "properties": {
+        "id": 132,
+        "name": "Point 132",
+        "category": "park",
+        "priority": "high",
+        "speed": 0.32,
+        "intensity": 0.79,
+        "color": "#22c55e",
+        "delay": 1.73
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3392,
+          48.8099
+        ]
+      },
+      "properties": {
+        "id": 133,
+        "name": "Point 133",
+        "category": "park",
+        "priority": "medium",
+        "speed": 1.84,
+        "intensity": 0.79,
+        "color": "#22c55e",
+        "delay": 1.85
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3331,
+          48.8509
+        ]
+      },
+      "properties": {
+        "id": 134,
+        "name": "Point 134",
+        "category": "landmark",
+        "priority": "high",
+        "speed": 0.45,
+        "intensity": 0.93,
+        "color": "#f59e0b",
+        "delay": 1.67
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.2956,
+          48.8387
+        ]
+      },
+      "properties": {
+        "id": 135,
+        "name": "Point 135",
+        "category": "restaurant",
+        "priority": "medium",
+        "speed": 0.6,
+        "intensity": 0.62,
+        "color": "#f97316",
+        "delay": 0.68
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3521,
+          48.839
+        ]
+      },
+      "properties": {
+        "id": 136,
+        "name": "Point 136",
+        "category": "park",
+        "priority": "low",
+        "speed": 1.16,
+        "intensity": 0.97,
+        "color": "#22c55e",
+        "delay": 1.68
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3503,
+          48.821
+        ]
+      },
+      "properties": {
+        "id": 137,
+        "name": "Point 137",
+        "category": "culture",
+        "priority": "medium",
+        "speed": 0.48,
+        "intensity": 0.72,
+        "color": "#ef4444",
+        "delay": 0.49
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3437,
+          48.8396
+        ]
+      },
+      "properties": {
+        "id": 138,
+        "name": "Point 138",
+        "category": "landmark",
+        "priority": "high",
+        "speed": 0.52,
+        "intensity": 0.47,
+        "color": "#f59e0b",
+        "delay": 0.41
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3644,
+          48.9063
+        ]
+      },
+      "properties": {
+        "id": 139,
+        "name": "Point 139",
+        "category": "landmark",
+        "priority": "low",
+        "speed": 1.09,
+        "intensity": 0.42,
+        "color": "#f59e0b",
+        "delay": 1.06
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3128,
+          48.8703
+        ]
+      },
+      "properties": {
+        "id": 140,
+        "name": "Point 140",
+        "category": "landmark",
+        "priority": "high",
+        "speed": 1.34,
+        "intensity": 0.47,
+        "color": "#f59e0b",
+        "delay": 1.75
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.404,
+          48.8325
+        ]
+      },
+      "properties": {
+        "id": 141,
+        "name": "Point 141",
+        "category": "culture",
+        "priority": "high",
+        "speed": 1.86,
+        "intensity": 0.78,
+        "color": "#ef4444",
+        "delay": 0.23
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3374,
+          48.8285
+        ]
+      },
+      "properties": {
+        "id": 142,
+        "name": "Point 142",
+        "category": "culture",
+        "priority": "high",
+        "speed": 0.67,
+        "intensity": 0.79,
+        "color": "#ef4444",
+        "delay": 0.38
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3249,
+          48.856
+        ]
+      },
+      "properties": {
+        "id": 143,
+        "name": "Point 143",
+        "category": "transport",
+        "priority": "low",
+        "speed": 0.38,
+        "intensity": 0.71,
+        "color": "#3b82f6",
+        "delay": 0.3
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3827,
+          48.8289
+        ]
+      },
+      "properties": {
+        "id": 144,
+        "name": "Point 144",
+        "category": "landmark",
+        "priority": "low",
+        "speed": 1.06,
+        "intensity": 0.64,
+        "color": "#f59e0b",
+        "delay": 0.45
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.404,
+          48.8386
+        ]
+      },
+      "properties": {
+        "id": 145,
+        "name": "Point 145",
+        "category": "culture",
+        "priority": "medium",
+        "speed": 0.55,
+        "intensity": 0.91,
+        "color": "#ef4444",
+        "delay": 0.31
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.4065,
+          48.8341
+        ]
+      },
+      "properties": {
+        "id": 146,
+        "name": "Point 146",
+        "category": "park",
+        "priority": "high",
+        "speed": 1.02,
+        "intensity": 0.44,
+        "color": "#22c55e",
+        "delay": 0.57
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3954,
+          48.851
+        ]
+      },
+      "properties": {
+        "id": 147,
+        "name": "Point 147",
+        "category": "restaurant",
+        "priority": "low",
+        "speed": 0.52,
+        "intensity": 0.43,
+        "color": "#f97316",
+        "delay": 1.87
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3782,
+          48.8577
+        ]
+      },
+      "properties": {
+        "id": 148,
+        "name": "Point 148",
+        "category": "park",
+        "priority": "low",
+        "speed": 1.66,
+        "intensity": 0.67,
+        "color": "#22c55e",
+        "delay": 1.94
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.3684,
+          48.88
+        ]
+      },
+      "properties": {
+        "id": 149,
+        "name": "Point 149",
+        "category": "culture",
+        "priority": "low",
+        "speed": 0.92,
+        "intensity": 0.42,
+        "color": "#ef4444",
+        "delay": 0.91
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.412,
+          48.8526
+        ]
+      },
+      "properties": {
+        "id": 150,
+        "name": "Point 150",
+        "category": "transport",
+        "priority": "low",
+        "speed": 1.07,
+        "intensity": 0.77,
+        "color": "#3b82f6",
+        "delay": 1.42
+      }
+    }
   ]
 }
