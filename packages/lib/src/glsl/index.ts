@@ -16,3 +16,13 @@ export const glsl = {
 };
 
 export { noiseGLSL, easingGLSL, shapesGLSL, colorsGLSL };
+
+// GLSL Preprocessor
+export {
+  preprocessGLSL,
+  processGLSL,
+  getAvailableLibraries,
+  isLibraryAvailable,
+  getLibrarySource,
+} from './preprocessor';
+export type { GLSLLibraryName, PreprocessResult, PreprocessOptions } from './preprocessor';

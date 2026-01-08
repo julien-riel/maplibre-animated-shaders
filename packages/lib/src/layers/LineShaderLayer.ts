@@ -114,6 +114,7 @@ const LINE_VERTEX_SHADER = `
  */
 export class LineShaderLayer extends BaseShaderLayer {
   protected readonly layerTypeName = 'LineShaderLayer';
+  protected readonly geometryType = 'line' as const;
 
   // Attribute locations
   private aPosStart: number = -1;

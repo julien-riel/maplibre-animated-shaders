@@ -5,7 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 2026-01-05
+## [0.3.0] - 2026-01-07
+
+### Added
+
+- **glsl:** add preprocessor with `#include` directive support for modular shader composition ([d2d0ba3])
+- **hot-reload:** add `updateShaderSource()` method for live shader editing without page reload
+- **utils:** add shader varyings reference for debugging and documentation ([022fba3])
+- **utils:** add schema validator for runtime config validation
+- **utils:** improve WebGL error diagnostics with better error messages
+
+### Changed
+
+- **layers:** refactor BaseShaderLayer instanced rendering for cleaner abstraction
+
+### Fixed
+
+- fix eslint no-console warnings ([f301f04])
+
+### Documentation
+
+- add varyings reference and clarify float precision in guide ([a9e4e7d])
+- add plugin performance guide with optimization tips
+
+## [0.2.0] - 2026-01-05
 
 ### ⚠️ BREAKING CHANGES
 

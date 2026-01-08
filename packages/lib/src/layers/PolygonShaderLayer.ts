@@ -87,6 +87,7 @@ const POLYGON_VERTEX_SHADER = `
  */
 export class PolygonShaderLayer extends BaseShaderLayer {
   protected readonly layerTypeName = 'PolygonShaderLayer';
+  protected readonly geometryType = 'polygon' as const;
 
   // Attribute locations
   private aPos: number = -1;

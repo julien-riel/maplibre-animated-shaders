@@ -5,16 +5,20 @@ Ce guide explique comment écrire des plugins performants pour MapLibre Animated
 ## Table des matières
 
 1. [Concepts GLSL fondamentaux](#concepts-glsl-fondamentaux)
-2. [Comprendre le pipeline de rendu](#comprendre-le-pipeline-de-rendu)
-3. [Flux de données : per-feature et data-driven](#flux-de-données--per-feature-et-data-driven)
-4. [Optimisations automatiques](#optimisations-automatiques)
-5. [Configurer un shader (ConfigSchema)](#configurer-un-shader-configschema)
-6. [Écrire des shaders performants](#écrire-des-shaders-performants)
-7. [Utiliser des textures](#utiliser-des-textures)
-8. [Gérer les données efficacement](#gérer-les-données-efficacement)
-9. [Utiliser les presets](#utiliser-les-presets)
-10. [Instanced Rendering](#instanced-rendering)
-11. [Diagnostiquer les problèmes](#diagnostiquer-les-problèmes)
+2. [Inclure des utilitaires GLSL](#inclure-des-utilitaires-glsl)
+3. [Varyings disponibles par géométrie](#varyings-disponibles-par-géométrie)
+4. [Précision float : mediump vs highp](#précision-float--mediump-vs-highp)
+5. [Comprendre le pipeline de rendu](#comprendre-le-pipeline-de-rendu)
+6. [Flux de données : per-feature et data-driven](#flux-de-données--per-feature-et-data-driven)
+7. [Optimisations automatiques](#optimisations-automatiques)
+8. [Configurer un shader (ConfigSchema)](#configurer-un-shader-configschema)
+   - [Utilitaires de validation](#utilitaires-de-validation)
+9. [Écrire des shaders performants](#écrire-des-shaders-performants)
+10. [Utiliser des textures](#utiliser-des-textures)
+11. [Gérer les données efficacement](#gérer-les-données-efficacement)
+12. [Utiliser les presets](#utiliser-les-presets)
+13. [Instanced Rendering](#instanced-rendering)
+14. [Diagnostiquer les problèmes](#diagnostiquer-les-problèmes)
 
 ---
 
@@ -170,6 +174,401 @@ void main() {
 | `uniform` | Par frame ou rarement | `u_time`, `u_color`, `u_speed` | Très rapide |
 | `attribute` | Par vertex/feature | `a_position`, `a_color`, `a_timeOffset` | Upload unique |
 | `varying` | Interpolé automatiquement | `v_pos`, `v_color`, `v_effectiveTime` | Gratuit |
+
+---
+
+## Inclure des utilitaires GLSL
+
+La bibliothèque fournit des utilitaires GLSL pré-construits (noise, easing, shapes, colors) que vous pouvez inclure dans vos shaders. Il existe deux méthodes pour les utiliser.
+
+### Méthode 1 : Template literals (classique)
+
+Utilisez les template literals JavaScript avec l'objet `glsl` :
+
+```typescript
+import { defineShader, glsl } from 'maplibre-animated-shaders';
+
+const myShader = defineShader({
+  name: 'fire',
+  geometry: 'point',
+  fragmentShader: `
+    precision highp float;
+
+    ${glsl.noise}
+    ${glsl.shapes}
+
+    varying vec2 v_pos;
+    uniform float u_time;
+
+    void main() {
+      float n = fbm(v_pos * 4.0 + u_time, 4);
+      float circle = sdCircle(v_pos, 0.5);
+      gl_FragColor = vec4(vec3(n), fillAA(circle, 0.01));
+    }
+  `,
+  defaultConfig: { /* ... */ },
+  getUniforms: (config, time) => ({ u_time: time }),
+});
+```
+
+**Avantages** : Contrôle total, pas de magic string
+**Inconvénients** : Verbeux, facile d'oublier une virgule
+
+### Méthode 2 : Directives `#include` (recommandée)
+
+Utilisez la syntaxe `#include <library>` avec l'option `preprocess: true` :
+
+```typescript
+import { defineShader } from 'maplibre-animated-shaders';
+
+const myShader = defineShader({
+  name: 'fire',
+  geometry: 'point',
+  fragmentShader: `
+    precision highp float;
+
+    #include <noise>
+    #include <shapes>
+
+    varying vec2 v_pos;
+    uniform float u_time;
+
+    void main() {
+      float n = fbm(v_pos * 4.0 + u_time, 4);
+      float circle = sdCircle(v_pos, 0.5);
+      gl_FragColor = vec4(vec3(n), fillAA(circle, 0.01));
+    }
+  `,
+  defaultConfig: { /* ... */ },
+  getUniforms: (config, time) => ({ u_time: time }),
+}, { preprocess: true });  // <-- Active le préprocesseur
+```
+
+**Avantages** : Syntaxe familière (style C/C++), plus lisible, détection automatique des doublons
+**Inconvénients** : Nécessite `preprocess: true`
+
+### Bibliothèques GLSL disponibles
+
+| Bibliothèque | Directive | Description | Fonctions principales |
+|--------------|-----------|-------------|----------------------|
+| **noise** | `#include <noise>` | Fonctions de bruit | `snoise(vec2)`, `snoise(vec3)`, `fbm(vec2, int)`, `random(vec2)`, `voronoi(vec2)` |
+| **easing** | `#include <easing>` | Fonctions d'interpolation | `easeInQuad`, `easeOutQuad`, `easeInOutQuad`, `easeInElastic`, `easeOutBounce`, etc. |
+| **shapes** | `#include <shapes>` | SDF (Signed Distance Functions) | `sdCircle`, `sdBox`, `sdRing`, `sdTriangle`, `sdPolygon`, `sdStar`, `fillAA`, `strokeAA` |
+| **colors** | `#include <colors>` | Manipulation de couleurs | `rgb2hsl`, `hsl2rgb`, `rgb2hsv`, `hsv2rgb`, `blendMultiply`, `blendScreen`, `palette` |
+| **all** | `#include <all>` | Toutes les bibliothèques | Combine noise + easing + shapes + colors |
+
+### Utilisation avancée du préprocesseur
+
+Vous pouvez également utiliser le préprocesseur directement :
+
+```typescript
+import { preprocessGLSL, processGLSL, getAvailableLibraries } from 'maplibre-animated-shaders';
+
+// Obtenir la liste des bibliothèques disponibles
+console.log(getAvailableLibraries());
+// ['noise', 'easing', 'shapes', 'colors', 'all']
+
+// Préprocesser avec métadonnées
+const result = preprocessGLSL(`
+  #include <noise>
+  #include <unknown>
+  void main() {}
+`);
+
+console.log(result.includedLibraries);  // ['noise']
+console.log(result.warnings);            // ["Unknown GLSL library: 'unknown'..."]
+console.log(result.source);              // Le code GLSL avec noise inclus
+
+// Préprocesser simplement (retourne juste le source)
+const source = processGLSL(`
+  #include <shapes>
+  void main() { float d = sdCircle(vec2(0.0), 1.0); }
+`);
+```
+
+### Options du préprocesseur
+
+```typescript
+preprocessGLSL(source, {
+  // Ajouter des commentaires de début/fin autour du code inclus (défaut: true)
+  addComments: true,
+
+  // Avertir en cas de bibliothèque inconnue (défaut: true)
+  warnUnknown: true,
+
+  // Ajouter des bibliothèques personnalisées
+  customLibraries: {
+    myUtils: `
+      float myHelper(float x) { return x * 2.0; }
+    `,
+  },
+});
+```
+
+### Prévention des doublons
+
+Le préprocesseur détecte automatiquement les inclusions dupliquées :
+
+```glsl
+#include <noise>
+#include <noise>  // → "// #include <noise> (already included)"
+```
+
+Cela évite les erreurs de redéfinition de fonctions GLSL.
+
+### Syntaxe supportée
+
+Les deux formats sont acceptés :
+
+```glsl
+#include <noise>   // Style angle brackets (recommandé)
+#include "noise"   // Style guillemets (compatible C/C++)
+```
+
+---
+
+## Varyings disponibles par géométrie
+
+Chaque type de géométrie expose des varyings différents dans le fragment shader. Voici la liste complète des varyings disponibles selon le type de layer.
+
+### Point (`geometry: 'point'`)
+
+| Varying | Type | Description |
+|---------|------|-------------|
+| `v_pos` | `vec2` | Position dans le quad (-1 à 1). Utilisez `length(v_pos)` pour la distance au centre. |
+| `v_index` | `float` | Index du point dans la source de données |
+| `v_timeOffset` | `float` | Décalage temporel pour désynchroniser les animations |
+| `v_effectiveTime` | `float` | Temps d'animation effectif (gère pause/play automatiquement) |
+| `v_color` | `vec4` | Couleur data-driven (RGBA, valeurs 0-1) |
+| `v_intensity` | `float` | Intensité data-driven |
+| `v_useDataDrivenColor` | `float` | Flag (0.0 ou 1.0) indiquant si la couleur est data-driven |
+| `v_useDataDrivenIntensity` | `float` | Flag (0.0 ou 1.0) indiquant si l'intensité est data-driven |
+
+> ⚠️ **Note importante**: Les points n'ont **PAS** de `v_uv`. Utilisez `v_pos` à la place. Pour convertir en coordonnées 0-1 : `vec2 uv = v_pos * 0.5 + 0.5;`
+
+**Exemple typique pour un point:**
+
+```glsl
+precision highp float;
+
+varying vec2 v_pos;
+varying float v_effectiveTime;
+varying vec4 v_color;
+
+void main() {
+    float dist = length(v_pos);           // Distance au centre (0 au centre, 1 au bord)
+    float pulse = sin(v_effectiveTime * 3.0) * 0.5 + 0.5;
+    float alpha = smoothstep(1.0, 0.0, dist) * pulse;
+
+    gl_FragColor = vec4(v_color.rgb, v_color.a * alpha);
+}
+```
+
+### Line (`geometry: 'line'`)
+
+| Varying | Type | Description |
+|---------|------|-------------|
+| `v_pos` | `vec2` | Position dans le segment. `v_pos.x` = position le long (-1 à 1), `v_pos.y` = distance perpendiculaire (-1 à 1) |
+| `v_progress` | `float` | Progression le long de la ligne complète (0 à 1) |
+| `v_line_index` | `float` | Index de la ligne dans la source |
+| `v_width` | `float` | Largeur de la ligne en pixels |
+| `v_timeOffset` | `float` | Décalage temporel |
+| `v_effectiveTime` | `float` | Temps d'animation effectif |
+| `v_color` | `vec4` | Couleur data-driven |
+| `v_intensity` | `float` | Intensité data-driven |
+| `v_useDataDrivenColor` | `float` | Flag couleur data-driven |
+| `v_useDataDrivenIntensity` | `float` | Flag intensité data-driven |
+
+> ⚠️ **Note importante**: Pour les lignes, `v_pos.y` représente la distance **perpendiculaire** au centre de la ligne, pas la progression. Utilisez `v_progress` pour la progression le long de la ligne.
+
+**Exemple typique pour une ligne:**
+
+```glsl
+precision highp float;
+
+varying vec2 v_pos;
+varying float v_progress;
+varying float v_effectiveTime;
+varying vec4 v_color;
+
+void main() {
+    // Effet de flux le long de la ligne
+    float flow = fract(v_progress - v_effectiveTime * 0.5);
+
+    // Atténuation vers les bords (perpendiculaire)
+    float edgeFade = 1.0 - abs(v_pos.y);
+
+    gl_FragColor = vec4(v_color.rgb, v_color.a * flow * edgeFade);
+}
+```
+
+### Polygon (`geometry: 'polygon'`)
+
+| Varying | Type | Description |
+|---------|------|-------------|
+| `v_pos` | `vec2` | Position du vertex en coordonnées Mercator |
+| `v_uv` | `vec2` | Coordonnées UV normalisées dans les bounds du polygone (0 à 1) |
+| `v_centroid` | `vec2` | Centre du polygone en coordonnées Mercator |
+| `v_polygon_index` | `float` | Index du polygone |
+| `v_screen_pos` | `vec2` | Position en pixels sur l'écran |
+| `v_timeOffset` | `float` | Décalage temporel |
+| `v_effectiveTime` | `float` | Temps d'animation effectif |
+| `v_color` | `vec4` | Couleur data-driven |
+| `v_intensity` | `float` | Intensité data-driven |
+| `v_useDataDrivenColor` | `float` | Flag couleur data-driven |
+| `v_useDataDrivenIntensity` | `float` | Flag intensité data-driven |
+
+**Exemple typique pour un polygone:**
+
+```glsl
+precision highp float;
+
+varying vec2 v_uv;
+varying vec2 v_centroid;
+varying float v_effectiveTime;
+varying vec4 v_color;
+
+void main() {
+    // Dégradé du centre vers les bords
+    vec2 toCenter = v_uv - vec2(0.5);
+    float distFromCenter = length(toCenter);
+
+    // Animation radiale
+    float wave = sin(distFromCenter * 10.0 - v_effectiveTime * 2.0) * 0.5 + 0.5;
+
+    gl_FragColor = vec4(v_color.rgb * wave, v_color.a);
+}
+```
+
+### Global (`geometry: 'global'`)
+
+| Varying | Type | Description |
+|---------|------|-------------|
+| `v_uv` | `vec2` | Coordonnées UV du viewport (0 à 1) |
+
+> 💡 **Note**: Les layers globaux couvrent tout l'écran et sont utilisés pour des effets post-process ou des overlays.
+
+**Exemple typique pour un effet global:**
+
+```glsl
+precision highp float;
+
+varying vec2 v_uv;
+uniform float u_time;
+
+void main() {
+    // Effet de vignette
+    vec2 center = v_uv - 0.5;
+    float vignette = 1.0 - length(center) * 1.5;
+
+    gl_FragColor = vec4(0.0, 0.0, 0.0, (1.0 - vignette) * 0.5);
+}
+```
+
+### Résumé des varyings par géométrie
+
+| Varying | Point | Line | Polygon | Global |
+|---------|:-----:|:----:|:-------:|:------:|
+| `v_pos` | ✅ | ✅ | ✅ | ❌ |
+| `v_uv` | ❌ | ❌ | ✅ | ✅ |
+| `v_progress` | ❌ | ✅ | ❌ | ❌ |
+| `v_index` / `v_*_index` | ✅ | ✅ | ✅ | ❌ |
+| `v_width` | ❌ | ✅ | ❌ | ❌ |
+| `v_centroid` | ❌ | ❌ | ✅ | ❌ |
+| `v_screen_pos` | ❌ | ❌ | ✅ | ❌ |
+| `v_timeOffset` | ✅ | ✅ | ✅ | ❌ |
+| `v_effectiveTime` | ✅ | ✅ | ✅ | ❌ |
+| `v_color` | ✅ | ✅ | ✅ | ❌ |
+| `v_intensity` | ✅ | ✅ | ✅ | ❌ |
+
+---
+
+## Précision float : mediump vs highp
+
+### Recommandation générale
+
+```glsl
+// Recommandé pour la plupart des shaders
+precision highp float;
+```
+
+La différence de performance entre `mediump` et `highp` est **négligeable sur les appareils modernes**. Privilégiez `highp` pour éviter les bugs visuels difficiles à diagnostiquer.
+
+### Quand utiliser highp (par défaut)
+
+Utilisez `highp` quand votre shader effectue :
+
+- **Calculs de distance** : `length()`, `distance()`, `dot()`
+- **Opérations sur les coordonnées géographiques** : positions Mercator, projections
+- **Calculs avec de petits incréments** : animations précises, temps cumulé
+- **Fonctions de bruit avec itérations** : fbm, noise multi-octaves
+- **Tout calcul où la précision impacte le rendu visuel**
+
+```glsl
+precision highp float;
+
+varying vec2 v_pos;
+uniform float u_time;
+
+void main() {
+    float dist = length(v_pos);                    // highp nécessaire pour précision
+    float noise = fbm(v_pos * 100.0 + u_time, 4);  // highp pour éviter les artefacts
+
+    gl_FragColor = vec4(vec3(noise), 1.0);
+}
+```
+
+### Quand mediump peut suffire
+
+`mediump` peut être utilisé **uniquement** pour :
+
+- Calculs simples de couleur (mix, clamp sur valeurs 0-1)
+- Shaders très simples sans calculs géométriques
+- Cas où les performances sont critiques ET testées sur appareils cibles
+
+```glsl
+// Acceptable UNIQUEMENT pour un shader très simple
+precision mediump float;
+
+varying vec4 v_color;
+uniform float u_opacity;
+
+void main() {
+    // Opérations simples sur des valeurs bornées 0-1
+    vec3 color = v_color.rgb;
+    gl_FragColor = vec4(color, v_color.a * u_opacity);
+}
+```
+
+### Problèmes courants avec mediump
+
+| Symptôme | Cause | Solution |
+|----------|-------|----------|
+| Cercles deviennent des polygones | Précision insuffisante pour `length()` | Passer à `highp` |
+| Bruit qui "saute" ou montre des bandes | Accumulation d'erreurs de précision | Passer à `highp` |
+| Animations saccadées | Temps avec décimales perdues | Passer à `highp` |
+| Artefacts près des bords | Calculs de distance imprécis | Passer à `highp` |
+| Effet différent sur mobile vs desktop | Implémentation mediump varie selon GPU | Passer à `highp` |
+
+### Mixer les précisions (avancé)
+
+Si vous avez vraiment besoin d'optimiser, vous pouvez mixer les précisions :
+
+```glsl
+precision highp float;  // Par défaut highp
+
+void main() {
+    // Calculs précis en highp (implicite)
+    float dist = length(v_pos);
+
+    // Couleur finale en mediump (explicite)
+    mediump vec3 color = vec3(dist);
+
+    gl_FragColor = vec4(color, 1.0);
+}
+```
+
+> ⚠️ **Attention**: Cette optimisation est rarement nécessaire et peut introduire des bugs subtils. Ne l'utilisez que si vous avez mesuré un problème de performance réel.
 
 ---
 
@@ -561,7 +960,7 @@ const myShader: ShaderDefinition<MyShaderConfig> = {
   tags: ['point', 'pulse', 'alert'],
 
   fragmentShader: `
-    precision mediump float;
+    precision highp float;
     uniform float u_time;
     uniform vec4 u_color;
     uniform float u_rings;
@@ -597,6 +996,95 @@ const myShader: ShaderDefinition<MyShaderConfig> = {
 | `string` | Text input | - | Labels, identifiants |
 | `select` | Dropdown | `options: string[]` | Mode, type d'easing |
 | `array` | Custom | - | Coordonnées, vecteurs |
+
+### Utilitaires de validation
+
+La bibliothèque fournit des utilitaires pour valider les configurations et générer des types TypeScript.
+
+```typescript
+import {
+  validateConfig,
+  getSchemaDefaults,
+  mergeWithDefaults,
+  generateTypeDefinition,
+  generateSchemaDocumentation,
+  createSchemaFromDefaults,
+  isValidColor,
+} from 'maplibre-animated-shaders';
+
+// Valider une configuration utilisateur
+const result = validateConfig(userConfig, configSchema);
+if (!result.valid) {
+  console.error('Erreurs de validation:', result.errors);
+  result.errors.forEach(error => {
+    console.error(`  ${error.field}: ${error.message}`);
+    if (error.suggestion) {
+      console.error(`    Suggestion: ${error.suggestion}`);
+    }
+  });
+}
+
+// Extraire les valeurs par défaut d'un schema
+const defaults = getSchemaDefaults(configSchema);
+
+// Fusionner config utilisateur avec les valeurs par défaut
+const fullConfig = mergeWithDefaults(userConfig, configSchema);
+
+// Générer une définition TypeScript depuis un schema
+const typeDef = generateTypeDefinition(configSchema, 'MyShaderConfig');
+console.log(typeDef);
+// interface MyShaderConfig {
+//   /** Couleur des anneaux (default: '#3b82f6') */
+//   color: string | [number, number, number, number];
+//   /** Multiplicateur de vitesse (default: 1) [min: 0.1, max: 5] */
+//   speed: number;
+//   ...
+// }
+
+// Générer de la documentation markdown
+const docs = generateSchemaDocumentation(configSchema, 'Options de configuration');
+
+// Créer un schema à partir de valeurs par défaut (pour prototypage rapide)
+const quickSchema = createSchemaFromDefaults({
+  speed: 1.0,
+  color: '#3b82f6',
+  enabled: true,
+});
+
+// Vérifier si une valeur est une couleur valide
+isValidColor('#ff6600');        // true
+isValidColor([1, 0.4, 0, 1]);   // true
+isValidColor('red');            // false
+```
+
+#### Structure du résultat de validation
+
+```typescript
+interface SchemaValidationResult {
+  valid: boolean;
+  errors: SchemaValidationError[];
+  warnings: SchemaValidationWarning[];
+}
+
+interface SchemaValidationError {
+  field: string;      // Nom du champ en erreur
+  message: string;    // Message d'erreur
+  value: unknown;     // Valeur invalide
+  expected?: string;  // Type/format attendu
+  suggestion?: string; // Suggestion de correction
+}
+```
+
+Les expressions MapLibre (data-driven) sont automatiquement ignorées lors de la validation :
+
+```typescript
+// Ces valeurs sont valides (expressions MapLibre)
+const config = {
+  color: ['get', 'status_color'],
+  speed: ['match', ['get', 'priority'], 'high', 2.0, 1.0],
+};
+validateConfig(config, configSchema).valid; // true
+```
 
 ### Conversion config → uniforms
 
@@ -710,22 +1198,15 @@ float myLength = length(v);
 
 ### Règle #4: Précision appropriée
 
-```glsl
-// Mobile-friendly: utiliser mediump quand possible
-precision mediump float;
+Voir la section dédiée [Précision float : mediump vs highp](#précision-float--mediump-vs-highp) pour les recommandations complètes.
 
-// Pour les calculs de position: highp
-highp vec2 position = u_matrix * a_pos;
-
-// Pour les couleurs/effets: mediump suffit
-mediump vec4 color = mix(colorA, colorB, t);
-```
+**En résumé**: Utilisez `precision highp float;` par défaut. La différence de performance est négligeable sur les appareils modernes, et `highp` évite de nombreux bugs visuels difficiles à diagnostiquer.
 
 ### Exemple de shader optimisé
 
 ```glsl
 // Fragment shader optimisé pour un effet pulse
-precision mediump float;
+precision highp float;
 
 varying vec2 v_pos;
 varying float v_effectiveTime;
@@ -793,7 +1274,7 @@ function loadTexture(gl: WebGLRenderingContext, url: string): Promise<WebGLTextu
 
 ```glsl
 // Fragment shader
-precision mediump float;
+precision highp float;
 
 uniform sampler2D u_texture;    // La texture
 varying vec2 v_uv;              // Coordonnées UV (0-1)
@@ -1282,6 +1763,7 @@ globalEventEmitter.on('performance:frame', (event) => {
 ### À faire ✅
 
 ```
+✓ Utiliser precision highp float par défaut
 ✓ Limiter les octaves de bruit à 3-4
 ✓ Utiliser mix/step au lieu de if/else
 ✓ Préférer les fonctions GLSL built-in
@@ -1300,7 +1782,7 @@ globalEventEmitter.on('performance:frame', (event) => {
 ```
 ✗ Boucles avec beaucoup d'itérations dans le fragment shader
 ✗ Branches conditionnelles complexes
-✗ Calculs de précision highp non nécessaires
+✗ Utiliser mediump pour des calculs de distance ou de bruit
 ✗ Uniforms qui changent à chaque feature (utiliser attributs)
 ✗ Ignorer les warnings de performance
 ✗ Textures > 2048×2048 (surtout sur mobile)

@@ -198,6 +198,7 @@ const INSTANCE_FLOATS = 11;
 
 export class PointShaderLayer extends BaseShaderLayer {
   protected readonly layerTypeName = 'PointShaderLayer';
+  protected readonly geometryType = 'point' as const;
 
   // Attribute locations (standard rendering)
   private aPos: number = -1;

@@ -160,6 +160,54 @@ export class ShaderManager implements IShaderManager {
     updateShaderConfig(this.state, layerId, config);
   }
 
+  /**
+   * Update shader source code at runtime (hot-reload)
+   *
+   * This allows updating the GLSL shader code without removing and re-registering
+   * the shader. Useful for development workflows and live shader editing.
+   *
+   * @param layerId - The layer ID to update
+   * @param fragmentShader - New fragment shader source code
+   * @param vertexShader - Optional new vertex shader source code
+   * @returns true if the update succeeded, false otherwise
+   *
+   * @example
+   * ```typescript
+   * const newFragmentShader = `
+   *   precision mediump float;
+   *   uniform float u_time;
+   *   void main() {
+   *     gl_FragColor = vec4(sin(u_time), 0.0, 0.0, 1.0);
+   *   }
+   * `;
+   * shaderManager.updateShaderSource('my-layer', newFragmentShader);
+   * ```
+   */
+  updateShaderSource(layerId: string, fragmentShader: string, vertexShader?: string): boolean {
+    const customLayer = this.state.customLayers.get(layerId);
+    if (!customLayer) {
+      log(this.state, `Cannot update shader source: layer "${layerId}" not found`);
+      return false;
+    }
+
+    const success = customLayer.updateShaderSource(fragmentShader, vertexShader);
+
+    if (success) {
+      // Also update the instance definition for consistency
+      const instance = this.state.instances.get(layerId);
+      if (instance) {
+        instance.definition = {
+          ...instance.definition,
+          fragmentShader,
+          ...(vertexShader && { vertexShader }),
+        };
+      }
+      log(this.state, `Shader source updated for layer "${layerId}"`);
+    }
+
+    return success;
+  }
+
   /** Set global animation speed */
   setGlobalSpeed(speed: number): void {
     this.state.animationLoop.setGlobalSpeed(speed);

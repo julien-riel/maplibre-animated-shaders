@@ -1,7 +1,15 @@
 import { defineConfig } from 'vitest/config';
 import { resolve } from 'path';
+import glsl from 'vite-plugin-glsl';
 
 export default defineConfig({
+  plugins: [
+    glsl({
+      include: ['**/*.glsl', '**/*.vert', '**/*.frag'],
+      defaultExtension: 'glsl',
+      compress: false, // Don't compress in tests for easier debugging
+    }),
+  ],
   test: {
     globals: true,
     environment: 'node',

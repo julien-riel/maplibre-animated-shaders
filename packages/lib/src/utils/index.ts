@@ -7,6 +7,8 @@ export * from './maplibre-helpers';
 export * from './metrics-collector';
 export * from './object-pool';
 export * from './performance-monitor';
+export * from './schema-validator';
+export * from './shader-varyings';
 export * from './throttle';
 export * from './webgl-error-handler';
 export * from './webgl-capabilities';
