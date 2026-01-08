@@ -691,11 +691,7 @@ export class PointShaderLayer extends BaseShaderLayer {
     const updatedLayout: InstanceAttribute[] = layout.map((attr) => ({
       ...attr,
       location:
-        attr.name === 'a_vertex'
-          ? this.aVertex
-          : attr.name === 'a_uv'
-            ? this.aUv
-            : attr.location,
+        attr.name === 'a_vertex' ? this.aVertex : attr.name === 'a_uv' ? this.aUv : attr.location,
     }));
 
     this.instancedRenderer.setIndexedGeometry(vertices, indices, updatedLayout, stride);
@@ -795,8 +791,8 @@ export class PointShaderLayer extends BaseShaderLayer {
         intensity: 1.0,
       };
       const timeOffset = timeOffsets[point.index] ?? 0;
-      const isPlaying = isPlayingData ? isPlayingData[point.index] ?? 1.0 : 1.0;
-      const localTime = localTimeData ? localTimeData[point.index] ?? 0.0 : 0.0;
+      const isPlaying = isPlayingData ? (isPlayingData[point.index] ?? 1.0) : 1.0;
+      const localTime = localTimeData ? (localTimeData[point.index] ?? 0.0) : 0.0;
 
       // Pack instance data
       this.instanceData[offset + 0] = point.mercatorX; // position.x

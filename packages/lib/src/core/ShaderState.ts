@@ -179,6 +179,7 @@ export function createState(
  */
 export function log(state: ShaderManagerState, message: string, ...args: unknown[]): void {
   if (state.debug) {
+    // eslint-disable-next-line no-console
     console.log(`${LOG_PREFIX} ${message}`, ...args);
   }
 }

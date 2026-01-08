@@ -298,6 +298,7 @@ export class ProgramCache {
   private log(message: string, layerId?: string): void {
     if (this.debug) {
       const prefix = layerId ? `${WEBGL_LOG_PREFIX} [${layerId}]` : WEBGL_LOG_PREFIX;
+      // eslint-disable-next-line no-console
       console.log(`${prefix} ProgramCache: ${message}`);
     }
   }
