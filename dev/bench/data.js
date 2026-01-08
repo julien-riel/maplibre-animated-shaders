@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1767665344108,
+  "lastUpdate": 1767837343248,
   "repoUrl": "https://github.com/julien-riel/maplibre-animated-shaders",
   "entries": {
     "Performance Benchmarks": [
@@ -3496,6 +3496,443 @@ window.BENCHMARK_DATA = {
             "range": "±1.15%",
             "unit": "ms",
             "extra": "4505.18 ops/sec (2253 samples)"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "julien.riel@gmail.com",
+            "name": "Julien Riel",
+            "username": "julien-riel"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "def855616743e1a999597d24f39f202dd8a5e690",
+          "message": "Develop (#16)\n\n* Refactor plugin system to introduce examplePlugin and remove thematic plugins\n\n- Updated index.ts to export only examplePlugin and its lazy loading functions.\n- Refactored loaders.ts to support loading of examplePlugin and removed unused thematic plugin loaders.\n- Modified tests to validate the structure and functionality of the new examplePlugin, ensuring it meets expected shader and preset criteria.\n- Adjusted shader tests to focus on the four shaders in the examplePlugin, verifying their structure and uniform handling.\n- Removed references to thematic plugins in various test files, consolidating tests around the new examplePlugin.\n\n* delete: remove RECOMMANDATIONS.md and ROADMAP.md files as part of project restructuring\n\n* delete: remove README.md as part of project restructuring\n\n* docs: add comprehensive project documentation\n\n- README.md: Project overview, installation, API reference, examples\n- ARCHITECTURE.md: Technical architecture, MapLibre integration, shader pipeline\n- PLUGIN_GUIDE.md: Step-by-step guide for creating custom shader plugins\n- RECOMMANDATIONS.md: Improvement recommendations for features, architecture, performance\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\n\n* feat: add core infrastructure modules\n\n- Add src/constants.ts with centralized configuration constants\n- Add src/errors/ with typed error hierarchy and error codes\n- Add src/events/ with ShaderEventEmitter for lifecycle events\n- Add src/adapters/ with IMapAdapter interface and MapLibreAdapter\n- Add src/utils/program-cache.ts for WebGL shader program caching\n- Update src/index.ts with new exports\n- Update documentation (README.md, ARCHITECTURE.md)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\n\n* refactor: extract ShaderManager into modular core components\n\nSplit ShaderManager.ts (927 lines) into smaller, focused modules:\n\n- src/core/ShaderState.ts: Shared state management and factory\n- src/core/ShaderRegistration.ts: Shader register/unregister logic\n- src/core/ShaderPlayback.ts: Play/pause/speed/updateConfig control\n- src/core/index.ts: Module exports\n\nShaderManager.ts is now a lightweight facade (316 lines) that delegates\nto the core modules. Public API remains unchanged.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\n\n* docs: update ARCHITECTURE.md with core/ module structure\n\n- Add core/ directory to file structure\n- Add core modules to component responsibilities table\n- Update ShaderManager line count (927 → 316)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\n\n* Add comprehensive tests for deep-freeze utilities, InstancedRenderer, WebGLContext, and GeometryWorker\n\n- Implement tests for deep-freeze functions including deepFreeze, deepFreezeClone, createImmutableConfig, isFrozen, isDeeplyFrozen, mergeConfigs, and unfreeze.\n- Create tests for InstancedRenderer covering initialization, geometry setup, instance data management, drawing, and cleanup.\n- Add tests for WebGLContext to validate context wrapping, VAO management, and instanced drawing capabilities.\n- Introduce tests for GeometryWorker to ensure proper geometry processing, simplification, bounds computation, and buffer generation.\n- Mock necessary WebGL and Worker functionalities to isolate tests and ensure reliability.\n\n* feat: update dependencies and add size-limit for bundle size checks\n\n- Added @size-limit/preset-small-lib and size-limit to devDependencies.\n- Introduced size and size:check scripts for size-limit integration.\n- Updated package-lock.json with new dependencies and their versions.\n- Modified generate-changelog script to use ES module syntax.\n- Updated project name in documentation and comments for clarity.\n- Enhanced color utility functions with detailed JSDoc comments.\n- Refactored ProgramBuilder to use const for isFirstBlock.\n- Updated TypeDoc configuration for new project name and GitHub link.\n\n* feat: implement Phase 2 robustness improvements\n\n- Add WebGL context recovery tests (17 tests)\n- Add MapLibre multi-version compatibility CI workflow\n- Add framework integration examples (React, Vue, Vanilla JS)\n- Add production performance monitoring utility with telemetry support\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\n\n* feat: implement Phase 3 - React/Vue wrappers and visual shader editor\n\nReact package (packages/react/):\n- Hooks: useShaderEffect, useShaderManager, useShaderRegistry, usePerformanceMonitor\n- Components: ShaderLayer, AnimatedMap, ShaderProvider\n- Full TypeScript support with comprehensive types\n\nVue package (packages/vue/):\n- Composables: useShaderEffect, useShaderManager, useShaderRegistry, usePerformanceMonitor\n- Components: ShaderLayer.vue, AnimatedMap.vue\n- Vue 3 Composition API with TypeScript\n\nVisual Shader Editor (demo):\n- GLSL syntax editing for vertex and fragment shaders\n- Automatic uniform controls generation\n- Basic GLSL validation\n- Export/Import functionality (JSON)\n- Keyboard shortcut (Ctrl+Enter) to compile\n- Integration with ConfigPanel and MapView\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\n\n* refactor: move demo to packages/demo for monorepo structure\n\n- Move demo/ to packages/demo/\n- Update import paths from ../../src to ../../../src and ../../../../src\n- Update vite.config.ts paths for generated-docs and dist output\n- Update package.json scripts to use packages/demo/\n- Fix CI workflow artifact path to dist-demo/\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\n\n* chore: configure npm workspaces for monorepo\n\n- Add workspaces configuration to root package.json\n- Create packages/demo/package.json with workspace dependency\n- Update demo imports to use package name instead of relative paths\n- Configure Vite aliases to resolve workspace package to source\n- Update package-lock.json with workspace dependencies\n\nStructure:\n- packages/demo - Interactive playground (private)\n- packages/react - React bindings\n- packages/vue - Vue 3 bindings\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\n\n* refactor: move core library to packages/lib for full monorepo structure\n\n- Move src/ to packages/lib/src/\n- Create packages/lib/package.json with library config\n- Create packages/lib/vite.config.ts and tsconfig.json\n- Update root package.json as workspace root (private)\n- Update demo vite.config to resolve from ../lib/src\n- Update vitest.config.ts paths for packages/lib\n- Update scripts/validate-glsl.ts for new path\n- Update typedoc.json entry point\n- Update .size-limit.json bundle paths\n- Update CI workflows for packages/lib/dist\n- Update e2e vite config\n- Create packages/demo/tsconfig.json\n- Remove root vite.config.ts (now in packages/lib)\n\nFinal monorepo structure:\n- packages/lib - Core shader library (maplibre-animated-shaders)\n- packages/demo - Interactive playground\n- packages/react - React bindings\n- packages/vue - Vue 3 bindings\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\n\n* refactor: move tests and benchmarks to packages/lib\n\n- Move tests/ to packages/lib/tests/\n- Move benchmarks/ to packages/lib/benchmarks/\n- Update vitest.config.ts paths\n\nAll 924 tests pass.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\n\n* feat: add performance monitoring utility and tests\n\n- Introduced ProductionPerformanceMonitor for tracking FPS, frame times, and GPU metrics.\n- Implemented telemetry reporting capabilities with customizable options.\n- Added event handling for performance-related events such as FPS warnings and context loss.\n- Created tests for the performance monitor covering initialization, metrics collection, event handling, telemetry, and context recovery.\n- Developed tests for WebGL context loss and recovery, ensuring graceful degradation and resource management.\n\n* feat: add initial README, LICENSE, and CHANGELOG files for the library\n\n* refactor: update shader tests to use example namespace and remove visual regression tests\n\n* fix: update test import compatibility path in workflow\n\n* feat: add MapLibre 5.x compatibility\n\nAdd support for the new render() method signature introduced in MapLibre 5.0\nwhile maintaining backward compatibility with 3.x and 4.x versions.\n\nChanges:\n- Add CustomRenderMethodInput type and extractMatrix() helper function\n- Update BaseShaderLayer and GlobalShaderLayer render methods\n- Use type casting when adding layers to the map\n- Fix CI workflow to run test script from project directory\n- Add maintenance documentation for MapLibre compatibility\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\n\n* feat: add instanced rendering support to BaseShaderLayer and PointShaderLayer\n\n- Introduced a unified WebGL context wrapper for WebGL 1/2 compatibility.\n- Implemented instanced rendering capabilities in BaseShaderLayer, allowing for efficient rendering of large datasets.\n- Enhanced PointShaderLayer to utilize instanced rendering, including new shaders and attribute management.\n- Added methods for checking instancing support, initializing instanced renderers, and building instance data.\n- Updated tests to accommodate new instanced attributes and functionality.\n\n* chore(lint): fix eslint no-console warnings\n\nAdd eslint-disable-next-line comments for intentional debug logging\nin ShaderState and program-cache. Remove unnecessary debug log and\nfix code formatting in PointShaderLayer.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.5 <noreply@anthropic.com>",
+          "timestamp": "2026-01-07T20:54:40-05:00",
+          "tree_id": "6788923e91c9314cf9f20718a859310b27d0ab84",
+          "url": "https://github.com/julien-riel/maplibre-animated-shaders/commit/def855616743e1a999597d24f39f202dd8a5e690"
+        },
+        "date": 1767837342323,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "packages/lib/benchmarks/core.bench.ts > ObjectPool - acquire 1,000 points",
+            "value": 0.010898217785538497,
+            "range": "±0.75%",
+            "unit": "ms",
+            "extra": "91758.12 ops/sec (45880 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/core.bench.ts > ObjectPool - acquire 10,000 points",
+            "value": 0.13254729446065033,
+            "range": "±0.92%",
+            "unit": "ms",
+            "extra": "7544.48 ops/sec (3773 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/core.bench.ts > ObjectPool - acquire/release cycle 1,000 points",
+            "value": 0.0066179868567293985,
+            "range": "±0.06%",
+            "unit": "ms",
+            "extra": "151103.35 ops/sec (75552 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/core.bench.ts > ObjectPool - acquire 1,000 segments",
+            "value": 0.019698338809436527,
+            "range": "±0.53%",
+            "unit": "ms",
+            "extra": "50765.70 ops/sec (25383 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/core.bench.ts > ObjectPool - acquire 1,000 polygons",
+            "value": 0.05682648960110101,
+            "range": "±0.36%",
+            "unit": "ms",
+            "extra": "17597.43 ops/sec (8799 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/core.bench.ts > AnimationLoop - create and destroy",
+            "value": 0.0001552915147801311,
+            "range": "±0.82%",
+            "unit": "ms",
+            "extra": "6439501.87 ops/sec (3219751 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/core.bench.ts > AnimationLoop - add/remove 100 shaders",
+            "value": 0.011227821705255945,
+            "range": "±0.62%",
+            "unit": "ms",
+            "extra": "89064.47 ops/sec (44533 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/core.bench.ts > AnimationLoop - tick with 50 shaders",
+            "value": 0.0034086319578435905,
+            "range": "±1.76%",
+            "unit": "ms",
+            "extra": "293372.83 ops/sec (146687 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/core.bench.ts > ShaderRegistry - register 100 shaders",
+            "value": 0.012667286126889322,
+            "range": "±0.92%",
+            "unit": "ms",
+            "extra": "78943.51 ops/sec (39472 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/core.bench.ts > ShaderRegistry - get shader by name (100 shaders)",
+            "value": 0.013362103420622141,
+            "range": "±0.80%",
+            "unit": "ms",
+            "extra": "74838.52 ops/sec (37420 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/core.bench.ts > ShaderRegistry - list shaders by geometry",
+            "value": 0.025061023907404518,
+            "range": "±0.74%",
+            "unit": "ms",
+            "extra": "39902.60 ops/sec (19952 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/core.bench.ts > ConfigResolver - resolve config (simple)",
+            "value": 0.00008359421133774392,
+            "range": "±0.72%",
+            "unit": "ms",
+            "extra": "11962550.80 ops/sec (5981276 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/core.bench.ts > ConfigResolver - resolve config (full override)",
+            "value": 0.00017994770397598554,
+            "range": "±0.21%",
+            "unit": "ms",
+            "extra": "5557170.10 ops/sec (2778586 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/core.bench.ts > ConfigResolver - validate config",
+            "value": 0.0007831188178654693,
+            "range": "±0.88%",
+            "unit": "ms",
+            "extra": "1276945.44 ops/sec (638473 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/core.bench.ts > ConfigResolver - resolve + validate 1,000 configs",
+            "value": 1.1661298581396486,
+            "range": "±1.49%",
+            "unit": "ms",
+            "extra": "857.54 ops/sec (430 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > TimeOffsetCalculator - fixed offset (1,000 features)",
+            "value": 0.06111589880224294,
+            "range": "±1.67%",
+            "unit": "ms",
+            "extra": "16362.35 ops/sec (8182 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > TimeOffsetCalculator - random offset (1,000 features)",
+            "value": 0.06409355716483629,
+            "range": "±1.03%",
+            "unit": "ms",
+            "extra": "15602.19 ops/sec (7802 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > TimeOffsetCalculator - range offset (1,000 features)",
+            "value": 0.07028976623559191,
+            "range": "±1.03%",
+            "unit": "ms",
+            "extra": "14226.82 ops/sec (7114 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > TimeOffsetCalculator - property-based offset (1,000 features)",
+            "value": 0.06882866455611204,
+            "range": "±1.01%",
+            "unit": "ms",
+            "extra": "14528.83 ops/sec (7265 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > TimeOffsetCalculator - hash-based offset (1,000 features)",
+            "value": 0.08213735676740182,
+            "range": "±0.93%",
+            "unit": "ms",
+            "extra": "12174.73 ops/sec (6088 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > TimeOffsetCalculator - fixed offset (10,000 features)",
+            "value": 0.8491596932203612,
+            "range": "±4.99%",
+            "unit": "ms",
+            "extra": "1177.63 ops/sec (590 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > TimeOffsetCalculator - hash-based offset (10,000 features)",
+            "value": 1.1614349164732516,
+            "range": "±4.00%",
+            "unit": "ms",
+            "extra": "861.00 ops/sec (431 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > TimeOffsetCalculator - expanded offsets (1,000 features, 4 vertices)",
+            "value": 0.06866979387532288,
+            "range": "±1.18%",
+            "unit": "ms",
+            "extra": "14562.44 ops/sec (7282 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > ExpressionEvaluator - compile simple get expression",
+            "value": 0.0021790125075186444,
+            "range": "±0.41%",
+            "unit": "ms",
+            "extra": "458923.48 ops/sec (229462 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > ExpressionEvaluator - compile match expression",
+            "value": 0.011527570351586131,
+            "range": "±0.57%",
+            "unit": "ms",
+            "extra": "86748.55 ops/sec (43375 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > ExpressionEvaluator - compile interpolate expression",
+            "value": 0.008508410305285163,
+            "range": "±0.54%",
+            "unit": "ms",
+            "extra": "117530.77 ops/sec (58766 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > ExpressionEvaluator - evaluate get (1,000 features)",
+            "value": 0.10136395580782134,
+            "range": "±1.29%",
+            "unit": "ms",
+            "extra": "9865.44 ops/sec (4933 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > ExpressionEvaluator - evaluate match (1,000 features)",
+            "value": 0.11970911746410512,
+            "range": "±1.33%",
+            "unit": "ms",
+            "extra": "8353.58 ops/sec (4180 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > ExpressionEvaluator - evaluate complex (1,000 features)",
+            "value": 0.16209072965965002,
+            "range": "±1.12%",
+            "unit": "ms",
+            "extra": "6169.38 ops/sec (3085 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > ExpressionEvaluator - multiple expressions (1,000 features)",
+            "value": 0.2870937600459895,
+            "range": "±1.10%",
+            "unit": "ms",
+            "extra": "3483.18 ops/sec (1742 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > Color Conversion - hexToRgba (1,000 conversions)",
+            "value": 0.14473683415342778,
+            "range": "±0.52%",
+            "unit": "ms",
+            "extra": "6909.09 ops/sec (3455 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > Color Conversion - rgbaToHex (1,000 conversions)",
+            "value": 0.15581903801806574,
+            "range": "±0.46%",
+            "unit": "ms",
+            "extra": "6417.70 ops/sec (3209 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > Color Conversion - round-trip conversion (1,000 times)",
+            "value": 0.3281798753280751,
+            "range": "±0.51%",
+            "unit": "ms",
+            "extra": "3047.11 ops/sec (1524 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > Coordinate Transformation - lngLat to Mercator (10,000 points)",
+            "value": 0.13894311030840462,
+            "range": "±0.50%",
+            "unit": "ms",
+            "extra": "7197.19 ops/sec (3599 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > Coordinate Transformation - process coordinates array (1,000 lines x 10 pts)",
+            "value": 0.34170997472674175,
+            "range": "±0.83%",
+            "unit": "ms",
+            "extra": "2926.46 ops/sec (1464 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > Buffer Building - Float32Array allocation (1,000 points, 24 bytes each)",
+            "value": 0.012294445621978001,
+            "range": "±4.19%",
+            "unit": "ms",
+            "extra": "81337.54 ops/sec (40669 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > Buffer Building - Float32Array allocation (10,000 points)",
+            "value": 0.039777815940186895,
+            "range": "±1.02%",
+            "unit": "ms",
+            "extra": "25139.64 ops/sec (12572 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > Buffer Building - Float32Array fill (1,000 points)",
+            "value": 0.07608902282410203,
+            "range": "±0.55%",
+            "unit": "ms",
+            "extra": "13142.50 ops/sec (6572 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/data-processing.bench.ts > Buffer Building - Uint16Array index buffer (1,000 quads)",
+            "value": 0.004196314620699604,
+            "range": "±0.61%",
+            "unit": "ms",
+            "extra": "238304.34 ops/sec (119153 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > PointShaderLayer - create layer",
+            "value": 0.0008851143567256735,
+            "range": "±0.59%",
+            "unit": "ms",
+            "extra": "1129797.51 ops/sec (564899 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > PointShaderLayer - onAdd with 100 points",
+            "value": 0.010964713229973196,
+            "range": "±0.42%",
+            "unit": "ms",
+            "extra": "91201.66 ops/sec (45601 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > PointShaderLayer - onAdd with 1,000 points",
+            "value": 0.0658087186101627,
+            "range": "±1.67%",
+            "unit": "ms",
+            "extra": "15195.55 ops/sec (7598 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > PointShaderLayer - onAdd with 10,000 points",
+            "value": 0.8878649219858017,
+            "range": "±5.47%",
+            "unit": "ms",
+            "extra": "1126.30 ops/sec (564 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > PointShaderLayer - render cycle (1,000 points)",
+            "value": 0.06505872833723468,
+            "range": "±1.30%",
+            "unit": "ms",
+            "extra": "15370.73 ops/sec (7686 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > PointShaderLayer - updateConfig (1,000 points)",
+            "value": 0.12619006611153435,
+            "range": "±1.20%",
+            "unit": "ms",
+            "extra": "7924.55 ops/sec (3963 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > LineShaderLayer - create layer",
+            "value": 0.0010022552362801774,
+            "range": "±0.19%",
+            "unit": "ms",
+            "extra": "997749.84 ops/sec (498875 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > LineShaderLayer - onAdd with 100 lines (10 pts each)",
+            "value": 0.029493763168759193,
+            "range": "±0.79%",
+            "unit": "ms",
+            "extra": "33905.47 ops/sec (16953 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > LineShaderLayer - onAdd with 1,000 lines (10 pts each)",
+            "value": 0.3123236298377227,
+            "range": "±2.31%",
+            "unit": "ms",
+            "extra": "3201.81 ops/sec (1602 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > LineShaderLayer - onAdd with 100 lines (100 pts each)",
+            "value": 0.23680002982954843,
+            "range": "±2.03%",
+            "unit": "ms",
+            "extra": "4222.97 ops/sec (2112 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > LineShaderLayer - render cycle (1,000 lines)",
+            "value": 0.29043580081301723,
+            "range": "±2.25%",
+            "unit": "ms",
+            "extra": "3443.10 ops/sec (1722 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > PolygonShaderLayer - create layer",
+            "value": 0.0010931666531847778,
+            "range": "±0.53%",
+            "unit": "ms",
+            "extra": "914773.60 ops/sec (457387 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > PolygonShaderLayer - onAdd with 100 polygons (6 vertices)",
+            "value": 0.031849614497742304,
+            "range": "±0.91%",
+            "unit": "ms",
+            "extra": "31397.55 ops/sec (15699 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > PolygonShaderLayer - onAdd with 1,000 polygons (6 vertices)",
+            "value": 0.294886560141532,
+            "range": "±1.29%",
+            "unit": "ms",
+            "extra": "3391.13 ops/sec (1696 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > PolygonShaderLayer - onAdd with 100 polygons (20 vertices)",
+            "value": 0.08488435664573497,
+            "range": "±0.91%",
+            "unit": "ms",
+            "extra": "11780.73 ops/sec (5891 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > PolygonShaderLayer - render cycle (1,000 polygons)",
+            "value": 0.26543912898089567,
+            "range": "±1.20%",
+            "unit": "ms",
+            "extra": "3767.34 ops/sec (1884 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > PolygonShaderLayer - triangulation (complex polygon 50 vertices)",
+            "value": 0.1884130568952651,
+            "range": "±1.46%",
+            "unit": "ms",
+            "extra": "5307.49 ops/sec (2654 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > Layer Comparison - 1,000 points - full lifecycle",
+            "value": 0.06412746543544066,
+            "range": "±1.42%",
+            "unit": "ms",
+            "extra": "15593.94 ops/sec (7797 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > Layer Comparison - 1,000 lines - full lifecycle",
+            "value": 0.27228174142622585,
+            "range": "±1.81%",
+            "unit": "ms",
+            "extra": "3672.67 ops/sec (1837 samples)"
+          },
+          {
+            "name": "packages/lib/benchmarks/layers.bench.ts > Layer Comparison - 1,000 polygons - full lifecycle",
+            "value": 0.272097779107754,
+            "range": "±1.31%",
+            "unit": "ms",
+            "extra": "3675.15 ops/sec (1838 samples)"
           }
         ]
       }
