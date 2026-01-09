@@ -355,8 +355,14 @@ export abstract class BaseShaderLayer {
       // Initialize WebGL context wrapper for unified WebGL 1/2 API
       this.ctx = new WebGLContext(gl);
 
-      // Check if instancing is supported
-      this.useInstancing = this.ctx.supportsInstancing && this.supportsInstancing();
+      // Check if instancing is supported by the context.
+      // Note: We don't enable instancing yet because the decision requires knowing
+      // the feature count, which is only available after data is loaded.
+      // The standard rendering path is used initially to ensure correct attribute
+      // initialization. Instancing will be enabled dynamically in updateData()
+      // when we have enough features to benefit from it.
+      const canUseInstancing = this.ctx.supportsInstancing && this.supportsInstancing();
+      this.useInstancing = false;
 
       // Compile shaders and create program
       this.program = this.createProgram(gl);
