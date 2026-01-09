@@ -360,6 +360,15 @@ body {
   border-color: var(--color-primary-muted);
 }
 
+/* Editor Panel Wrapper */
+.editor-panel-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
 /* Editor Container */
 .editor-container {
   flex: 1;

@@ -57,9 +57,12 @@ function init(): void {
     container: geometrySelectorContainer,
   });
 
-  // Shader editor
+  // Shader editor (in its own container to avoid innerHTML overwrite)
+  const editorContainer = document.createElement('div');
+  editorContainer.className = 'editor-panel-wrapper';
+  sidebar.appendChild(editorContainer);
   const editorPanel = new ShaderEditorPanel({
-    container: sidebar,
+    container: editorContainer,
     onCompile: (fragment, vertex) => {
       const currentShader = store.getCurrentShader();
       const geometry = currentShader?.geometry ?? 'point';
