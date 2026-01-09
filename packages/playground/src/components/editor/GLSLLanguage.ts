@@ -251,7 +251,7 @@ export function registerGLSLLanguage(monaco: typeof Monaco): void {
     builtinFunctions,
 
     // Define symbols pattern
-    symbols: /[=><!~?:&|+\-*\/\^%]+/,
+    symbols: /[=><!~?:&|+\-*/^%]+/,
 
     tokenizer: {
       root: [
@@ -268,7 +268,7 @@ export function registerGLSLLanguage(monaco: typeof Monaco): void {
         [/"/, 'string', '@string'],
 
         // Numbers
-        [/\d*\.\d+([eE][\-+]?\d+)?[fF]?/, 'number.float'],
+        [/\d*\.\d+([eE][-+]?\d+)?[fF]?/, 'number.float'],
         [/0[xX][0-9a-fA-F]+/, 'number.hex'],
         [/\d+/, 'number'],
 
@@ -286,7 +286,7 @@ export function registerGLSLLanguage(monaco: typeof Monaco): void {
         ],
 
         // Brackets
-        [/[{}()\[\]]/, '@brackets'],
+        [/[{}()[\]]/, '@brackets'],
         [/[<>]/, '@brackets'],
 
         // Delimiters
@@ -297,9 +297,9 @@ export function registerGLSLLanguage(monaco: typeof Monaco): void {
       ],
 
       comment: [
-        [/[^\/*]+/, 'comment'],
+        [/[^/*]+/, 'comment'],
         [/\*\//, 'comment', '@pop'],
-        [/[\/*]/, 'comment'],
+        [/[/*]/, 'comment'],
       ],
 
       string: [
@@ -322,9 +322,7 @@ export function getAllLibraryFunctions(): string[] {
  * Get library functions for specific libraries
  */
 export function getLibraryFunctions(libraries: string[]): string[] {
-  return libraries.flatMap(
-    (lib) => libraryFunctions[lib as keyof typeof libraryFunctions] || []
-  );
+  return libraries.flatMap((lib) => libraryFunctions[lib as keyof typeof libraryFunctions] || []);
 }
 
 /**

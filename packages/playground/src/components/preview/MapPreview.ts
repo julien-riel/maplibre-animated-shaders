@@ -52,7 +52,8 @@ export class MapPreview {
               'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
             ],
             tileSize: 256,
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            attribution:
+              '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
           },
         },
         layers: [
@@ -142,24 +143,15 @@ export class MapPreview {
 
     if (geometry === 'global') {
       // Global layer - skip for now, requires special handling
-      console.log('[Playground] Global geometry preview not yet implemented');
       return;
     }
 
     // First, add a base MapLibre layer (ShaderManager requires an existing layer)
     this.addBaseLayer(geometry, sourceId);
 
-    // Debug: Check if base layer was added
-    const baseLayer = this.map.getLayer(PREVIEW_LAYER_ID);
-    const source = this.map.getSource(sourceId);
-    console.log('[Playground] Base layer exists:', !!baseLayer);
-    console.log('[Playground] Source exists:', !!source);
-    console.log('[Playground] Source ID:', sourceId);
-
     // Then apply the animated shader on top
     try {
       const shaderName = `example:${geometry}`;
-      console.log('[Playground] Registering shader:', shaderName, 'on layer:', PREVIEW_LAYER_ID);
       this.shaderManager.register(PREVIEW_LAYER_ID, shaderName, {
         speed: 1.0,
         intensity: 1.0,
@@ -176,13 +168,7 @@ export class MapPreview {
         // Polygon-specific
         scale: 1.0,
       });
-      console.log('[Playground] Animated shader layer added:', geometry);
-
-      // Check the shader layer was created
-      const customLayerId = `${PREVIEW_LAYER_ID}-shader`;
-      console.log('[Playground] Custom shader layer exists:', !!this.map.getLayer(customLayerId));
-    } catch (error) {
-      console.error('[Playground] Failed to add shader layer:', error);
+    } catch {
       // Base layer remains visible as fallback
     }
   }

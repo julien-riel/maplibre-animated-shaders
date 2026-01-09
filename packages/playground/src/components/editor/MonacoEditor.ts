@@ -129,10 +129,7 @@ export class MonacoEditor {
 
     // Create markers
     const markers: monaco.editor.IMarkerData[] = errors.map((err) => ({
-      severity:
-        err.type === 'error'
-          ? monaco.MarkerSeverity.Error
-          : monaco.MarkerSeverity.Warning,
+      severity: err.type === 'error' ? monaco.MarkerSeverity.Error : monaco.MarkerSeverity.Warning,
       message: err.message,
       startLineNumber: err.line,
       startColumn: err.column || 1,
@@ -148,8 +145,7 @@ export class MonacoEditor {
       options: {
         isWholeLine: true,
         className: err.type === 'error' ? 'error-line-decoration' : 'warning-line-decoration',
-        glyphMarginClassName:
-          err.type === 'error' ? 'error-glyph-margin' : 'warning-glyph-margin',
+        glyphMarginClassName: err.type === 'error' ? 'error-glyph-margin' : 'warning-glyph-margin',
       },
     }));
 

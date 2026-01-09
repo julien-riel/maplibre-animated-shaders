@@ -3,10 +3,7 @@
  */
 
 import { store } from '../../state';
-import {
-  downloadProject,
-  importProjectFromFile,
-} from '../../services/ProjectService';
+import { downloadProject, importProjectFromFile } from '../../services/ProjectService';
 import * as Toast from '../shared/Toast';
 
 export interface SaveLoadPanelOptions {

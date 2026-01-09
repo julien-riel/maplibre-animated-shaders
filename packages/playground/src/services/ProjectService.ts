@@ -2,12 +2,7 @@
  * ProjectService - Project save/load functionality
  */
 
-import type {
-  PlaygroundState,
-  ProjectFile,
-  ShaderFileData,
-  EditorState,
-} from '../state';
+import type { PlaygroundState, ProjectFile, ShaderFileData, EditorState } from '../state';
 import type { GeometryType } from 'maplibre-animated-shaders';
 import { store } from '../state';
 

@@ -181,7 +181,9 @@ export class ShaderCompiler {
     this.canvas = document.createElement('canvas');
     this.canvas.width = 1;
     this.canvas.height = 1;
-    this.gl = this.canvas.getContext('webgl') || this.canvas.getContext('experimental-webgl') as WebGLRenderingContext;
+    this.gl =
+      this.canvas.getContext('webgl') ||
+      (this.canvas.getContext('experimental-webgl') as WebGLRenderingContext);
 
     if (!this.gl) {
       console.error('WebGL not supported');
@@ -247,21 +249,13 @@ export class ShaderCompiler {
     const testVertexShader = processedVertex || DEFAULT_VERTEX_SHADERS[geometryType];
 
     // Compile fragment shader
-    const fragResult = this.compileShader(
-      this.gl.FRAGMENT_SHADER,
-      processedFragment,
-      'fragment'
-    );
+    const fragResult = this.compileShader(this.gl.FRAGMENT_SHADER, processedFragment, 'fragment');
     errors.push(...fragResult.errors);
     warnings.push(...fragResult.warnings);
 
     // Compile vertex shader if provided
     if (vertexShader) {
-      const vertResult = this.compileShader(
-        this.gl.VERTEX_SHADER,
-        testVertexShader,
-        'vertex'
-      );
+      const vertResult = this.compileShader(this.gl.VERTEX_SHADER, testVertexShader, 'vertex');
       errors.push(...vertResult.errors);
       warnings.push(...vertResult.warnings);
     }

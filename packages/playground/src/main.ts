@@ -12,7 +12,11 @@ import { MapPreview } from './components/preview/MapPreview';
 import { PlaybackControls } from './components/preview/PlaybackControls';
 import { shaderCompiler } from './services/ShaderCompiler';
 import { autoSaveService } from './services/AutoSaveService';
-import { showSaveDialog, showLoadDialog, showNewProjectDialog } from './components/project/SaveLoadPanel';
+import {
+  showSaveDialog,
+  showLoadDialog,
+  showNewProjectDialog,
+} from './components/project/SaveLoadPanel';
 import { store } from './state';
 import * as Toast from './components/shared/Toast';
 
@@ -51,9 +55,6 @@ function init(): void {
   sidebar.appendChild(geometrySelectorContainer);
   new GeometrySelector({
     container: geometrySelectorContainer,
-    onChange: (geometry) => {
-      console.log('Geometry changed:', geometry);
-    },
   });
 
   // Shader editor
@@ -77,8 +78,6 @@ function init(): void {
   mapPreview = new MapPreview({
     container: preview,
     onReady: () => {
-      console.log('Map ready');
-
       // Initial compilation
       const currentShader = store.getCurrentShader();
       if (currentShader) {
@@ -97,12 +96,6 @@ function init(): void {
   if (playbackContainer) {
     new PlaybackControls({
       container: playbackContainer,
-      onPlayPause: (playing) => {
-        console.log('Playback:', playing ? 'playing' : 'paused');
-      },
-      onSpeedChange: (speed) => {
-        console.log('Speed:', speed);
-      },
     });
   }
 
@@ -135,8 +128,11 @@ function init(): void {
     }
 
     // Space - Play/Pause (when not in editor)
-    if (e.key === ' ' && document.activeElement?.tagName !== 'INPUT' &&
-        !document.activeElement?.closest('.monaco-editor')) {
+    if (
+      e.key === ' ' &&
+      document.activeElement?.tagName !== 'INPUT' &&
+      !document.activeElement?.closest('.monaco-editor')
+    ) {
       e.preventDefault();
       store.togglePreviewPlayback();
     }
@@ -147,8 +143,6 @@ function init(): void {
     editorPanel.layout();
     mapPreview?.resize();
   });
-
-  console.log('Shader Plugin Playground initialized');
 }
 
 // Initialize when DOM is ready
